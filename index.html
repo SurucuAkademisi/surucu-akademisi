@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sürücü Akademisi</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-title" content="Sürücü Akademisi">
+    <link rel="apple-touch-icon" href="resimler/logo.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Segoe+UI:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+
+    <script src="auth.js"></script>
+
+    <style>
+        /* --- 1. CANLI ARKA PLAN (PARTICLE ANIMATION) --- */
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            margin: 0; overflow: hidden; color: #ecf0f1;
+            background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364); /* Derin Okyanus/Uzay Gradyanı */
+            height: 100vh; width: 100vw; position: relative;
+        }
+
+        /* Parçacıkların bulunduğu kapsayıcı */
+        .particles {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            overflow: hidden; z-index: -1; /* İçeriğin arkasında kal */
+            pointer-events: none; /* Tıklamayı engelleme */
+        }
+
+        /* Tekil Parçacık (Bubble/Star) */
+        .particle {
+            position: absolute; bottom: -20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            animation: floatUp 15s infinite linear;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Farklı boyut ve hızlar için varyasyonlar (JS yerine CSS ile statik üretim) */
+        .particle:nth-child(1) { width: 10px; height: 10px; left: 10%; animation-duration: 12s; animation-delay: 0s; opacity: 0.3; }
+        .particle:nth-child(2) { width: 20px; height: 20px; left: 20%; animation-duration: 18s; animation-delay: 2s; opacity: 0.2; }
+        .particle:nth-child(3) { width: 15px; height: 15px; left: 35%; animation-duration: 15s; animation-delay: 4s; opacity: 0.4; }
+        .particle:nth-child(4) { width: 25px; height: 25px; left: 50%; animation-duration: 22s; animation-delay: 0s; opacity: 0.1; }
+        .particle:nth-child(5) { width: 12px; height: 12px; left: 65%; animation-duration: 14s; animation-delay: 3s; opacity: 0.3; }
+        .particle:nth-child(6) { width: 18px; height: 18px; left: 80%; animation-duration: 19s; animation-delay: 1s; opacity: 0.2; }
+        .particle:nth-child(7) { width: 8px; height: 8px; left: 90%; animation-duration: 10s; animation-delay: 5s; opacity: 0.5; }
+        .particle:nth-child(8) { width: 30px; height: 30px; left: 5%; animation-duration: 25s; animation-delay: 2s; opacity: 0.05; }
+        .particle:nth-child(9) { width: 14px; height: 14px; left: 45%; animation-duration: 16s; animation-delay: 6s; opacity: 0.25; }
+        .particle:nth-child(10) { width: 22px; height: 22px; left: 75%; animation-duration: 20s; animation-delay: 4s; opacity: 0.15; }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-110vh) translateX(20px); opacity: 0; }
+        }
+
+        /* --- GENEL AYARLAR DEVAMI --- */
+        .app-container { display: flex; flex-direction: column; height: 100vh; background: transparent; /* Arka planı body'den al */ }
+        
+        /* --- FULL EKRAN SAYFALAR --- */
+        .full-screen {
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            height: 100vh; width: 100%; position: absolute; top: 0; left: 0; z-index: 100; 
+            transition: transform 0.3s ease-in-out;
+            background: transparent; /* Animasyonlu arka plan görünsün */
+        }
+
+        /* --- SAAT STİLLERİ --- */
+        .home-clock {
+            font-family: 'Share Tech Mono', monospace; font-size: 3.5rem; color: #fff;
+            text-shadow: 0 0 20px rgba(52, 152, 219, 0.8); margin-bottom: 30px; letter-spacing: 2px;
+        }
+        .header-clock {
+            font-family: 'Share Tech Mono', monospace; font-size: 1.2rem; color: #e67e22;
+            text-shadow: 0 0 5px rgba(230, 126, 34, 0.5);
+        }
+
+        /* GERİ TUŞU STİLİ */
+        .back-btn-circle {
+            position: absolute; top: 20px; left: 20px; width: 45px; height: 45px;
+            border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1000;
+            color: #ecf0f1; font-size: 1.2rem; transition: all 0.2s; backdrop-filter: blur(5px);
+        }
+        .back-btn-circle:active { background: rgba(230, 126, 34, 0.8); transform: scale(0.95); border-color: #e67e22; }
+
+        /* LOGO WRAPPER - TÜM SAYFALARDA ORTAK */
+        .logoWrap {
+            position: relative; width: 240px; height: 240px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; margin: 0 auto 10px;
+        }
+        .logoWrap img {
+            width: 100%; height: 100%; border-radius: 50%;
+            object-fit: contain; position: relative; z-index: 2;
+        }
+        /* RGB NEON HALO */
+        .logoHalo {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            border-radius: 50%; z-index: 1;
+        }
+        .logoHalo::before {
+            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 280px; height: 280px; border-radius: 50%;
+            /* Merkez dolgusunu kaldır: daha ince, yumuşak fade'li halka */
+            background: radial-gradient(circle,
+                transparent 56%,
+                rgba(0, 200, 255, 0.18) 64%,
+                rgba(0, 153, 200, 0.10) 72%,
+                transparent 86%
+            );
+            -webkit-mask-image: radial-gradient(circle, transparent 54%, #000 62%, #000 76%, transparent 88%);
+            mask-image: radial-gradient(circle, transparent 54%, #000 62%, #000 76%, transparent 88%);
+            animation: neonHaloPulse 3.5s ease-in-out infinite;
+        }
+        .logoHalo::after {
+            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 320px; height: 320px; border-radius: 50%;
+            background: radial-gradient(circle,
+                transparent 60%,
+                rgba(0, 100, 255, 0.10) 68%,
+                transparent 86%
+            );
+            -webkit-mask-image: radial-gradient(circle, transparent 58%, #000 66%, #000 78%, transparent 90%);
+            mask-image: radial-gradient(circle, transparent 58%, #000 66%, #000 78%, transparent 90%);
+            animation: neonHaloPulse 3.5s ease-in-out infinite -0.2s;
+        }
+        @keyframes neonHaloPulse {
+            0%, 100% { opacity: 0.25; filter: blur(5px); }
+            50% { opacity: 0.55; filter: blur(10px); }
+        }
+
+        /* HEADER'DAKİ KÜÇÜK LOGO (HİÇ HALO YOK) */
+        .header .logoWrap {
+            width: 40px; height: 40px; margin: 0;
+        }
+        .header .logoHalo { display: none; }
+
+        /* LOGO VE BAŞLIKLAR */
+        .big-logo {
+            width: 240px; height: 240px; border-radius: 50%;
+            object-fit: contain; margin-bottom: 10px;
+            animation: logoPulseGlow 3.5s ease-in-out infinite;
+        }
+        @keyframes logoPulseGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 153, 255, 0.25), 0 0 40px rgba(0, 153, 255, 0.08); }
+            50% { box-shadow: 0 0 30px rgba(0, 153, 255, 0.45), 0 0 60px rgba(0, 153, 255, 0.15); }
+        }
+
+        .header-logo-small { width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.7); object-fit: cover; box-shadow: 0 0 8px rgba(0, 153, 255, 0.3); }
+
+        .main-title { font-family: 'Dancing Script', cursive; font-size: 2.5rem; color: #f1c40f; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); margin-bottom: 0px; }
+        .slogan { font-size: 1rem; color: #bdc3c7; letter-spacing: 1px; margin-bottom: 20px; font-style: italic; font-weight: 300; }
+
+        /* --- GLOBAL NEON KUTU EFEKTİ --- */
+        @keyframes pulseGlowBox {
+            0% { box-shadow: 0 4px 6px rgba(0,0,0,0.2), inset 0 0 0 rgba(52, 152, 219, 0); border-color: rgba(255, 255, 255, 0.1); }
+            100% { box-shadow: 0 0 15px rgba(52, 152, 219, 0.3), inset 0 0 10px rgba(52, 152, 219, 0.05); border-color: rgba(52, 152, 219, 0.5); }
+        }
+
+        /* ANA MENÜ BUTONLARI */
+        .menu-btn {
+            background: rgba(15, 23, 42, 0.6); /* Daha şeffaf */
+            color: white; width: 80%; max-width: 300px; padding: 18px; margin: 10px; border-radius: 20px;
+            text-align: left; font-size: 1.1rem; font-weight: bold; cursor: pointer; 
+            border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 15px; 
+            backdrop-filter: blur(8px); /* Arkadaki baloncuklar bulanık görünsün */
+            animation: pulseGlowBox 3s infinite alternate; transition: transform 0.2s;
+        }
+        .menu-btn:active { transform: scale(0.96); animation: none; }
+        .menu-btn i { font-size: 1.6rem; color: #3498db; width: 35px; text-align: center; text-shadow: 0 0 10px rgba(52, 152, 219, 0.6); }
+
+        /* --- İÇERİK SAYFASI HEADER --- */
+        /* Header da hafif şeffaf olsun */
+        .app-header { background: rgba(15, 23, 42, 0.85); padding: 10px 15px; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); z-index: 10; position: relative; backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .header-back { position: absolute; left: 15px; font-size: 1.5rem; color: #95a5a6; cursor: pointer; padding: 5px; }
+        .header-title-small { display: none; margin: 0; font-family: 'Dancing Script', cursive; font-size: 1.5rem; font-weight: 700; color: #f1c40f; }
+        
+        /* ANA SAYFA BUTONU */
+        .header-home-btn { display: flex; align-items: center; justify-content: center;
+            width: 40px; height: 40px; border-radius: 50%; background: rgba(0, 153, 255, 0.2); border: 2px solid rgba(0, 153, 255, 0.5); 
+            cursor: pointer; color: #00d4ff; font-size: 1.2rem; transition: all 0.3s; }
+        .header-home-btn:active { background: rgba(0, 153, 255, 0.4); box-shadow: 0 0 15px rgba(0, 153, 255, 0.5); transform: scale(0.95); }
+        
+        /* HEADER ACTIONS CONTAINER */
+        .header-actions { position: fixed; top: 20px; right: 20px; display: flex; align-items: center; gap: 12px; z-index: 1001; }
+        
+        @media (max-width: 480px) {
+            .header-actions { gap: 8px; }
+            .header-home-btn { width: 36px; height: 36px; font-size: 1rem; }
+            .header-clock { font-size: 1rem; }
+        }
+        
+        #content-wrapper { display: none; height: 100vh; flex-direction: column; }
+        .content-area { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 120px; }
+        
+        /* ALT MENÜ */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: rgba(15, 23, 42, 0.9); display: flex; border-top: 1px solid rgba(255,255,255,0.1); padding: 10px 0; z-index: 20; backdrop-filter: blur(10px); }
+        .nav-item { flex: 1; text-align: center; color: #95a5a6; cursor: pointer; font-size: 0.7rem; transition: color 0.3s; }
+        .nav-item.active { color: #e67e22; font-weight: bold; text-shadow: 0 0 8px rgba(230, 126, 34, 0.4); }
+        .nav-icon { display: block; font-size: 1.4rem; margin-bottom: 2px; }
+        
+        /* KARTLAR */
+        .tab-content { display: none; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .section-header { color: #e67e22; font-size: 1.2rem; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; margin-top: 20px; text-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        
+        .card { 
+            background: rgba(44, 62, 80, 0.6); padding: 15px; margin-bottom: 10px; border-radius: 10px; 
+            display: flex; align-items: center; border-left: 5px solid #e67e22; cursor: pointer; 
+            transition: transform 0.2s; border: 1px solid rgba(255,255,255,0.05);
+            backdrop-filter: blur(5px);
+            animation: pulseGlowBox 4s infinite alternate; 
+        }
+        .card:active { transform: scale(0.98); }
+        .card-icon { font-size: 1.8rem; margin-right: 15px; width: 40px; text-align: center; }
+        .card-title { font-weight: bold; display: block; font-size: 1rem; }
+        .card-subtitle { font-size: 0.85rem; color: #bdc3c7; }
+        
+        /* --- ARAÇ REHBERİ --- */
+        #dashboard-ui { display: none; flex-direction: column; padding-bottom: 50px; }
+        
+        .dash-intro-box { 
+            background: rgba(44, 62, 80, 0.6); padding: 15px; border-radius: 10px; margin-bottom: 20px; 
+            font-size: 0.95rem; line-height: 1.5; text-align: justify;
+            border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(5px);
+            animation: pulseGlowBox 5s infinite alternate;
+        }
+        .dash-legend { margin-top: 10px; font-weight: bold; font-size: 0.9rem; }
+        .text-green { color: #2ecc71; text-shadow: 0 0 5px rgba(46, 204, 113, 0.3); }
+        .text-yellow { color: #f1c40f; text-shadow: 0 0 5px rgba(241, 196, 15, 0.3); }
+        .text-red { color: #e74c3c; text-shadow: 0 0 5px rgba(231, 76, 60, 0.3); }
+
+        .dash-accordion-item { 
+            background: rgba(44, 62, 80, 0.6); border-radius: 10px; margin-bottom: 10px; overflow: hidden; 
+            border-left: 5px solid #bdc3c7; border: 1px solid rgba(255,255,255,0.05);
+            backdrop-filter: blur(5px); animation: pulseGlowBox 4s infinite alternate;
+        }
+        .dash-header { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; color: #fff; transition: background 0.2s; }
+        .dash-header:active { background: rgba(255,255,255,0.1); }
+        
+        .dash-content { display: none; padding: 10px; background: rgba(255,255,255,0.9); text-align: center; position: relative; color: #000; }
+        .dash-thumb-container { position: relative; cursor: pointer; overflow: hidden; border-radius: 5px; }
+        .dash-thumb { max-width: 100%; display: block; border-radius: 5px; }
+        .dash-zoom-hint { position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.6); color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; pointer-events: none; }
+        .dash-accordion-item.open .dash-content { display: block; }
+        .dash-accordion-item.open .dash-header i { transform: rotate(180deg); }
+
+        /* Elektrikli Araç Butonu */
+        .ev-btn { 
+            background: linear-gradient(135deg, #1abc9c, #16a085); color: white; padding: 15px; border-radius: 10px; 
+            margin-top: 30px; margin-bottom: 80px; text-align: center; font-weight: bold; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 0 15px rgba(26, 188, 156, 0.4); border: 1px solid #1abc9c;
+            animation: pulseGreenBtn 3s infinite alternate;
+        }
+        @keyframes pulseGreenBtn { from { box-shadow: 0 0 5px rgba(26, 188, 156, 0.3); } to { box-shadow: 0 0 20px rgba(26, 188, 156, 0.7); } }
+        .ev-btn:active { transform: scale(0.98); }
+
+        /* İletişim */
+        .contact-logo-box { text-align: center; margin-bottom: 20px; }
+        .contact-slogan { font-family: 'Dancing Script', cursive; color: #f1c40f; font-size: 1.5rem; margin-top: 5px; }
+        .contact-card { background: rgba(44, 62, 80, 0.6); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05); animation: pulseGlowBox 4s infinite alternate; backdrop-filter: blur(5px); }
+        .contact-row { display: flex; align-items: flex-start; margin-bottom: 15px; font-size: 0.95rem; }
+        .contact-icon { color: #e67e22; font-size: 1.2rem; margin-right: 15px; margin-top: 3px; width: 20px; text-align: center; }
+        .contact-link { color: #fff; text-decoration: none; transition: color 0.2s; }
+        .map-btn { display: block; width: 100%; background: #e67e22; color: white; text-align: center; padding: 12px; border-radius: 50px; font-weight: bold; margin-top: 15px; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(230,126,34,0.3); }
+        
+        .faq-item { background: rgba(44, 62, 80, 0.6); border-radius: 10px; margin-bottom: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); animation: pulseGlowBox 5s infinite alternate; backdrop-filter: blur(5px); }
+        .faq-question { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.95rem; }
+        .faq-answer { display: none; padding: 0 15px 15px 15px; color: #bdc3c7; font-size: 0.9rem; line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
+        .faq-item.open .faq-answer { display: block; }
+        .faq-item.open .faq-question { color: #e67e22; }
+        .faq-icon { transition: transform 0.3s; }
+        .faq-item.open .faq-icon { transform: rotate(180deg); }
+        
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
+        .modal-box { background: #2c3e50; padding: 25px; border-radius: 15px; width: 85%; max-height: 80vh; overflow-y: auto; text-align: left; border: 1px solid #555; position: relative; animation: popUp 0.3s; box-shadow: 0 0 30px rgba(0,0,0,0.7); }
+        .image-modal-box { width: 100%; height: 100%; background: rgba(0,0,0,0.9); overflow: hidden; display: flex; justify-content: center; align-items: center; position: relative; }
+        .full-image { max-width: 100%; max-height: 100%; display: block; }
+        .image-close-btn { position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.6); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; cursor: pointer; z-index: 2002; border: 2px solid white; }
+        .image-reset-btn { position: fixed; bottom: 30px; right: 20px; background: rgba(230, 126, 34, 0.9); color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; z-index: 2002; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        @keyframes popUp { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-close { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #bdc3c7; }
+        .modal-h3 { color: #e67e22; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 10px; font-size: 1.1rem; }
+        .modal-p { font-size: 0.95rem; line-height: 1.6; color: #ecf0f1; margin-bottom: 15px; }
+
+        .quiz-wrapper { display: none; }
+        .result-box { text-align: center; display: none; }
+        /* --- QUIZ STYLES --- */
+        .quiz-overlay { display: flex; flex-direction: column; gap: 12px; align-items: stretch; background: rgba(15,23,42,0.6); padding: 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(6px); }
+        .quiz-header { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+        .quiz-title { font-weight:700; color:#f1c40f; font-size:1.1rem; }
+        .timer-badge { background: rgba(0,0,0,0.5); color:#fff; padding:6px 10px; border-radius:12px; font-family:'Share Tech Mono', monospace; }
+        .quiz-card { background: rgba(44,62,80,0.7); padding:16px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); }
+        .quiz-q { font-size:1rem; margin-bottom:10px; color:#fff; }
+        .options { display:flex; flex-direction:column; gap:8px; }
+        .option-btn { text-align:left; padding:10px 12px; border-radius:8px; background: rgba(255,255,255,0.03); color:#fff; border:1px solid rgba(255,255,255,0.04); cursor:pointer; transition:all 0.12s; }
+        .option-btn:active { transform:scale(0.995); }
+        .option-btn.disabled { pointer-events:none; opacity:0.9; }
+        .option-btn.correct { background: rgba(46,204,113,0.15); border-color: rgba(46,204,113,0.4); color:#2ecc71; }
+        .option-btn.wrong { background: rgba(231,76,60,0.12); border-color: rgba(231,76,60,0.35); color:#e74c3c; }
+        .explain-box { margin-top:10px; padding:10px; border-radius:8px; background: rgba(0,0,0,0.35); color:#bdc3c7; font-size:0.92rem; min-height:36px; }
+        .quiz-footer { display:flex; justify-content:space-between; gap:10px; margin-top:12px; }
+        .btn { padding:10px 14px; border-radius:10px; background:#e67e22; color:#fff; border:none; cursor:pointer; font-weight:700; }
+        .btn.ghost { background: rgba(255,255,255,0.06); color:#fff; border:1px solid rgba(255,255,255,0.06); }
+        .result-box .stat { font-size:1.05rem; margin:8px 0; color:#fff; }
+
+        /* --- LOGIN GATE --- */
+        .login-card {
+            width: 85%; max-width: 360px;
+            background: rgba(15,23,42,0.65);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 16px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+        }
+        .login-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+        .login-field label { color: #bdc3c7; font-size: 0.9rem; }
+        .login-field input {
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(0,0,0,0.25);
+            color: #fff;
+            outline: none;
+        }
+        .login-error { min-height: 18px; margin: 6px 0 10px; color: #ffb3b3; font-weight: 700; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <div id="login-screen" class="full-screen" style="display:none; z-index: 2000;">
+        <div class="logoWrap">
+            <img src="resimler/logo.png" alt="Logo">
+            <div class="logoHalo"></div>
+        </div>
+
+        <div class="login-card">
+            <div class="login-field">
+                <label for="login-username">Kullanıcı Adı</label>
+                <input id="login-username" autocomplete="username" placeholder="Kullanıcı adı">
+            </div>
+            <div class="login-field">
+                <label for="login-password">Şifre</label>
+                <input id="login-password" type="password" autocomplete="current-password" placeholder="Şifre">
+            </div>
+            <div id="login-error" class="login-error"></div>
+            <div class="menu-btn" onclick="handleLogin()" style="width:100%; max-width:none; margin: 0; justify-content: center; text-align: center;">
+                <i class="fa-solid fa-right-to-bracket"></i> Giriş Yap
+            </div>
+        </div>
+    </div>
+
+<div class="app-container" id="app-container" style="display:none;">
+    
+    <div id="home-screen" class="full-screen">
+        <div class="logoWrap">
+            <img src="resimler/logo.png" alt="Sürücü Akademisi Logo">
+            <div class="logoHalo"></div>
+        </div>
+        <div class="slogan">"Güvenli Sürüşün Adresi"</div>
+        
+        <div id="home-clock" class="home-clock">00:00</div>
+        
+        <div class="menu-btn" onclick="openExamSelection()">
+            <i class="fa-solid fa-pen-to-square"></i> Sınavlar
+        </div>
+        <div class="menu-btn" onclick="openContentDirectly('notes')">
+            <i class="fa-solid fa-book-open"></i> Notlar
+        </div>
+        <div class="menu-btn" onclick="openContentDirectly('videos')">
+            <i class="fa-solid fa-play"></i> Videolar
+        </div>
+        <div class="menu-btn" onclick="openContentDirectly('contact')">
+            <i class="fa-solid fa-phone-volume"></i> İletişim & SSS
+        </div>
+    </div>
+
+    <div id="exam-select-screen" class="full-screen" style="display: none; transform: translateX(100%);">
+        <div class="back-btn-circle" onclick="goBackToHome()"><i class="fa-solid fa-arrow-left"></i></div>
+        <div class="logoWrap">
+            <img src="resimler/logo.png" alt="Sürücü Akademisi Logo">
+            <div class="logoHalo"></div>
+        </div>
+        <div class="slogan">"Güvenli Sürüşün Adresi"</div>
+        
+        <div class="menu-btn" onclick="loadExamList('visual')">
+            <i class="fa-regular fa-image"></i> 
+            <div>
+                <span style="display:block;">Resimli Çıkmış Sorular</span>
+                <span style="font-size:0.8rem; color:#bdc3c7; font-weight:normal;">Deneme Sınavı (PDF)</span>
+            </div>
+        </div>
+        <div class="menu-btn" onclick="loadExamList('standard')">
+            <i class="fa-solid fa-list-check"></i>
+            <div>
+                <span style="display:block;">Çıkmış Sorular</span>
+                <span style="font-size:0.8rem; color:#bdc3c7; font-weight:normal;">Deneme Sınavları</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="content-wrapper">
+        <div class="app-header header">
+            <div class="header-back" onclick="handleContentBack()">
+                <i class="fa-solid fa-arrow-left"></i>
+            </div>
+            <div class="logoWrap">
+                <img src="resimler/logo.png" alt="Sürücü Akademisi Logo">
+                <div class="logoHalo"></div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="header-home-btn" onclick="goBackToHome()" title="Ana Sayfa">
+                    <i class="fa-solid fa-home"></i>
+                </div>
+                <div class="header-home-btn" onclick="handleLogout()" title="Çıkış Yap">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </div>
+                <div id="header-clock" class="header-clock">00:00</div>
+            </div>
+        </div>
+
+        <div class="content-area">
+            
+            <div id="tab-exams" class="tab-content">
+                <div id="exam-list-title" class="section-header"></div>
+                <div id="dynamic-exam-list"></div>
+            </div>
+
+            <div id="tab-notes" class="tab-content">
+                <h2 style="color:#e67e22; margin-top:0; text-shadow:0 0 5px black;">Ders Notları</h2>
+                <div id="pdf-list"></div>
+
+                <div class="section-header" style="margin-top: 30px;">Pratik Bilgiler Rehberi</div>
+                <div class="card" onclick="openDashboard()">
+                    <div class="card-icon"><i class="fa-solid fa-gauge-high" style="color:#3498db;"></i></div>
+                    <div>
+                        <span class="card-title">Araç Gösterge Paneli</span>
+                        <span class="card-subtitle">İkaz lambaları ve anlamları</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-videos" class="tab-content">
+                <h2 style="color:#e67e22; margin-top:0; text-shadow:0 0 5px black;">Video Dersler</h2>
+                <p style="color:#bdc3c7;">Video içerikleri yakında eklenecektir.</p>
+            </div>
+
+            <div id="tab-contact" class="tab-content">
+                <div class="contact-logo-box">
+                    <div class="logoWrap" style="width: 160px; height: 160px; margin: 0 auto 10px;">
+                        <img src="resimler/logo.png" alt="Sürücü Akademisi Logo">
+                        <div class="logoHalo"></div>
+                    </div>
+                    <div class="contact-slogan">Geleceğin Güvenli Sürücülerini Yetiştiriyoruz</div>
+                </div>
+                <div class="section-header">İletişim Bilgileri</div>
+                <div class="contact-card">
+                    <div class="contact-row">
+                        <i class="fa-solid fa-phone contact-icon"></i>
+                        <div>
+                            <div style="font-weight:bold; color:#e67e22; margin-bottom:5px;">Telefon</div>
+                            <a href="tel:02623253333" class="contact-link">0262 325 33 33</a> <br>
+                            <a href="tel:05365905050" class="contact-link">0536 590 50 50</a>
+                        </div>
+                    </div>
+                    <div class="contact-row">
+                        <i class="fa-solid fa-location-dot contact-icon"></i>
+                        <div>
+                            <div style="font-weight:bold; color:#e67e22; margin-bottom:5px;">Adres</div>
+                            28 Haziran Mah. Turan Güneş Cad. No: 297 Kat: 5 Bekirpaşa / İzmit / Kocaeli
+                        </div>
+                    </div>
+                    <button class="map-btn" onclick="openMap()"><i class="fa-solid fa-map-location-dot"></i> Yol Tarifi Al</button>
+                </div>
+                <div class="section-header">Sıkça Sorulan Sorular</div>
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">Yazılı Sınavı Geçtim Şimdi Ne Yapmam Gerekiyor?<i class="fa-solid fa-chevron-down faq-icon"></i></div>
+                    <div class="faq-answer">Türkiye Yönetmeliğine göre; yazılı sınavı başarıyla geçtikten sonra direksiyon eğitim planlamanızın yapılması için kursumuzla iletişime geçmeniz gerekmektedir.</div>
+                </div>
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">Direksiyon Eğitimleri Ne Zaman Başlar?<i class="fa-solid fa-chevron-down faq-icon"></i></div>
+                    <div class="faq-answer">Direksiyon eğitimleri, aday yazılı sınavı geçtikten sonra adayın uygunluk durumu ve kurumun programına göre aday ile birlikte planlanır.</div>
+                </div>
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">Özel Direksiyon Dersi Alabilir miyim?<i class="fa-solid fa-chevron-down faq-icon"></i></div>
+                    <div class="faq-answer">Evet, bu mümkündür. Özel direksiyon dersi talepleriniz Genel Müdürlükte programlanabilir. Detaylar için lütfen bizimle iletişime geçiniz.</div>
+                </div>
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">Sınavdan Kaldım Şimdi Ne Olacak?<i class="fa-solid fa-chevron-down faq-icon"></i></div>
+                    <div class="faq-answer">Toplamda 4 sınav hakkınız bulunmaktadır. Sınavdan başarısız olmanız durumunda tekrar sınav harcı yatırılarak bir sonraki sınava giriş yapılabilir.</div>
+                </div>
+            </div>
+
+            <div id="dashboard-ui">
+                <div class="dash-intro-box">
+                    <div style="font-weight:bold; color:#e67e22; margin-bottom:5px; text-align:center;">Araç Arıza İkaz Lambaları Ve Anlamları</div>
+                    Aracınızla ilgili hemen her konuya hâkim olmanız, yolculuk esnasında güvenlik için kontrol etmeniz gerekir. Bu yüzden araçlarınızda gösterge paneli bulunur. Gösterge panelinde birkaç saniye göz gezdirerek aracın hızı, yakıt durumu, o anda kullandığınız motor gücü hakkında bilgi sahibi olunur.
+                    <div class="dash-legend">
+                        <div class="text-green">● Yeşil: Sistemde Problem yok aktif çalışıyor</div>
+                        <div class="text-yellow">● Sarı: Bir şeyler ters gidiyor ivedilikle kontrol ettirin</div>
+                        <div class="text-red">● Kırmızı: Ciddi bir sorun var, aracı hemen durdurup servise götürün.</div>
+                    </div>
+                </div>
+
+                <div id="dash-accordion-container">
+                    </div>
+
+                <div class="ev-btn" onclick="openEvModal()">
+                    <i class="fa-solid fa-bolt"></i> Elektrikli Araçlarda Dikkat Edilmesi Gereken Hususlar
+                </div>
+            </div>
+
+            <div id="quiz-ui" class="quiz-wrapper"></div>
+            <div id="quiz-result" class="result-box"></div>
+        </div>
+
+        <div class="bottom-nav">
+            <div id="nav-exams" class="nav-item" onclick="handleNavClick('exams')"><span class="nav-icon">📝</span>Sınavlar</div>
+            <div id="nav-notes" class="nav-item" onclick="switchTab('notes')"><span class="nav-icon">📚</span>Notlar</div>
+            <div id="nav-videos" class="nav-item" onclick="switchTab('videos')"><span class="nav-icon">▶️</span>Videolar</div>
+            <div id="nav-contact" class="nav-item" onclick="switchTab('contact')"><span class="nav-icon">📞</span>İletişim</div>
+        </div>
+    </div>
+
+    <div id="info-modal" class="modal-overlay" onclick="closeModal()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-close" onclick="closeModal()">×</div>
+            <div id="modal-content-area">
+                </div>
+        </div>
+    </div>
+
+    <div id="image-viewer-modal" class="modal-overlay" onclick="closeImageViewer()">
+        <div class="image-close-btn" onclick="closeImageViewer()">×</div>
+        
+        <div class="image-modal-box" onclick="event.stopPropagation()">
+            <img id="full-screen-image" class="full-image" src="">
+        </div>
+        
+        <div class="image-reset-btn" onclick="resetZoom()">Sıfırla</div>
+    </div>
+
+</div>
+
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
+// --- AUTH GATE (LOGIN) ---
+function showLogin() {
+    document.getElementById('app-container').style.display = 'none';
+    const loginScreen = document.getElementById('login-screen');
+    loginScreen.style.display = 'flex';
+    const err = document.getElementById('login-error');
+    if (err) err.textContent = '';
+    const u = document.getElementById('login-username');
+    if (u) u.focus();
+}
+
+function showApp() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-container').style.display = 'flex';
+}
+
+async function handleLogin() {
+    const err = document.getElementById('login-error');
+    const username = (document.getElementById('login-username').value || '').trim();
+    const password = document.getElementById('login-password').value || '';
+    if (err) err.textContent = '';
+
+    try {
+        if (!username || !password) {
+            if (err) err.textContent = 'Kullanıcı adı ve şifre gerekli.';
+            return;
+        }
+        const ok = await window.SAAuth.authenticateStudent(username, password);
+        if (!ok) {
+            if (err) err.textContent = 'Kullanıcı adı veya şifre hatalı.';
+            return;
+        }
+        window.SAAuth.setStudentSession(username, 30);
+        showApp();
+    } catch (e) {
+        if (err) err.textContent = (e && e.message) ? e.message : 'Giriş başarısız.';
+    }
+}
+
+function handleLogout() {
+    try {
+        window.SAAuth.clearStudentSession();
+    } finally {
+        location.reload();
+    }
+}
+
+function initAuthGate() {
+    if (!window.SAAuth) {
+        // auth.js yüklenemediyse içerik göstermeyelim.
+        showLogin();
+        const err = document.getElementById('login-error');
+        if (err) err.textContent = 'Giriş sistemi yüklenemedi.';
+        return;
+    }
+    const session = window.SAAuth.getStudentSession();
+    if (session) showApp();
+    else showLogin();
+}
+
+// --- SAAT GÜNCELLEME ---
+function updateClock() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const timeString = `${hours}:${minutes}`;
+    document.getElementById('home-clock').innerText = timeString;
+    document.getElementById('header-clock').innerText = timeString;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// Enter ile giriş
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') {
+        handleLogin();
+    }
+});
+
+initAuthGate();
+
+// --- PANZOOM AYARLARI ---
+let panzoomInstance = null;
+
+// --- VERİLER ---
+const visualExams = [
+    { title: "Resimli Çıkmış Sorular Deneme Sınavı-1", sub: "Görselli PDF", file: "denemeler/resimli_deneme1.pdf", icon: "🖼️" },
+    { title: "Resimli Çıkmış Sorular Deneme Sınavı-2", sub: "Görselli PDF", file: "denemeler/resimli_deneme2.pdf", icon: "🖼️" },
+    { title: "Resimli Çıkmış Sorular Deneme Sınavı-3", sub: "Görselli PDF", file: "denemeler/resimli_deneme3.pdf", icon: "🖼️" }
+];
+const standardExams = [
+    { title: "Çıkmış Sorular Deneme Sınavları-1", sub: "İnteraktif Test", file: "#", icon: "📝" },
+    { title: "Çıkmış Sorular Deneme Sınavları-2", sub: "İnteraktif Test", file: "#", icon: "📝" },
+    { title: "Çıkmış Sorular Deneme Sınavları-3", sub: "İnteraktif Test", file: "#", icon: "📝" }
+];
+const lectureNotes = [
+    { title: "Trafik ve Çevre Bilgisi", sub: "Kurallar ve İşaretler", file: "notlar/trafikvecevre.pdf", icon: "🛑" },
+    { title: "Trafik", sub: "Genel Bilgiler", file: "notlar/trafik.pdf", icon: "🚦" },
+    { title: "Motor Tekniği", sub: "Araç Bilgisi", file: "notlar/motor.pdf", icon: "⚙️" },
+    { title: "İlk Yardım", sub: "Hayat Kurtaran Bilgiler", file: "notlar/ilkyardim.pdf", icon: "🚑" },
+    { title: "İş Makineleri", sub: "Operatörlük Bilgisi", file: "notlar/ismakineleri.pdf", icon: '<i class="fa-solid fa-truck-ramp-box icon-yellow-black"></i>' }
+];
+
+// --- ARAÇ REHBERİ VERİLERİ ---
+const dashListItems = [
+    { title: "Lambalarla ilgili araç gösterge paneli işaretleri", img: "resimler/lamba.jpg" }, 
+    { title: "Motorla ilgili araba göstergeleri ve anlamları", img: "resimler/motor.gosterge.jpg" },
+    { title: "Yakıt ve yağlama ile ilgili araç arıza ışıkları", img: "resimler/yakit.yaglama.jpg" },
+    { title: "Dizel araçlara özel araç içi göstergeler ve anlamları", img: "resimler/disel.arac.jpg" },
+    { title: "Hava koşulları ile ilgili araba ikaz ışıkları ve işaretleri", img: "resimler/havakosullari.jpg" },
+    { title: "Mekanik aksamla ilgili araç uyarı lambaları", img: "resimler/mekanik.jpg" },
+    { title: "Sürüş ve sürüş emniyeti ile ilgili araba ikaz lambaları", img: "resimler/surusemniyeti.jpg" }
+];
+
+// --- SAYFA GEÇİŞLERİ ---
+function openExamSelection() {
+    document.getElementById('home-screen').style.transform = 'translateY(-100%)';
+    setTimeout(() => {
+        document.getElementById('home-screen').style.display = 'none';
+        const examScreen = document.getElementById('exam-select-screen');
+        examScreen.style.display = 'flex';
+        setTimeout(() => { examScreen.style.transform = 'translateX(0)'; }, 50);
+    }, 300);
+}
+
+function openContentDirectly(tabId) {
+    document.getElementById('home-screen').style.transform = 'translateY(-100%)';
+    setTimeout(() => {
+        document.getElementById('home-screen').style.display = 'none';
+        document.getElementById('content-wrapper').style.display = 'flex';
+        switchTab(tabId);
+    }, 300);
+}
+
+function loadExamList(type) {
+    const listTitle = document.getElementById('exam-list-title');
+    const listContainer = document.getElementById('dynamic-exam-list');
+    let data = (type === 'visual') ? visualExams : standardExams;
+    if(type === 'visual') listTitle.innerText = "Resimli Çıkmış Sorular (PDF)";
+    else listTitle.innerText = "Çıkmış Sorular (Deneme)";
+    renderList2(listContainer, data);
+    document.getElementById('exam-select-screen').style.transform = 'translateX(-100%)';
+    setTimeout(() => {
+        document.getElementById('exam-select-screen').style.display = 'none';
+        document.getElementById('content-wrapper').style.display = 'flex';
+        switchTab('exams');
+    }, 300);
+}
+
+// --- ARAÇ REHBERİ FONKSİYONLARI ---
+function openDashboard() {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    const dashUI = document.getElementById('dashboard-ui');
+    dashUI.style.display = 'flex';
+    renderDashAccordion();
+    document.querySelector('.app-header .header-back').setAttribute('onclick', 'closeDashboard()');
+}
+
+function closeDashboard() {
+    document.getElementById('dashboard-ui').style.display = 'none';
+    document.getElementById('tab-notes').classList.add('active');
+    document.querySelector('.app-header .header-back').setAttribute('onclick', 'handleContentBack()');
+}
+
+function renderDashAccordion() {
+    const container = document.getElementById('dash-accordion-container');
+    container.innerHTML = "";
+    dashListItems.forEach((item, index) => {
+        container.innerHTML += `
+            <div class="dash-accordion-item" id="dash-item-${index}">
+                <div class="dash-header" onclick="toggleDashItem(${index})">
+                    ${item.title}
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="dash-content">
+                    <div class="dash-thumb-container" onclick="openImageViewer('${item.img}')">
+                        <img src="${item.img}" class="dash-thumb" onerror="this.parentElement.innerHTML='Görsel Yüklenemedi';">
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function toggleDashItem(index) {
+    const item = document.getElementById(`dash-item-${index}`);
+    item.classList.toggle('open');
+}
+
+// --- RESİM BÜYÜTME (LIGHTBOX & PANZOOM) ---
+function openImageViewer(src) {
+    const modal = document.getElementById('image-viewer-modal');
+    const imgElement = document.getElementById('full-screen-image');
+    
+    imgElement.src = src;
+    modal.style.display = 'flex';
+
+    if (panzoomInstance) {
+        panzoomInstance.dispose();
+    }
+    
+    panzoomInstance = Panzoom(imgElement, {
+        maxScale: 5,
+        minScale: 1,
+        contain: 'outside'
+    });
+    
+    imgElement.parentElement.addEventListener('wheel', panzoomInstance.zoomWithWheel);
+}
+
+function closeImageViewer() {
+    document.getElementById('image-viewer-modal').style.display = 'none';
+    if(panzoomInstance) {
+        panzoomInstance.dispose();
+        panzoomInstance = null;
+    }
+}
+
+function resetZoom() {
+    if(panzoomInstance) {
+        panzoomInstance.reset();
+    }
+}
+
+// --- ELEKTRİKLİ ARAÇ MODALI ---
+function openEvModal() {
+    const content = `
+        <h2 style="color:#3498db; border-bottom:2px solid #3498db; padding-bottom:10px;">Elektrikli Araçlarda Dikkat Edilmesi Gereken Hususlar</h2>
+        <div class="modal-h3">ŞARJ KABLOSU</div>
+        <div class="modal-p">Elektrikli Araçlarda, araç üzerinde üreticinin sağlamış olduğu mevcut olan şarj kablosunun, aracın şarj ihtiyacı doğduğunda soketlerinin ters kullanılması sonucunda ciddi arızalar ile karşılaşabilirsiniz. Şarj kablosunun yönlerinin karıştırılmaması konusunda dikkat edilmesi gereklidir. Dikkat edilmesi gereken en önemli hususlardır.</div>
+        <div class="modal-h3">ŞARJ KULLANIMI</div>
+        <div class="modal-p">Ev, İşyeri v.b. alanlarda şarj edilmek istenildiğinde mutlaka elektrik ana girişi dışında ayrı bir uyumlu bir alandan elektrik alınmalıdır. Aksi takdirde meydana gelecek ısınmalardan dolayı, elektrik tesisatının yanmasına kadar sebebiyet verebilmektedir.</div>
+        <div class="modal-h3">ÇEKİCİ KULLANIMI</div>
+        <div class="modal-p">Aracın herhangi bir arıza sebebiyle çekici ihtiyacı doğduğunda, aracın çekiciye yüklenmesi konusunda çok dikkatli olunmalıdır. Aracın bataryaları aracın tabanında olduğundan dolayı çekim esnasında ciddi anlamda zarar görebilir.</div>
+        <div class="modal-h3">UZUN YOLCULUKLAR</div>
+        <div class="modal-p">Elektrikli arabalar ile ilgili min. ve max. Yolculuk kilometreleri araç modellerine göre değişkenlik gösterebilir. Yolculuk öncesi batarya doluluk oranı ve şarj istasyon ağı kontrol edilmelidir.</div>
+    `;
+    document.getElementById('modal-content-area').innerHTML = content;
+    document.getElementById('info-modal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('info-modal').style.display = 'none';
+}
+
+// --- NAVİGASYON ---
+function goBackToHome() {
+    const home = document.getElementById('home-screen');
+    const examScreen = document.getElementById('exam-select-screen');
+    const content = document.getElementById('content-wrapper');
+    examScreen.style.display = 'none';
+    examScreen.style.transform = 'translateX(100%)';
+    content.style.display = 'none';
+    home.style.display = 'flex';
+    setTimeout(() => { home.style.transform = 'translateY(0)'; }, 50);
+}
+
+function handleContentBack() {
+    if (document.getElementById('tab-exams').classList.contains('active')) {
+        document.getElementById('content-wrapper').style.display = 'none';
+        const examScreen = document.getElementById('exam-select-screen');
+        examScreen.style.display = 'flex';
+        setTimeout(() => { examScreen.style.transform = 'translateX(0)'; }, 50);
+    } else {
+        goBackToHome();
+    }
+}
+
+function handleNavClick(tabId) {
+    if(document.getElementById('dashboard-ui').style.display === 'flex') closeDashboard(); 
+    if(tabId === 'exams') {
+        document.getElementById('content-wrapper').style.display = 'none';
+        const examScreen = document.getElementById('exam-select-screen');
+        examScreen.style.display = 'flex';
+        setTimeout(() => { examScreen.style.transform = 'translateX(0)'; }, 50);
+    } else {
+        switchTab(tabId);
+    }
+}
+
+function switchTab(tabId) {
+    if(document.getElementById('dashboard-ui').style.display === 'flex') closeDashboard();
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tabId).classList.add('active');
+    
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('nav-' + tabId).classList.add('active');
+}
+
+// --- İLETİŞİM ---
+function openMap() {
+    const address = "Turan+Güneş+Cd.+No:297+İzmit+Kocaeli";
+    window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
+}
+function toggleFaq(element) { element.classList.toggle('open'); }
+
+// --- LİSTELEME ---
+const exam1Questions = [
+  {
+    id: 1,
+    q: "Bir yıl içinde trafik ceza puanı 100 puanı ilk kez dolduran sürücünün ehliyetine ne kadar süreyle el konulur?",
+    options: ["A) 2 ay", "B) 4 ay", "C) 6 ay", "D) Ehliyeti süresiz iptal edilir."],
+    answer: "A",
+    explain: "Trafik ceza puanı 100'ü ilk kez dolduran sürücünün sürücü belgesine 2 ay süreyle el konulur. İkinci kez 4 ay, üçüncü kez ise daha ağır yaptırımlar ve süresiz iptal süreci gündeme gelir."
+  },
+    { id: 2, q: "Kaza sonucu vücudun hangi kısımlarında çıkık görülebilir?", options: ["A) Kafatası eklemlerinde", "B) Hareketli eklem yerlerinde", "C) Kısa kemiğin ortasında", "D) Uzun kemiğin ortasında"], answer: "B", explain: "Çıkık, eklem yüzeylerinin birbirinden ayrılmasıdır. Dolayısıyla sadece hareketli eklem yerlerinde görülür." },
+    { id: 3, q: "Yeni yönetmeliğe göre, C sınıfı sürücü belgesi alan bir kişi aşağıdaki araçlardan hangisini kullanabilir?", options: ["A) Çekici", "B) Otobüs", "C) Kamyon", "D) İş makinesi"], answer: "C", explain: "Sürücü belgesi sınıflarına göre C sınıfı ehliyet Kamyon ve kamyonet kullanacaklar içindir. Çekici (Tır) için CE sınıfı Otobüs için D sınıfı ve İş makinesi için G sınıfı ehliyet gereklidir." },
+    { id: 4, q: "Rot ayarı aşağıdakilerin hangisinden dolayı yapılır?", options: ["A) Aracı yavaş kullanmak için", "B) Lastik aşıntılarını önlemek ve aracın düzgün istikamet takibi için", "C) Daha rahat vites değişimi için", "D) Lastik hava basıncını istenilen değerde tutmak için"], answer: "B", explain: "Rot ayarı tekerleklerin yola basış açılarını ve birbirine paralelliğini düzenler. Eğer bu ayar bozuksa araç yolda gezme yapar (sağa-sola çeker) ve lastikler düzensiz aşınır. Bu nedenle rot ayarı lastik aşıntılarını önlemek ve düzgün istikamet takibi için yapılır." },
+    { id: 5, q: "Aracın hangi sistemindeki kaçak, akünün kendiliğinden boşalmasına neden olur?", options: ["A) Yakıt sistemindeki", "B) Elektrik sistemindeki", "C) Yağlama sistemindeki", "D) Soğutma sistemindeki"], answer: "B", explain: "Akü elektrik depolar. Eğer araçta kısa devre veya kaçak akım varsa, bu durum elektrik sistemindeki bir sorundur ve akünün durduğu yerde boşalmasına neden olur." },
+    { id: 6, q: "Aşağıdakilerden hangisi ilk yardımın hedeflerinden biri değildir?", options: ["A) Şokun önlenmesi", "B) Bulaşıcı hastalıkların önlenmesi", "C) Acil yardım istenmesi", "D) Kanamanın durdurulması"], answer: "B", explain: "İlk yardımın amacı olay anındaki hayati tehlikeyi gidermektir. Ancak bulaşıcı hastalıkların önlenmesi uzun vadeli bir halk sağlığı konusudur ve acil ilk yardımın öncelikli hedefleri arasında yer almaz." },
+    { id: 7, q: "Trafik adabı aşağıdakilerden hangisini belirler?", options: ["A) Trafik içinde hatalı davranış sergileyen sürücülerin uyarılmaması gerektiğini", "B) Bir toplumdaki kişilerin birbirlerine karşı davranışlarıyla trafik ortamındaki davranışlarının farklı olduğunu", "C) Öfkeli araç kullanmaya eğilimli olmak ile saldırgan sürücülük davranışlarının birbirleriyle ilişkili olmadığını", "D) Trafik kurallarının kişiler tarafından ve her koşulda güvenliği sağlamak amacıyla uygulanıp uygulanmayacağını"], answer: "D", explain: "Trafik adabı, polisin olmadığı yerde bile kurallara uymayı sağlayan ahlaki değerdir. Yani trafik kurallarının kişiler tarafından ve her koşulda güvenliği sağlamak amacıyla uygulanıp uygulanmayacağını belirler." },
+    { id: 8, q: "Aşağıdakilerden hangisi \"park etme\" kuralıdır?", options: ["A) Araçta bir gözcü bulundurmak", "B) Aracın anahtarını park görevlilerine teslim etmek", "C) 5 dakikayı geçmeyecek şekilde beklemek", "D) Park yerindeki araçların çıkışını engellememek"], answer: "D", explain: "Park etme, aracın uzun süreli olarak durdurulmasıdır. Etik ve yasal olarak uygun bir park işlemi için en önemli kurallardan biri, park yerindeki araçların çıkışını engellememek ve trafiği aksatmamaktır." },
+    { id: 9, q: "Araçların muayene süresi dolmasa bile, aşağıdaki hâllerin hangisinden dolayı özel muayenesi zorunludur?", options: ["A) Kazaya karışması sonucu yetkili görevli tarafından gerekli görüldüğünde", "B) Sürücüsü veya işleticisi değiştiğinde", "C) Motoru bakımdan geçirildiğinde", "D) Sahibi değiştiğinde"], answer: "A", explain: "Araç büyük bir kazaya karışmışsa ve trafik polisi aracın teknik güvenliğinden şüphe ederse, muayene süresi dolmamış olsa bile aracı tekrar muayeneye sevk edebilir." },
+    { id: 10, q: "Kavrama (debriyaj) sistemi, motorun hareketinin hangi aktarma organına iletilmesinde veya kesilmesinde görev yapar?", options: ["A) Volana", "B) Marş motoruna", "C) Fren balatalarına", "D) Vites kutusuna"], answer: "D", explain: "Kavrama (debriyaj) sistemi, motor ile şanzıman (vites kutusu) arasında yer alır. Debriyaj pedalına basıldığında motorun ürettiği güç tekerleklere gitmez, yani bağlantı kesilir; böylece vites değiştirilir. Bırakıldığında ise güç vites kutusuna iletilir." },
+    { id: 11, q: "Aşağıdakilerden hangisi, trafik kazalarının ülke ekonomisine verdiği zararlardan biri değildir?", options: ["A) Trafik işaretlerinin hasar görmesi", "B) Kara yollarının zamanından önce yıpranması", "C) Trafik suçlarına uygulanan cezaların artırılması", "D) Yol kenarındaki oto korkuluklarının tahrip olması"], answer: "C", explain: "Trafik kazaları maddi hasar yaratır. Ancak trafik suçlarına uygulanan cezaların artırılması bir zarar değil, caydırıcılık için yapılan bir düzenlemedir." },
+    { id: 12, q: "Aşağıdakilerden hangisi, şoka girmiş kazazedeye yapılan doğru bir ilk yardım uygulaması değildir?", options: ["A) Rastgele hareket ettirilmesi", "B) Hava yolu açıklığının sağlanması", "C) Kanama varsa, hemen durdurulması", "D) Sırt üstü yatırılarak ayaklarının 30 cm kadar yükseltilmesi"], answer: "A", explain: "Şok durumundaki bir hastada hava yolunu açmak, kanamayı durdurmak ve şok pozisyonu vermek doğrudur. Rastgele hareket ettirilmesi yanlıştır." },
+    { id: 13, q: "Okul taşıtının arkasındaki \"DUR\" işaretinin yandığını gören sürücüler nasıl hareket etmelidir?", options: ["A) Okul taşıtını geçmemelidir.", "B) Dikkatli ve yavaş geçmelidir.", "C) Diğer sürücüleri uyarmalıdır.", "D) Hızını artırarak uzaklaşmalıdır."], answer: "A", explain: "Okul taşıtının arkasındaki kırmızı 'DUR' ışığı, öğrencilerin inip bindiğini bildirir. Güvenlik gereği arkadaki sürücü durmalı ve okul taşıtını geçmemelidir." },
+    { id: 14, q: "Aşağıdakilerden hangisi sorumluluk duygusuna sahip bir sürücünün özelliklerindendir?", options: ["A) Trafik kurallarını önemsemeden araç kullanması", "B) Davranışlarının sonuçlarını düşünerek hareket etmesi", "C) Sevdiklerinin hayatını tehlikeye atmaktan çekinmemesi", "D) Kendi yetki alanına giren herhangi bir olayı başkalarının üstlenmesini beklemesi"], answer: "B", explain: "Sorumluluk sahibi bir sürücü, trafikte yaptığı her hareketin doğuracağı sonuçları önceden hesaplar ve davranışlarının sonuçlarını düşünerek hareket eder." },
+    { id: 15, q: "Aşağıdakilerden hangisi kavrama (debriyaj) sisteminin görevidir?", options: ["A) Motorun hareketini supaplara iletmek veya kesmek", "B) Motorun hareketini altenatöre iletmek veya kesmek", "C) Motorun hareketini vites kutusuna iletmek veya kesmek", "D) Motorun hareketini marş motoruna iletmek veya kesmek"], answer: "C", explain: "Kavrama (debriyaj) sistemi motor ile vites kutusu arasında yer alır ve motorun hareketini vites kutusuna iletme veya kesme görevini üstlenir." },
+    { id: 16, q: "Aşağıdakilerden hangisi çıkıklarda yapılan ilk yardım uygulamasıdır?", options: ["A) Çıkan bölge üzerine masaj yapmak", "B) Çıkan bölge üzerine sıcak uygulama yapmak", "C) Çıkan bölge ile kalp arasına turnike uygulamak", "D) Çıkan bölgenin hareketsizliğini sağlayarak, sevk etmek"], answer: "D", explain: "Çıkıklarda eklem yerine oturtulmaya çalışılmaz. Doğru ilk yardım, çıkan bölgenin hareketsizliğini sağlayarak sevk etmektir." },
+    { id: 17, q: "Yerleşim birimleri dışındaki kara yollarında geceleri araç ışıklarının kullanılması ile ilgili verilen bilgilerden hangisi doğrudur?", options: ["A) Yeterince aydınlatılmamış tünellere girerken uzağı gösteren ışıkları yakmak", "B) Dönüş ışıklarını geç anlamında kullanmak", "C) Karşılaşmalarda ışıkları söndürmek", "D) Park veya sis ışıkları ile seyretmek"], answer: "A", explain: "Gece sürüşlerinde veya aydınlatmanın yetersiz olduğu tünel girişlerinde uzağı gösteren ışıkları yakmak (uzun farlar) gerekir." },
+    { id: 18, q: "Donmayı önlemek için radyatöre ne konulur?", options: ["A) Yağ", "B) Asit", "C) Antifriz", "D) Saf su"], answer: "C", explain: "Kış aylarında suyun donup motor bloğunu çatlatmasını önlemek için soğutma suyuna antifriz eklenir." },
+    { id: 19, q: "Kara yollarındaki trafik levhalarına zarar veren sorumluya ne yapılır?", options: ["A) 6 ay hapis cezası verilir.", "B) Trafikten ömür boyu men edilir.", "C) Sürücü belgesi varsa geri alınır.", "D) Zarar karşılıkları ve masraf ödetilir."], answer: "D", explain: "Trafik levhaları kamu malıdır. Bunlara zarar vermek suçtur ve verdikleri zararın bedeli ödetilir." },
+    { id: 20, q: "Manevra yapacak sürücü aşağıdakilerden hangisini yapmalıdır?", options: ["A) İşaret verdiği anda manevraya başlamalı", "B) Ön, arka ve yanlardaki trafiği kontrol etmeli", "C) Manevraya başladıktan sonra işaret vermeli", "D) Manevra bitmeden önce işaret vermeyi sona erdirmeli"], answer: "B", explain: "Manevra öncesinde çevre güvenliği şarttır; sürücü kör noktalar dahil ön, arka ve yanlardaki trafiği kontrol etmelidir." },
+    { id: 21, q: "Aşağıdakilerden hangisi trafikte bireye yapılan hak ihlallerindendir?", options: ["A) Aşırı hız yapmaktan kaçınılması", "B) Geçiş önceliğine sahip araçlara yol verilmesi", "C) Engelli kişiler için ayrılmış yerlere park edilmesi", "D) Trafikte sürücülerin tek başına olmadığının düşünülmesi"], answer: "C", explain: "Engelli park yerleri fiziksel kısıtlılığı olan bireylerin hayatını kolaylaştırmak içindir. Bu yerlere izinsiz park etmek hak ihlalidir." },
+    { id: 22, q: "Öndeki aracı geçmeye başlamadan önce sürücünün ilk yapması gereken nedir?", options: ["A) Geçiş yapacağı yolun güvenli olduğundan emin olmak", "B) Öndeki aracın sağa yaklaşmasını beklemek", "C) Selektör yapmak", "D) Hızını arttırmak"], answer: "A", explain: "Sollama manevrasında önce aynaları kontrol ederek geçiş yapacağı yolun güvenli olduğundan emin olmak gerekir." },
+    { id: 23, q: "Karayollarında hız sınırı en yüksek olan araç cinsi aşağıdakilerden hangisidir?", options: ["A) Otomobil", "B) Otobüs", "C) Minibüs", "D) Kamyonet"], answer: "A", explain: "Araçların teknik yapısı dikkate alındığında karayollarında en yüksek hıza izin verilen araç otomobildir." },
+    { id: 24, q: "Aşırı agresif ve öfkeli araç kullanan bir sürücü zincirleme trafik kazasına sebep olmuştur. Bu kazaya neden olan sürücü için aşağıdakilerden hangisi söylenemez?", options: ["A) Madde kayıplara neden olmuştur", "B) Psikolojik olarak olumsuz etkilenmiştir", "C) Ülkenin gelişimine katkı sağlamıştır", "D) Kaza sonucu diğer sürücülerin huzurunu kaçırmıştır"], answer: "C", explain: "Trafik kazaları bireylere ve ülkeye zarar verir; kazanın ülkenin gelişimine katkı sağladığı söylenemez." },
+    { id: 25, q: "Çocuklarda temel yaşam desteği uygulamasıyla ilgili verilenlerden hangisi doğrudur?", options: ["A) Solunum yapıp yapmadığı Heimlich manevrası ile kontrol edilir.", "B) Kalp masajı uygulamasının hızı, dakikada 50 bası olacak şekilde ayarlanır.", "C) Göğüs kemiğine yandan bakıldığında göğüs yüksekliğinin ½'si kadar kalp basısı uygulanır.", "D) Kalp basısı uygulamak için göğüs kemiğinin alt ve üst ucu tespit edilerek alt yarısına bir elin topuğu yerleştirilir."], answer: "D", explain: "Çocuklarda (1-8 yaş) kalp masajı tek elle yapılır ve doğru nokta göğüs kemiğinin alt yarısıdır." },
+    { id: 26, q: "Aşağıdakilerden hangisi en hafif olup, iz bırakmayan yanıklardır?", options: ["A) Birinci derece yanıklar", "B) İkinci derece yanıklar", "C) Üçüncü derece yanıklar", "D) Kas tabakasını etkileyen yanıklar"], answer: "A", explain: "Birinci derece yanıklar derinin sadece en üst tabakasını etkiler, genellikle iz bırakmaz." },
+    { id: 27, q: "Yukarıdaki açıklama hangi davranış özelliğine aittir? (kendimizi karşımızdakinin yerine koymak)", options: ["A) Öfke", "B) Empati", "C) Bastırma", "D) Engellenme"], answer: "B", explain: "Empati, diğer sürücülerin hatalarını anlamak ve hoşgörülü olmak için gereklidir." },
+    { id: 28, q: "Geçme yapan araca, geçilmekte olan araç sürücüsünün yavaşlayıp kolaylık sağlaması durumu, trafikte hangi temel değerle ifade edilir?", options: ["A) Bencillik", "B) İnatlaşmak", "C) Diğergamlık", "D) Sorumsuzluk"], answer: "C", explain: "Diğergamlık başkalarının iyiliğini kendi çıkarının önüne koymaktır." },
+    { id: 29, q: "Kriko ile aracı kaldırırken tekerleklere takoz konulmasının nedeni aşağıdakilerden hangisidir?", options: ["A) Aracın motorunu çalıştırabilmek", "B) Aracın hareket etmesini engellemek", "C) Araç yakıtının buharlaşmasını engellemek", "D) Araç motorunun sarsıntısız çalışmasını sağlamak"], answer: "B", explain: "Aracın krikoyla kaldırıldığında kaymasını önlemek için tekerleklere takoz konur." },
+    { id: 30, q: "Karbonmonoksit zehirlenmelerinde hangi etkiler beklenir?", options: ["A) I ve II", "B) I ve III", "C) II ve III", "D) I, II ve III"], answer: "B", explain: "Karbonmonoksit kandaki hemoglobine bağlanır ve oksijen taşınmasını engeller; boğucu etki yapar." },
+    { id: 31, q: "Aksine bir durum yoksa yerleşim yeri dışındaki kara yollarında, geceleri hangi ışıkların yakılması zorunludur?", options: ["A) Uzağı gösteren ışıkların", "B) Acil uyarı ışıklarının", "C) Park ışıklarının", "D) Sis ışıklarının"], answer: "A", explain: "Yerleşim yeri dışındaysanız ve yol aydınlatması yetersizse uzağı gösteren ışıkların yakılması zorunludur." },
+    { id: 32, q: "Hangi temel değere sahip sürücü, yoğun trafikte bir dizi hâlinde gitmekte olan diğer sürücülerin önlerine geçip trafiği sıkışık hâle getirerek yoluna devam etmez?", options: ["A) Bencil", "B) Sorumsuz", "C) Görgü seviyesi düşük", "D) Empati düzeyi yüksek"], answer: "D", explain: "Empati düzeyi yüksek sürücüler başkalarının hakkını gözetir." },
+    { id: 33, q: "Aşağıdakilerden hangisi burkulmanın tanımıdır?", options: ["A) Eklem çevresindeki şişmedir.", "B) Eklemlerde görülen şekil bozukluğudur.", "C) Eklem yüzeylerinin birbirinden ayrılmasıdır.", "D) Eklem bağları ve yüzeylerinin zedelenmesidir."], answer: "D", explain: "Burkulma, eklem bağları ve yüzeylerinin zedelenmesidir." },
+    { id: 34, q: "Yağ seviyesi normalin çok altında iken motorun çalışması devam ettirilirse aşağıdakilerden hangisinin olması beklenir?", options: ["A) Motor gücünün artması", "B) Motorun çabuk soğuması", "C) Motorun aşırı ısınarak zarar görmesi", "D) Motorun normal çalışmasını sürdürmesi"], answer: "C", explain: "Yağ azalınca sürtünme artar ve motor aşırı ısınarak zarar görür." },
+    { id: 35, q: "Hangi durumdaki yaralı kesinlikle sedye ile taşınmalıdır?", options: ["A) Omurga kırığı olan", "B) Kaburga kırığı olan", "C) 1. derece yanığı olan", "D) Kolunda yara ve kırık olan"], answer: "A", explain: "Omurga kırığında en ufak hareket omurilik felcine neden olabilir; bu yüzden sedye ile taşınmalıdır." },
+    { id: 36, q: "Sola dönüş yapacak olan sürücülerin aşağıdakilerden hangisini yapması yanlıştır?", options: ["A) Dar bir kavisle dönmesi", "B) Döneceği yönü önceden işaretle bildirmesi", "C) Dönüşünü tamamladıktan sonra hızına uygun şeride girmesi", "D) Kurallara uygun olarak karşıya geçen yayalara ilk geçiş hakkını vermesi"], answer: "A", explain: "Sola dönüşler geniş kavisle yapılır; dar kavisle dönmek yanlıştır." },
+    { id: 37, q: "Motor çalışır durumda iken marş yapılırsa aşağıdakilerden hangisi meydana gelir?", options: ["A) Motor daha iyi yağlama yapar.", "B) Motor daha yavaş döner.", "C) Marş dişlisi zarar görür.", "D) Motor daha hızlı döner."], answer: "C", explain: "Çalışan motorun volan dişlisi hızlı döner; marşa basılırsa marş dişlisi zarar görür." },
+    { id: 38, q: "I- Arkadan çarpma  II- Kırmızı ışıkta geçme  III- Kavşaklarda geçiş önceliğine uymama. Yukarıdakilerden hangileri trafik kazalarında asli kusur sayılır?", options: ["A) I - II", "B) I - III", "C) II - III", "D) I - II - III"], answer: "D", explain: "Bu üç davranış da kazanın ana sebebi sayılır ve asli kusurdur." },
+    { id: 39, q: "Öksüren, nefes alabilen ve tıkandığını ifade edebilen bir kazazedeye aşağıdaki ilk yardım uygulamalarından hangisi yapılır?", options: ["A) Kazazedeye dokunulmadan öksürmeye teşvik edilir.", "B) Bir elin topuk kısmıyla iki kürek kemiğinin arasına 5 kez kuvvetlice vurulur.", "C) Bir elin başparmağı midenin üst kısmına, göğüs kemiği altına gelecek şekilde yumruk yaparak konur, kuvvetle arkaya ve yukarı doğru bastırılır.", "D) Kazazedenin bacakları üzerine ata biner şekilde oturulur ve bir elin topuğuyla göbeğin üzerinden kürek kemiklerine doğru eğik bir baskı uygulanır."], answer: "A", explain: "Nefes alabilen ve öksüren kişide kısmi tıkanma vardır; öksürmeye teşvik edilmelidir." },
+    { id: 40, q: "Fazla eğimli yollarda karşılaşma hâllerinde inen araçlar ne yapmalıdır?", options: ["A) Motorun çalışmasını durdurup, vitesi boşa alarak inmek", "B) Çıkan araç için manevra imkânı bulunmadığının açıkça anlaşılması hâlinde geri gitmek", "C) Çıkan aracın sürücüsünü ikaz ederek yavaşlatmak", "D) Çıkan aracın geri gitmesini beklemek"], answer: "B", explain: "Eğimli yollarda inen araç, çıkan araca yol verir; gerekirse geri gitmelidir." },
+    { id: 41, q: "Aşağıdakilerden hangisi hoşgörülü olma özelliği taşımayan sürücülerin özelliklerindendir?", options: ["A) Öfkeli olmak", "B) Sabırlı davranmak", "C) Başarılı iletişim kurmak", "D) Kural ihlalinden kaçınmak"], answer: "A", explain: "Hoşgörülü olmayan bir sürücü çabuk öfkelenir." },
+    { id: 42, q: "Başından yaralanan kazazedeye aşağıdakilerden hangisi uygulanır?", options: ["A) Yarası sarılarak uyutulur.", "B) Yaralı bölgeye sıcak uygulama yapılır.", "C) Solunum yolu açık tutularak sevk edilir.", "D) Kanama yoksa bir şey yapmaya gerek yoktur"], answer: "C", explain: "Baş yaralanmalarında bilinç kapanabilir; solunum yolu açık tutularak sevk edilmelidir." },
+    { id: 43, q: "Emniyet şeritlerinin kullanım amacı aşağıdakilerden hangisi olamaz?", options: ["A) Ambulans'ın hasta taşıması", "B) Görevi dışında çakar kullanan araçların ulaşım yoludur.", "C) Trafik kazalarında güvenli alan olarak kullanma", "D) Acil durumda durma veya duraklama"], answer: "B", explain: "Emniyet şeritleri acil durumlar içindir; görevi dışında çakar kullanan araçların ulaşım yolu olması yanlıştır." },
+    { id: 44, q: "Hasta/yaralının taşınmasında aşağıdakilerden hangisi doğrudur?", options: ["A) Yaralı tek kişiyle her koşulda taşınabilir", "B) Taşıma sırasında yaralı mümkün olduğunca sarsılmamalıdır", "C) Omurga yaralanmasında baş serbest bırakılmalıdır", "D) Taşıma sırasında yaralı mutlaka oturtulmalıdır"], answer: "B", explain: "Taşıma sırasında yaralı sarsılmamalı ve uygun teknik kullanılmalıdır." },
+    { id: 45, q: "Kazazedeye sözlü uyaranla ya da hafifçe omzuna dokunarak 'iyi misiniz?' diye sorularak hangi değerlendirme yapılır?", options: ["A) Dolaşım", "B) Bilinç durumu", "C) Solunum", "D) Hava yolu açıklığı"], answer: "B", explain: "Bu kontrol bilinç durumu değerlendirmesidir." },
+    { id: 46, q: "Omurga zedelenmesi olan yaralıyı oturtmadan ve hareket ettirmeden sağlık kuruluşuna ulaştırmaktaki amaç nedir?", options: ["A) Solunum sıkıntısını azaltmak", "B) Kan dolaşımını yavaşlatmak", "C) Sindirim işlevinin rahat olmasını sağlamak", "D) Sinir zedelenmesine bağlı oluşabilecek felci önlemek"], answer: "D", explain: "Omurga zedelenmesinde amaç sinir zedelenmesine bağlı oluşabilecek felci önlemektir." },
+    { id: 47, q: "Aşağıdakilerden hangisi araçtaki soğutma sisteminin görevidir?", options: ["A) Motoru çalışma sıcaklığında tutmak", "B) Diferansiyeli çalışma sıcaklığında tutmak", "C) Vites kutusunu çalışma sıcaklığında tutmak", "D) Alternatörü çalışma sıcaklığında tutmak"], answer: "A", explain: "Soğutma sisteminin amacı motoru çalışma sıcaklığında tutmaktır." },
+    { id: 48, q: "I. Azami yüklü ağırlığın %20'den fazla aşılması hâlinde... II. Taşıma sınırı üstünde yolcu alınması durumunda... Verilen bilgiler için hangisi söylenebilir?", options: ["A) I. doğru, II. yanlış", "B) I. yanlış, II. doğru", "C) Her ikisi de doğru", "D) Her ikisi de yanlış"], answer: "C", explain: "Her iki durum da trafik güvenliği açısından yasaktır ve cezai işlem gerektirir." },
+    { id: 49, q: "Olay ya da kaza mümkün olduğu kadar hızlı bir şekilde 112 aranarak bildirilmelidir. Bu hangi ilk yardım uygulamasıyla ilgilidir?", options: ["A) Bildirme", "B) Koruma", "C) Kurtarma", "D) Tedavi etme"], answer: "A", explain: "Kaza anında profesyonel ekiplere haber verilmesi bildirme aşamasıdır." },
+    { id: 50, q: "I. Geçme yasağı olan yerlerden geçme II. Kavşaklarda geçiş önceliğine uymama III. Doğrultu değiştirme manevralarını yanlış yapma IV. Kırmızı ışıklı trafik işaretinde geçme. Bunlardan hangileri asli kusurdur?", options: ["A) I ve II.", "B) I, III ve IV.", "C) II, III ve IV.", "D) I, II, III ve IV."], answer: "D", explain: "Tüm maddeler asli kusurdur." }
+];
+
+window.onload = function() {
+    renderList('pdf-list', lectureNotes);
+}
+function renderList(containerId, dataArray) {
+    const container = document.getElementById(containerId);
+    if(container) renderList2(container, dataArray);
+}
+function renderList2(container, dataArray) {
+    container.innerHTML = "";
+    dataArray.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.onclick = () => {
+            // Eğer kullanıcı "Çıkmış Sorular Deneme Sınavları-1" seçerse interaktif sınav başlat
+            if(item.title === "Çıkmış Sorular Deneme Sınavları-1") {
+                startQuiz(typeof exam1Questions !== 'undefined' ? exam1Questions : [], item.title);
+                return;
+            }
+            if(item.file === "#") alert("Bu içerik yakında eklenecektir.");
+            else window.open(item.file, '_blank');
+        };
+        div.innerHTML = `
+            <div class="card-icon">${item.icon}</div>
+            <div>
+                <span class="card-title">${item.title}</span>
+                <span class="card-subtitle">${item.sub}</span>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+// --- QUIZ ENGINE ---
+let quizState = null;
+function startQuiz(questions, title) {
+    if(!questions || !questions.length) { alert('Sınav verisi bulunamadı.'); return; }
+    quizState = {
+        questions: questions.slice(),
+        index: 0,
+        answers: Array(questions.length).fill(null),
+        totalSeconds: 45 * 60,
+        remaining: 45 * 60,
+        timerId: null,
+        startedAt: Date.now()
+    };
+    // prepare UI
+    const content = document.getElementById('content-wrapper'); if(content) content.style.display = 'flex';
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    const examsTab = document.getElementById('tab-exams'); if(examsTab) examsTab.style.display = 'none';
+    const quizUI = document.getElementById('quiz-ui');
+    const quizRes = document.getElementById('quiz-result'); if(quizRes) quizRes.style.display = 'none';
+    if(quizUI) { quizUI.style.display = 'block'; quizUI.innerHTML = renderQuizShell(title); }
+    document.querySelector('.app-header .header-back').setAttribute('onclick', 'closeQuiz()');
+    renderQuestion();
+    startTimer();
+}
+
+function renderQuizShell(title) {
+    return `
+        <div class="quiz-overlay">
+            <div class="quiz-header">
+                <div class="quiz-title">${title}</div>
+                <div class="timer-badge" id="quiz-timer">45:00</div>
+            </div>
+            <div class="quiz-card" id="quiz-card"></div>
+            <div class="quiz-footer">
+                <button class="btn ghost" id="btn-prev" onclick="prevQuestion()">Önceki</button>
+                <div style="flex:1"></div>
+                <button class="btn ghost" id="btn-next" onclick="nextQuestion()">Sonraki</button>
+                <button class="btn" id="btn-finish" onclick="finishQuiz()">Sınavı Bitir</button>
+            </div>
+        </div>
+    `;
+}
+
+function renderQuestion() {
+    if(!quizState) return;
+    const q = quizState.questions[quizState.index];
+    const card = document.getElementById('quiz-card');
+    const userAns = quizState.answers[quizState.index];
+    const optionsHtml = q.options.map((opt, i) => `<button class="option-btn ${userAns ? 'disabled' : ''}" data-idx="${i}" onclick="selectOption(${i})">${opt}</button>`).join('');
+    card.innerHTML = `
+        <div class="quiz-q"><strong>Soru ${quizState.index+1}.</strong> ${q.q}</div>
+        <div class="options">${optionsHtml}</div>
+        <div class="explain-box" id="explain-box">${userAns ? (q.explain || '') : ''}</div>
+    `;
+    if(userAns !== null) markSelectedOption(userAns);
+    document.getElementById('btn-prev').style.display = (quizState.index === 0) ? 'none' : 'inline-block';
+    document.getElementById('btn-next').style.display = (quizState.index === quizState.questions.length - 1) ? 'none' : 'inline-block';
+}
+
+function selectOption(optIndex) {
+    if(!quizState) return;
+    if(quizState.answers[quizState.index] !== null) return;
+    const q = quizState.questions[quizState.index];
+    const optBtns = Array.from(document.querySelectorAll('#quiz-card .option-btn'));
+    const chosen = optBtns[optIndex]; if(!chosen) return;
+    const letter = (q.options[optIndex] || '').trim().charAt(0);
+    quizState.answers[quizState.index] = letter;
+    optBtns.forEach(b => b.classList.add('disabled'));
+    if(letter === q.answer) chosen.classList.add('correct');
+    else {
+        chosen.classList.add('wrong');
+        const correctIdx = q.options.findIndex(o => (o||'').trim().charAt(0) === q.answer);
+        if(correctIdx >= 0 && optBtns[correctIdx]) optBtns[correctIdx].classList.add('correct');
+    }
+    const exBox = document.getElementById('explain-box'); if(exBox) exBox.innerText = q.explain || '';
+}
+
+function markSelectedOption(letter) {
+    const q = quizState.questions[quizState.index];
+    const optBtns = Array.from(document.querySelectorAll('#quiz-card .option-btn'));
+    optBtns.forEach((b,i) => {
+        b.classList.add('disabled');
+        const l = (q.options[i] || '').trim().charAt(0);
+        if(l === letter) { if(l === q.answer) b.classList.add('correct'); else b.classList.add('wrong'); }
+        if(l === q.answer) b.classList.add('correct');
+    });
+}
+
+function prevQuestion() { if(!quizState) return; if(quizState.index>0) { quizState.index--; renderQuestion(); } }
+function nextQuestion() { if(!quizState) return; if(quizState.index < quizState.questions.length-1) { quizState.index++; renderQuestion(); } }
+
+function startTimer() {
+    if(!quizState) return;
+    const timerEl = document.getElementById('quiz-timer');
+    if(quizState.timerId) clearInterval(quizState.timerId);
+    quizState.timerId = setInterval(() => {
+        quizState.remaining--;
+        if(timerEl) timerEl.innerText = formatTime(quizState.remaining);
+        if(quizState.remaining <= 0) { clearInterval(quizState.timerId); finishQuiz(); }
+    }, 1000);
+}
+
+function finishQuiz() {
+    if(!quizState) return;
+    clearInterval(quizState.timerId);
+    const total = quizState.questions.length;
+    const correct = quizState.answers.filter((a,i) => a !== null && a === quizState.questions[i].answer).length;
+    const answered = quizState.answers.filter(a => a !== null).length;
+    const blank = total - answered;
+    const wrong = total - correct - blank;
+    const elapsed = (quizState.totalSeconds - quizState.remaining);
+    const percentage = Math.round((correct / total) * 100);
+    
+    // store results for review
+    quizState.results = { correct, wrong, blank, total, percentage, elapsed };
+    
+    // hide quiz UI
+    const quizUI = document.getElementById('quiz-ui'); if(quizUI) quizUI.style.display = 'none';
+    // show results
+    const res = document.getElementById('quiz-result');
+    if(res) {
+        res.style.display = 'block';
+        res.innerHTML = `
+            <div class="quiz-overlay">
+                <div style="text-align:center; margin-bottom:15px;"><h2 class="quiz-title">Sınav Sonucu</h2></div>
+                <div class="result-box-inner">
+                    <div class="stat">Doğru: <strong>${correct}/${total}</strong></div>
+                    <div class="stat">Yanlış: <strong>${wrong}/${total}</strong></div>
+                    <div class="stat">Boş: <strong>${blank}/${total}</strong></div>
+                    <div class="stat">Başarı Oranı: <strong>${percentage}%</strong></div>
+                    <div class="stat">Geçen Süre: <strong>${formatTime(elapsed)}</strong></div>
+                </div>
+                <div style="display:flex; gap:8px; justify-content:center; margin-top:15px; flex-wrap:wrap;">
+                    ${wrong > 0 ? '<button class="btn ghost" onclick="showWrongAnswers()">Yanlış Cevapları Gör</button>' : ''}
+                    <button class="btn" onclick="returnHome()">Ana Menüye Dön</button>
+                </div>
+            </div>
+        `;
+    }
+    document.querySelector('.app-header .header-back').setAttribute('onclick', 'handleContentBack()');
+}
+
+function closeQuiz(fromResult) {
+    if(quizState && quizState.timerId) clearInterval(quizState.timerId);
+    quizState = null;
+    const quizUI = document.getElementById('quiz-ui'); if(quizUI) quizUI.style.display = 'none';
+    const res = document.getElementById('quiz-result'); if(res) res.style.display = 'none';
+    // return to exams tab
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    const examsTab = document.getElementById('tab-exams'); if(examsTab) { examsTab.style.display = 'block'; examsTab.classList.add('active'); }
+    document.getElementById('content-wrapper').style.display = 'flex';
+    document.querySelector('.app-header .header-back').setAttribute('onclick', 'handleContentBack()');
+}
+
+function showWrongAnswers() {
+    if(!quizState || !quizState.results) return;
+    const wrongQuestions = quizState.questions
+        .map((q, i) => ({ q, index: i, userAns: quizState.answers[i] }))
+        .filter(item => item.userAns !== null && item.userAns !== item.q.answer);
+    
+    const res = document.getElementById('quiz-result');
+    if(res) {
+        let wrongHtml = `
+            <div class="quiz-overlay">
+                <div style="text-align:center; margin-bottom:15px;"><h2 class="quiz-title">Yanlış Cevaplar</h2></div>
+                <div style="max-height: 60vh; overflow-y: auto;">
+        `;
+        wrongQuestions.forEach((item, idx) => {
+            const userAns = item.userAns;
+            const correctAns = item.q.answer;
+            wrongHtml += `
+                <div style="background: rgba(231,76,60,0.1); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #e74c3c;">
+                    <div style="font-weight: bold; color: #fff; margin-bottom: 8px;">Soru ${item.index + 1}. ${item.q.q}</div>
+                    <div style="font-size: 0.9rem; color: #bdc3c7; margin-bottom: 6px;">
+                        <strong style="color: #e74c3c;">Senin Cevabın:</strong> ${userAns}
+                    </div>
+                    <div style="font-size: 0.9rem; color: #bdc3c7; margin-bottom: 8px;">
+                        <strong style="color: #2ecc71;">Doğru Cevap:</strong> ${correctAns}
+                    </div>
+                    ${item.q.explain ? `<div style="font-size: 0.9rem; color: #ecf0f1; background: rgba(44,62,80,0.4); padding: 8px; border-radius: 5px;"><strong>Açıklama:</strong> ${item.q.explain}</div>` : ''}
+                </div>
+            `;
+        });
+        wrongHtml += `
+                </div>
+                <div style="display:flex; gap:8px; justify-content:center; margin-top:15px;">
+                    <button class="btn ghost" onclick="showResults()">Sonuçlara Geri Dön</button>
+                    <button class="btn" onclick="returnHome()">Ana Menüye Dön</button>
+                </div>
+            </div>
+        `;
+        res.innerHTML = wrongHtml;
+    }
+}
+
+function showResults() {
+    if(!quizState || !quizState.results) return;
+    const r = quizState.results;
+    const res = document.getElementById('quiz-result');
+    if(res) {
+        res.innerHTML = `
+            <div class="quiz-overlay">
+                <div style="text-align:center; margin-bottom:15px;"><h2 class="quiz-title">Sınav Sonucu</h2></div>
+                <div class="result-box-inner">
+                    <div class="stat">Doğru: <strong>${r.correct}/${r.total}</strong></div>
+                    <div class="stat">Yanlış: <strong>${r.wrong}/${r.total}</strong></div>
+                    <div class="stat">Boş: <strong>${r.blank}/${r.total}</strong></div>
+                    <div class="stat">Başarı Oranı: <strong>${r.percentage}%</strong></div>
+                    <div class="stat">Geçen Süre: <strong>${formatTime(r.elapsed)}</strong></div>
+                </div>
+                <div style="display:flex; gap:8px; justify-content:center; margin-top:15px; flex-wrap:wrap;">
+                    ${r.wrong > 0 ? '<button class="btn ghost" onclick="showWrongAnswers()">Yanlış Cevapları Gör</button>' : ''}
+                    <button class="btn" onclick="returnHome()">Ana Menüye Dön</button>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function returnHome() {
+    if(quizState && quizState.timerId) clearInterval(quizState.timerId);
+    quizState = null;
+    const quizUI = document.getElementById('quiz-ui'); if(quizUI) quizUI.style.display = 'none';
+    const res = document.getElementById('quiz-result'); if(res) res.style.display = 'none';
+    // go back to home screen
+    const home = document.getElementById('home-screen');
+    const content = document.getElementById('content-wrapper');
+    if(content) content.style.display = 'none';
+    if(home) {
+        home.style.display = 'flex';
+        home.style.transform = 'translateY(0)';
+    }
+    document.querySelector('.app-header .header-back').setAttribute('onclick', 'handleContentBack()');
+}
+
+function formatTime(sec) { const s = Math.max(0, Math.floor(sec)); const mm = String(Math.floor(s/60)).padStart(2,'0'); const ss = String(s%60).padStart(2,'0'); return `${mm}:${ss}`; }
+</script>
+</body>
+</html>

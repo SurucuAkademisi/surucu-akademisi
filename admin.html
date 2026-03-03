@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Yönetim Paneli</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="apple-touch-icon" href="resimler/logo.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      color: #ecf0f1;
+      background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+      margin-bottom: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: contain;
+      box-shadow: 0 0 10px rgba(0, 153, 255, 0.25);
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .title {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #f1c40f;
+    }
+
+    .pill {
+      font-size: 0.85rem;
+      color: #bdc3c7;
+    }
+
+    .btn {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(0, 153, 255, 0.2);
+      border: 2px solid rgba(0, 153, 255, 0.45);
+      color: #00d4ff;
+      cursor: pointer;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn:active { transform: scale(0.98); }
+
+    .card {
+      background: rgba(15, 23, 42, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 14px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+      margin-bottom: 12px;
+    }
+
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      color: #e67e22;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    @media (max-width: 720px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 0.9rem;
+      color: #bdc3c7;
+    }
+
+    .field input {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(0, 0, 0, 0.25);
+      color: #fff;
+      outline: none;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .muted { color: #bdc3c7; font-size: 0.9rem; }
+    .error { color: #ffb3b3; font-weight: 700; }
+    .ok { color: #2ecc71; font-weight: 700; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: left;
+    }
+
+    th { color: #f1c40f; font-size: 0.9rem; }
+    td { color: #ecf0f1; font-size: 0.92rem; }
+
+    .danger {
+      background: rgba(231, 76, 60, 0.12);
+      border-color: rgba(231, 76, 60, 0.45);
+      color: #ffb3b3;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      background: rgba(255, 255, 255, 0.08);
+      color: #bdc3c7;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div class="brand">
+        <img class="logo" src="resimler/logo.png" alt="Logo" />
+        <div>
+          <p class="title">Yönetim Paneli</p>
+          <div class="pill" id="admin-pill"></div>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn" onclick="location.href='index.html'" title="Uygulamaya Dön">
+          <i class="fa-solid fa-house"></i> Uygulama
+        </button>
+        <button class="btn danger" id="btn-admin-logout" style="display:none;" title="Çıkış Yap">
+          <i class="fa-solid fa-right-from-bracket"></i> Çıkış
+        </button>
+      </div>
+    </div>
+
+    <div class="card" id="box-setup" style="display:none;">
+      <h2>Admin Kurulumu</h2>
+      <p class="muted">İlk kullanım: admin hesabı oluşturun (offline).</p>
+      <div class="grid">
+        <div class="field">
+          <label>Admin kullanıcı adı</label>
+          <input id="setup-admin-username" value="admin" disabled />
+        </div>
+        <div class="field">
+          <label>Admin şifre</label>
+          <input id="setup-admin-password" type="password" autocomplete="new-password" placeholder="Şifre" />
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <button class="btn" id="btn-setup"><i class="fa-solid fa-wrench"></i> Kurulumu Tamamla</button>
+        <span id="setup-msg" class="muted"></span>
+      </div>
+    </div>
+
+    <div class="card" id="box-login" style="display:none;">
+      <h2>Admin Girişi</h2>
+      <div class="grid">
+        <div class="field">
+          <label>Kullanıcı adı</label>
+          <input id="admin-username" value="admin" autocomplete="username" />
+        </div>
+        <div class="field">
+          <label>Şifre</label>
+          <input id="admin-password" type="password" autocomplete="current-password" placeholder="Şifre" />
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <button class="btn" id="btn-login"><i class="fa-solid fa-lock"></i> Giriş Yap</button>
+        <span id="login-msg" class="muted"></span>
+      </div>
+    </div>
+
+    <div id="box-panel" style="display:none;">
+      <div class="card">
+        <h2>Öğrenci Oluştur</h2>
+        <div class="grid">
+          <div class="field">
+            <label>Öğrenci kullanıcı adı</label>
+            <input id="student-username" autocomplete="off" placeholder="ör: ogrenci1" />
+          </div>
+          <div class="field">
+            <label>Öğrenci şifre</label>
+            <input id="student-password" type="password" autocomplete="new-password" placeholder="Şifre" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px;">
+          <button class="btn" id="btn-create"><i class="fa-solid fa-user-plus"></i> Oluştur</button>
+          <span id="create-msg" class="muted"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Öğrenciler</h2>
+        <div class="row" style="justify-content:space-between;">
+          <span class="muted">Silme işlemi öğrenciyi erişimden kaldırır.</span>
+          <button class="btn" id="btn-refresh"><i class="fa-solid fa-rotate"></i> Yenile</button>
+        </div>
+        <div style="margin-top:10px; overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Kullanıcı adı</th>
+                <th>Rol</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="students-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="auth.js"></script>
+  <script>
+    const elSetup = document.getElementById('box-setup');
+    const elLogin = document.getElementById('box-login');
+    const elPanel = document.getElementById('box-panel');
+    const elPill = document.getElementById('admin-pill');
+    const btnAdminLogout = document.getElementById('btn-admin-logout');
+
+    function showOnly(which) {
+      elSetup.style.display = which === 'setup' ? 'block' : 'none';
+      elLogin.style.display = which === 'login' ? 'block' : 'none';
+      elPanel.style.display = which === 'panel' ? 'block' : 'none';
+      btnAdminLogout.style.display = which === 'panel' ? 'inline-flex' : 'none';
+    }
+
+    function setMsg(el, text, cls) {
+      el.className = cls || 'muted';
+      el.textContent = text || '';
+    }
+
+    async function renderStudents() {
+      const tbody = document.getElementById('students-tbody');
+      tbody.innerHTML = '';
+
+      const users = await window.SAAuth.listUsers();
+      const students = users.filter(u => u.role === 'student').sort((a,b) => (a.username || '').localeCompare(b.username || ''));
+
+      if (!students.length) {
+        tbody.innerHTML = '<tr><td colspan="3" class="muted">Kayıtlı öğrenci yok.</td></tr>';
+        return;
+      }
+
+      for (const u of students) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${u.username}</td>
+          <td><span class="badge">öğrenci</span></td>
+          <td>
+            <button class="btn danger" data-user="${u.username}"><i class="fa-solid fa-trash"></i> Sil</button>
+          </td>
+        `;
+        tr.querySelector('button').addEventListener('click', async (e) => {
+          const username = e.currentTarget.getAttribute('data-user');
+          if (!confirm(username + ' silinsin mi?')) return;
+          await window.SAAuth.deleteUser(username);
+          await renderStudents();
+        });
+        tbody.appendChild(tr);
+      }
+    }
+
+    async function init() {
+      if (!window.indexedDB || !window.crypto || !window.crypto.subtle) {
+        document.body.innerHTML = '<div style="padding:18px; color:#fff; font-family:Segoe UI, sans-serif;">Bu tarayıcı IndexedDB/WebCrypto desteklemiyor.</div>';
+        return;
+      }
+
+      const hasAdmin = await window.SAAuth.hasAdmin();
+      const adminSession = window.SAAuth.getAdminSession();
+
+      if (!hasAdmin) {
+        elPill.textContent = 'Admin hesabı yok';
+        showOnly('setup');
+        return;
+      }
+
+      if (adminSession) {
+        elPill.textContent = 'Giriş: ' + adminSession.user;
+        showOnly('panel');
+        await renderStudents();
+        return;
+      }
+
+      elPill.textContent = 'Admin girişi gerekli';
+      showOnly('login');
+    }
+
+    document.getElementById('btn-setup').addEventListener('click', async () => {
+      const msg = document.getElementById('setup-msg');
+      try {
+        setMsg(msg, 'Kurulum yapılıyor...', 'muted');
+        const password = document.getElementById('setup-admin-password').value;
+        await window.SAAuth.createUser({ username: 'admin', password, role: 'admin' });
+        window.SAAuth.setAdminSession('admin', 30);
+        setMsg(msg, 'Kurulum tamamlandı.', 'ok');
+        await init();
+      } catch (e) {
+        setMsg(msg, e.message || 'Kurulum başarısız.', 'error');
+      }
+    });
+
+    document.getElementById('btn-login').addEventListener('click', async () => {
+      const msg = document.getElementById('login-msg');
+      try {
+        setMsg(msg, 'Kontrol ediliyor...', 'muted');
+        const username = document.getElementById('admin-username').value;
+        const password = document.getElementById('admin-password').value;
+        const ok = await window.SAAuth.authenticateAdmin(username, password);
+        if (!ok) {
+          setMsg(msg, 'Kullanıcı adı veya şifre hatalı.', 'error');
+          return;
+        }
+        window.SAAuth.setAdminSession(username, 30);
+        setMsg(msg, 'Giriş başarılı.', 'ok');
+        await init();
+      } catch (e) {
+        setMsg(msg, e.message || 'Giriş başarısız.', 'error');
+      }
+    });
+
+    document.getElementById('btn-create').addEventListener('click', async () => {
+      const msg = document.getElementById('create-msg');
+      try {
+        setMsg(msg, 'Oluşturuluyor...', 'muted');
+        const username = document.getElementById('student-username').value;
+        const password = document.getElementById('student-password').value;
+        await window.SAAuth.createUser({ username, password, role: 'student' });
+        document.getElementById('student-username').value = '';
+        document.getElementById('student-password').value = '';
+        setMsg(msg, 'Öğrenci oluşturuldu.', 'ok');
+        await renderStudents();
+      } catch (e) {
+        setMsg(msg, e.message || 'Oluşturma başarısız.', 'error');
+      }
+    });
+
+    document.getElementById('btn-refresh').addEventListener('click', async () => {
+      await renderStudents();
+    });
+
+    btnAdminLogout.addEventListener('click', async () => {
+      window.SAAuth.clearAdminSession();
+      location.reload();
+    });
+
+    init();
+  </script>
+</body>
+</html>
