@@ -1,5 +1,5 @@
-/* Sürücü Akademisi SW - V8 (Offline-first auth + admin panel) */
-const CACHE_NAME = 'surucu-v8';
+/* Sürücü Akademisi SW - V9 (Offline-first auth + admin panel) */
+const CACHE_NAME = 'surucu-v9';
 const ASSETS = [
     './',
     './index.html',
