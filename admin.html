@@ -219,8 +219,8 @@
       <h2>Admin Girişi</h2>
       <div class="grid">
         <div class="field">
-          <label>Kullanıcı adı</label>
-          <input id="admin-username" value="admin" autocomplete="username" />
+          <label>E-posta</label>
+          <input id="admin-username" value="" autocomplete="username" placeholder="admin@ornek.com" />
         </div>
         <div class="field">
           <label>Şifre</label>
@@ -235,15 +235,19 @@
 
     <div id="box-panel" style="display:none;">
       <div class="card">
-        <h2>Öğrenci Oluştur</h2>
+        <h2>Erişim Kodu Oluştur</h2>
         <div class="grid">
           <div class="field">
-            <label>Öğrenci kullanıcı adı</label>
-            <input id="student-username" autocomplete="off" placeholder="ör: ogrenci1" />
+            <label>Not (opsiyonel)</label>
+            <input id="student-username" autocomplete="off" placeholder="ör: Mart grubu" />
           </div>
           <div class="field">
-            <label>Öğrenci şifre</label>
-            <input id="student-password" type="password" autocomplete="new-password" placeholder="Şifre" />
+            <label>Süre (gün)</label>
+            <input id="student-password" type="number" inputmode="numeric" min="1" value="30" placeholder="30" />
+          </div>
+          <div class="field">
+            <label>Maks. Cihaz</label>
+            <input id="code-max-devices" type="number" inputmode="numeric" min="1" value="3" placeholder="3" />
           </div>
         </div>
         <div class="row" style="margin-top:12px;">
@@ -253,17 +257,19 @@
       </div>
 
       <div class="card">
-        <h2>Öğrenciler</h2>
+        <h2>Erişim Kodları</h2>
         <div class="row" style="justify-content:space-between;">
-          <span class="muted">Silme işlemi öğrenciyi erişimden kaldırır.</span>
+          <span class="muted">Cihaz limiti ve süre erişim kodu bazındadır.</span>
           <button class="btn" id="btn-refresh"><i class="fa-solid fa-rotate"></i> Yenile</button>
         </div>
         <div style="margin-top:10px; overflow:auto;">
           <table>
             <thead>
               <tr>
-                <th>Kullanıcı adı</th>
-                <th>Rol</th>
+                <th>Kod</th>
+                <th>Durum</th>
+                <th>Süre</th>
+                <th>Cihaz</th>
                 <th>İşlem</th>
               </tr>
             </thead>
@@ -271,10 +277,64 @@
           </table>
         </div>
       </div>
+
+      <div class="card">
+        <h2>İçerik Linkleri</h2>
+        <p class="muted">Uygulamadaki PDF ve Video kartları bu linklerden beslenir.</p>
+
+        <div class="grid">
+          <div class="field">
+            <label>PDF - Trafik ve Çevre</label>
+            <input id="pdf-trafik-ve-cevre" placeholder="https://..." />
+          </div>
+          <div class="field">
+            <label>PDF - Trafik Adabı</label>
+            <input id="pdf-trafik-adabi" placeholder="https://..." />
+          </div>
+          <div class="field">
+            <label>PDF - Motor ve Araç Tekniği</label>
+            <input id="pdf-motor" placeholder="https://..." />
+          </div>
+          <div class="field">
+            <label>PDF - İlk Yardım</label>
+            <input id="pdf-ilk-yardim" placeholder="https://..." />
+          </div>
+          <div class="field">
+            <label>PDF - İş Makineleri</label>
+            <input id="pdf-is-makineleri" placeholder="https://..." />
+          </div>
+        </div>
+
+        <div class="muted" style="margin: 12px 0 8px;">Video Linkleri (11 adet)</div>
+        <div class="grid">
+          <div class="field"><label>Video 1</label><input id="video-url-1" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 2</label><input id="video-url-2" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 3</label><input id="video-url-3" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 4</label><input id="video-url-4" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 5</label><input id="video-url-5" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 6</label><input id="video-url-6" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 7</label><input id="video-url-7" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 8</label><input id="video-url-8" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 9</label><input id="video-url-9" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 10</label><input id="video-url-10" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 11</label><input id="video-url-11" placeholder="https://www.youtube.com/watch?v=..." /></div>
+        </div>
+
+        <div class="row" style="margin-top:12px;">
+          <button class="btn" id="btn-content-load"><i class="fa-solid fa-download"></i> Yükle</button>
+          <button class="btn" id="btn-content-save"><i class="fa-solid fa-floppy-disk"></i> Kaydet</button>
+          <span id="content-msg" class="muted"></span>
+        </div>
+      </div>
     </div>
   </div>
 
-  <script src="auth.js"></script>
+  <!-- Firebase config'i buraya yapıştırın (yeni proje):
+    <script>
+      window.FIREBASE_CONFIG = { ... };
+    </script>
+  -->
+  <script type="module" src="firebase_app.js"></script>
   <script>
     const elSetup = document.getElementById('box-setup');
     const elLogin = document.getElementById('box-login');
@@ -283,7 +343,7 @@
     const btnAdminLogout = document.getElementById('btn-admin-logout');
 
     function showOnly(which) {
-      elSetup.style.display = which === 'setup' ? 'block' : 'none';
+      elSetup.style.display = 'none';
       elLogin.style.display = which === 'login' ? 'block' : 'none';
       elPanel.style.display = which === 'panel' ? 'block' : 'none';
       btnAdminLogout.style.display = which === 'panel' ? 'inline-flex' : 'none';
@@ -294,93 +354,161 @@
       el.textContent = text || '';
     }
 
-    async function renderStudents() {
+    function fmtDate(ts) {
+      try {
+        if (!ts || typeof ts.toMillis !== 'function') return '-';
+        return new Date(ts.toMillis()).toLocaleString('tr-TR');
+      } catch {
+        return '-';
+      }
+    }
+
+    function countDevices(devices) {
+      if (!devices || typeof devices !== 'object') return 0;
+      return Object.keys(devices).length;
+    }
+
+    async function renderAccessCodes() {
       const tbody = document.getElementById('students-tbody');
       tbody.innerHTML = '';
 
-      const users = await window.SAAuth.listUsers();
-      const students = users.filter(u => u.role === 'student').sort((a,b) => (a.username || '').localeCompare(b.username || ''));
-
-      if (!students.length) {
-        tbody.innerHTML = '<tr><td colspan="3" class="muted">Kayıtlı öğrenci yok.</td></tr>';
+      const codes = await window.SAFB.listAccessCodes();
+      if (!codes.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="muted">Kayıtlı erişim kodu yok.</td></tr>';
         return;
       }
 
-      for (const u of students) {
+      for (const c of codes) {
+        const isActive = c.active === true;
+        const maxDevices = Number(c.maxDevices || 3);
+        const used = countDevices(c.devices);
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${u.username}</td>
-          <td><span class="badge">öğrenci</span></td>
+          <td><strong>${c.id}</strong></td>
+          <td><span class="badge" style="${isActive ? '' : 'opacity:0.7;'}">${isActive ? 'aktif' : 'pasif'}</span></td>
+          <td>${fmtDate(c.expiresAt)}</td>
+          <td>${used} / ${maxDevices}</td>
           <td>
-            <button class="btn danger" data-user="${u.username}"><i class="fa-solid fa-trash"></i> Sil</button>
+            <button class="btn" data-act="toggle" data-code="${c.id}"><i class="fa-solid fa-toggle-${isActive ? 'on' : 'off'}"></i> ${isActive ? 'Pasifleştir' : 'Aktifleştir'}</button>
+            <button class="btn" data-act="copy" data-code="${c.id}"><i class="fa-solid fa-copy"></i> Kopyala</button>
+            <button class="btn danger" data-act="delete" data-code="${c.id}"><i class="fa-solid fa-trash"></i> Sil</button>
           </td>
         `;
-        tr.querySelector('button').addEventListener('click', async (e) => {
-          const username = e.currentTarget.getAttribute('data-user');
-          if (!confirm(username + ' silinsin mi?')) return;
-          await window.SAAuth.deleteUser(username);
-          await renderStudents();
+
+        tr.querySelectorAll('button').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const act = e.currentTarget.getAttribute('data-act');
+            const code = e.currentTarget.getAttribute('data-code');
+
+            if (act === 'copy') {
+              try { await navigator.clipboard.writeText(code); } catch {}
+              return;
+            }
+
+            if (act === 'toggle') {
+              await window.SAFB.setAccessCodeActive(code, !isActive);
+              await renderAccessCodes();
+              return;
+            }
+
+            if (act === 'delete') {
+              if (!confirm(code + ' silinsin mi?')) return;
+              await window.SAFB.deleteAccessCode(code);
+              await renderAccessCodes();
+              return;
+            }
+          });
         });
+
         tbody.appendChild(tr);
       }
     }
 
-    async function init() {
-      if (!window.indexedDB || !window.crypto || !window.crypto.subtle) {
-        document.body.innerHTML = '<div style="padding:18px; color:#fff; font-family:Segoe UI, sans-serif;">Bu tarayıcı IndexedDB/WebCrypto desteklemiyor.</div>';
-        return;
+    async function loadContentForm() {
+      const msg = document.getElementById('content-msg');
+      try {
+        setMsg(msg, 'Yükleniyor...', 'muted');
+        const links = await window.SAFB.getContentLinks({ preferServer: true });
+        const pdf = links && links.pdfLinks ? links.pdfLinks : {};
+        const videos = links && Array.isArray(links.videoLinks) ? links.videoLinks : [];
+
+        document.getElementById('pdf-trafik-ve-cevre').value = pdf.trafik_ve_cevre || '';
+        document.getElementById('pdf-trafik-adabi').value = pdf.trafik_adabi || '';
+        document.getElementById('pdf-motor').value = pdf.motor_ve_arac_teknigi || '';
+        document.getElementById('pdf-ilk-yardim').value = pdf.ilk_yardim || '';
+        document.getElementById('pdf-is-makineleri').value = pdf.is_makineleri || '';
+
+        for (let i = 1; i <= 11; i++) {
+          const item = videos[i - 1];
+          document.getElementById('video-url-' + i).value = (item && item.url) ? item.url : '';
+        }
+        setMsg(msg, 'Yüklendi.', 'ok');
+      } catch (e) {
+        setMsg(msg, (e && e.message) ? e.message : 'Yükleme başarısız.', 'error');
       }
-
-      const hasAdmin = await window.SAAuth.hasAdmin();
-      const adminSession = window.SAAuth.getAdminSession();
-
-      if (!hasAdmin) {
-        elPill.textContent = 'Admin hesabı yok';
-        showOnly('setup');
-        return;
-      }
-
-      if (adminSession) {
-        elPill.textContent = 'Giriş: ' + adminSession.user;
-        showOnly('panel');
-        await renderStudents();
-        return;
-      }
-
-      elPill.textContent = 'Admin girişi gerekli';
-      showOnly('login');
     }
 
-    document.getElementById('btn-setup').addEventListener('click', async () => {
-      const msg = document.getElementById('setup-msg');
+    async function saveContentForm() {
+      const msg = document.getElementById('content-msg');
       try {
-        setMsg(msg, 'Kurulum yapılıyor...', 'muted');
-        const password = document.getElementById('setup-admin-password').value;
-        await window.SAAuth.createUser({ username: 'admin', password, role: 'admin' });
-        window.SAAuth.setAdminSession('admin', 30);
-        setMsg(msg, 'Kurulum tamamlandı.', 'ok');
-        await init();
+        setMsg(msg, 'Kaydediliyor...', 'muted');
+        const pdfLinks = {
+          trafik_ve_cevre: (document.getElementById('pdf-trafik-ve-cevre').value || '').trim(),
+          trafik_adabi: (document.getElementById('pdf-trafik-adabi').value || '').trim(),
+          motor_ve_arac_teknigi: (document.getElementById('pdf-motor').value || '').trim(),
+          ilk_yardim: (document.getElementById('pdf-ilk-yardim').value || '').trim(),
+          is_makineleri: (document.getElementById('pdf-is-makineleri').value || '').trim(),
+        };
+
+        const videoLinks = [];
+        for (let i = 1; i <= 11; i++) {
+          const url = (document.getElementById('video-url-' + i).value || '').trim();
+          videoLinks.push({ title: 'Video Deneme Sınavı - ' + i, url });
+        }
+
+        await window.SAFB.saveContentLinks({ pdfLinks, videoLinks });
+        setMsg(msg, 'Kaydedildi.', 'ok');
       } catch (e) {
-        setMsg(msg, e.message || 'Kurulum başarısız.', 'error');
+        setMsg(msg, (e && e.message) ? e.message : 'Kaydetme başarısız.', 'error');
       }
-    });
+    }
+
+    async function init() {
+      if (!window.SAFBReady) {
+        document.body.innerHTML = '<div style="padding:18px; color:#fff; font-family:Segoe UI, sans-serif;">Firebase yüklenemedi.</div>';
+        return;
+      }
+      try {
+        await window.SAFBReady;
+      } catch (e) {
+        document.body.innerHTML = '<div style="padding:18px; color:#fff; font-family:Segoe UI, sans-serif;">' + (e && e.message ? e.message : 'Firebase başlatılamadı.') + '</div>';
+        return;
+      }
+
+      window.SAFB.onAdminAuth(async (user) => {
+        if (user) {
+          elPill.textContent = 'Giriş: ' + (user.email || 'admin');
+          showOnly('panel');
+          await renderAccessCodes();
+          await loadContentForm();
+        } else {
+          elPill.textContent = 'Admin girişi gerekli';
+          showOnly('login');
+        }
+      });
+    }
 
     document.getElementById('btn-login').addEventListener('click', async () => {
       const msg = document.getElementById('login-msg');
       try {
         setMsg(msg, 'Kontrol ediliyor...', 'muted');
-        const username = document.getElementById('admin-username').value;
+        const email = document.getElementById('admin-username').value;
         const password = document.getElementById('admin-password').value;
-        const ok = await window.SAAuth.authenticateAdmin(username, password);
-        if (!ok) {
-          setMsg(msg, 'Kullanıcı adı veya şifre hatalı.', 'error');
-          return;
-        }
-        window.SAAuth.setAdminSession(username, 30);
+        await window.SAFB.adminSignIn(email, password);
         setMsg(msg, 'Giriş başarılı.', 'ok');
-        await init();
       } catch (e) {
-        setMsg(msg, e.message || 'Giriş başarısız.', 'error');
+        setMsg(msg, (e && e.message) ? e.message : 'Giriş başarısız.', 'error');
       }
     });
 
@@ -388,28 +516,54 @@
       const msg = document.getElementById('create-msg');
       try {
         setMsg(msg, 'Oluşturuluyor...', 'muted');
-        const username = document.getElementById('student-username').value;
-        const password = document.getElementById('student-password').value;
-        await window.SAAuth.createUser({ username, password, role: 'student' });
+        const note = document.getElementById('student-username').value;
+        const days = Number(document.getElementById('student-password').value || '30') || 30;
+        const maxDevices = Number(document.getElementById('code-max-devices').value || '3') || 3;
+        const code = await window.SAFB.createAccessCode({ note, days, maxDevices });
         document.getElementById('student-username').value = '';
-        document.getElementById('student-password').value = '';
-        setMsg(msg, 'Öğrenci oluşturuldu.', 'ok');
-        await renderStudents();
+        document.getElementById('student-password').value = '30';
+        document.getElementById('code-max-devices').value = '3';
+        setMsg(msg, 'Kod oluşturuldu: ' + code, 'ok');
+        await renderAccessCodes();
       } catch (e) {
-        setMsg(msg, e.message || 'Oluşturma başarısız.', 'error');
+        setMsg(msg, (e && e.message) ? e.message : 'Oluşturma başarısız.', 'error');
       }
     });
 
     document.getElementById('btn-refresh').addEventListener('click', async () => {
-      await renderStudents();
+      await renderAccessCodes();
     });
 
     btnAdminLogout.addEventListener('click', async () => {
-      window.SAAuth.clearAdminSession();
-      location.reload();
+      try { await window.SAFB.adminSignOut(); } catch {}
     });
 
-    init();
+    document.getElementById('btn-content-load').addEventListener('click', async () => {
+      await loadContentForm();
+    });
+
+    document.getElementById('btn-content-save').addEventListener('click', async () => {
+      await saveContentForm();
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      showOnly('login');
+      init();
+    });
   </script>
+
+  <script>
+    window.FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCpOESMP9HOvjY_Z-fv0w5G0MC-UVI5D_0",
+      authDomain: "surucuakademisi-f5e1f.firebaseapp.com",
+      projectId: "surucuakademisi-f5e1f",
+      storageBucket: "surucuakademisi-f5e1f.firebasestorage.app",
+      messagingSenderId: "268662659371",
+      appId: "1:268662659371:web:f7e2da8733af296ce74d6e",
+      measurementId: "G-JVZBFSS905"
+    };
+  </script>
+
+  <script type="module" src="./firebase_app.js"></script>
 </body>
 </html>

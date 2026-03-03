@@ -17,7 +17,19 @@
 
     <script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
 
-    <script src="auth.js"></script>
+        <!-- Firebase config'i buraya yapıştırın (yeni proje):
+            <script>
+                window.FIREBASE_CONFIG = {
+                    apiKey: "...",
+                    authDomain: "...",
+                    projectId: "...",
+                    storageBucket: "...",
+                    messagingSenderId: "...",
+                    appId: "..."
+                };
+            </script>
+        -->
+        <script type="module" src="firebase_app.js"></script>
 
     <style>
         /* --- 1. CANLI ARKA PLAN (PARTICLE ANIMATION) --- */
@@ -362,6 +374,10 @@
 
         <div class="login-card">
             <div class="login-field">
+                <label for="login-code">Erişim Kodu</label>
+                <input id="login-code" autocomplete="off" placeholder="ör: SA-9K2F-73QX" autocapitalize="characters">
+            </div>
+            <div class="login-field">
                 <label for="login-username">Kullanıcı Adı</label>
                 <input id="login-username" autocomplete="username" placeholder="Kullanıcı adı">
             </div>
@@ -469,72 +485,7 @@
 
             <div id="tab-videos" class="tab-content">
                 <h2 style="color:#e67e22; margin-top:0; text-shadow:0 0 5px black;">Video Dersler</h2>
-                <div class="card" onclick="window.open('https://www.youtube.com/watch?v=N_qpw37ISk4', '_blank')">
-                    <div class="card-icon">▶️</div>
-                    <div>
-                        <span class="card-title">Video Deneme Sınavı - 1</span>
-                    </div>
-                </div>
-                <div class="card" onclick="window.open('https://www.youtube.com/watch?v=cYUy1wMNJ-M', '_blank')">
-                    <div class="card-icon">▶️</div>
-                    <div>
-                        <span class="card-title">Video Deneme Sınavı - 2</span>
-                    </div>
-                </div>
-                <div class="card" onclick="window.open('https://www.youtube.com/watch?v=Rbcz1C7rsEg', '_blank')">
-                    <div class="card-icon">▶️</div>
-                    <div>
-                        <span class="card-title">Video Deneme Sınavı - 3</span>
-                    </div>
-                </div>
-                <div class="card" onclick="window.open('https://www.youtube.com/watch?v=yDasA7FIOXU', '_blank')">
-                    <div class="card-icon">▶️</div>
-                    <div>
-                        <span class="card-title">Video Deneme Sınavı - 4</span>
-                    </div>
-                </div>
-                <div class="card" onclick="window.open('https://www.youtube.com/watch?v=Bz6suP6NWE4', '_blank')">
-                    <div class="card-icon">▶️</div>
-                    <div>
-                        <span class="card-title">Video Deneme Sınavı - 5</span>
-                    </div>
-                </div>
-                <div class="card" onclick="window.open('https://www.youtube.com/watch?v=CmKWq7qs9rI', '_blank')">
-                    <div class="card-icon">▶️</div>
-                    <div>
-                        <span class="card-title">Video Deneme Sınavı - 6</span>
-                    </div>
-                </div>
-                <div class="card" onclick="window.open('https://www.youtube.com/watch?v=m7nNDGN06Gc', '_blank')">
-                    <div class="card-icon">▶️</div>
-                    <div>
-                        <span class="card-title">Video Deneme Sınavı - 7</span>
-                    </div>
-                </div>
-                <div class="card" onclick="window.open('https://www.youtube.com/watch?v=uIKwSKXZh8Y', '_blank')">
-                    <div class="card-icon">▶️</div>
-                    <div>
-                        <span class="card-title">Video Deneme Sınavı - 8</span>
-                    </div>
-                </div>
-                <div class="card" onclick="window.open('https://www.youtube.com/watch?v=EhaJtToEOC8', '_blank')">
-                    <div class="card-icon">▶️</div>
-                    <div>
-                        <span class="card-title">Video Deneme Sınavı - 9</span>
-                    </div>
-                </div>
-                <div class="card" onclick="window.open('https://www.youtube.com/watch?v=c1cnJ8VA5VI', '_blank')">
-                    <div class="card-icon">▶️</div>
-                    <div>
-                        <span class="card-title">Video Deneme Sınavı - 10</span>
-                    </div>
-                </div>
-                <div class="card" onclick="window.open('https://www.youtube.com/watch?v=lIrMFzTeHss', '_blank')">
-                    <div class="card-icon">▶️</div>
-                    <div>
-                        <span class="card-title">Video Deneme Sınavı - 11</span>
-                    </div>
-                </div>
+                <div id="video-list"></div>
             </div>
 
             <div id="tab-contact" class="tab-content">
@@ -644,8 +595,8 @@ function showLogin() {
     loginScreen.style.display = 'flex';
     const err = document.getElementById('login-error');
     if (err) err.textContent = '';
-    const u = document.getElementById('login-username');
-    if (u) u.focus();
+    const codeEl = document.getElementById('login-code');
+    if (codeEl) codeEl.focus();
 }
 
 function showApp() {
@@ -655,22 +606,16 @@ function showApp() {
 
 async function handleLogin() {
     const err = document.getElementById('login-error');
-    const username = (document.getElementById('login-username').value || '').trim();
-    const password = document.getElementById('login-password').value || '';
+    const code = (document.getElementById('login-code').value || '').trim();
     if (err) err.textContent = '';
 
     try {
-        if (!username || !password) {
-            if (err) err.textContent = 'Kullanıcı adı ve şifre gerekli.';
-            return;
-        }
-        const ok = await window.SAAuth.authenticateStudent(username, password);
-        if (!ok) {
-            if (err) err.textContent = 'Kullanıcı adı veya şifre hatalı.';
-            return;
-        }
-        window.SAAuth.setStudentSession(username, 30);
+        if (!window.SAFBReady) throw new Error('Giriş sistemi yüklenemedi.');
+        await window.SAFBReady;
+        if (!window.SAFB) throw new Error('Giriş sistemi yüklenemedi.');
+        await window.SAFB.studentLoginWithCode(code);
         showApp();
+        await ensureContentLoaded(true);
     } catch (e) {
         if (err) err.textContent = (e && e.message) ? e.message : 'Giriş başarısız.';
     }
@@ -678,23 +623,61 @@ async function handleLogin() {
 
 function handleLogout() {
     try {
-        window.SAAuth.clearStudentSession();
+        if (window.SAFB) window.SAFB.studentLogout();
     } finally {
         location.reload();
     }
 }
 
 function initAuthGate() {
-    if (!window.SAAuth) {
-        // auth.js yüklenemediyse içerik göstermeyelim.
+    if (!window.SAFB) {
         showLogin();
         const err = document.getElementById('login-error');
         if (err) err.textContent = 'Giriş sistemi yüklenemedi.';
         return;
     }
-    const session = window.SAAuth.getStudentSession();
-    if (session) showApp();
-    else showLogin();
+    const session = window.SAFB.getStudentSession();
+    if (session) {
+        showApp();
+        ensureContentLoaded(true);
+    } else {
+        showLogin();
+    }
+}
+
+// --- CONTENT LINKS (Firestore -> UI) ---
+let __contentLoadedOnce = false;
+
+function applyContentLinksToUI(links) {
+    if (!links) return;
+    const pdfLinks = links.pdfLinks || {};
+
+    lectureNotes.forEach(item => {
+        if (item && item.key && pdfLinks[item.key]) item.file = pdfLinks[item.key];
+    });
+    renderList('pdf-list', lectureNotes);
+
+    const videoLinks = Array.isArray(links.videoLinks) ? links.videoLinks : [];
+    const videoItems = videoLinks.map(v => ({
+        title: v && v.title ? v.title : 'Video',
+        sub: '',
+        file: v && v.url ? v.url : '#',
+        icon: '▶️'
+    }));
+    renderList('video-list', videoItems);
+}
+
+async function ensureContentLoaded(preferServer) {
+    try {
+        if (!window.SAFBReady) return;
+        await window.SAFBReady;
+        if (!window.SAFB) return;
+        const links = await window.SAFB.getContentLinks({ preferServer: !!preferServer });
+        applyContentLinksToUI(links);
+        __contentLoadedOnce = true;
+    } catch {
+        // sessizce geç
+    }
 }
 
 // --- SAAT GÜNCELLEME ---
@@ -716,7 +699,14 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-initAuthGate();
+window.addEventListener('DOMContentLoaded', async () => {
+    try {
+        if (window.SAFBReady) await window.SAFBReady;
+    } catch {
+        // ignore
+    }
+    initAuthGate();
+});
 
 // --- PANZOOM AYARLARI ---
 let panzoomInstance = null;
@@ -733,11 +723,25 @@ const standardExams = [
     { title: "Çıkmış Sorular Deneme Sınavları-3", sub: "İnteraktif Test", file: "#", icon: "📝" }
 ];
 const lectureNotes = [
-    { title: "Trafik ve Çevre Bilgisi", sub: "Kurallar ve İşaretler", file: "https://drive.google.com/file/d/1BKbYjx6vPanzWYw66DCpP8tWowP6C1fa/preview", icon: "🛑" },
-    { title: "Trafik Adabı", sub: "Genel Bilgiler", file: "https://drive.google.com/file/d/1sCpU-oJFGwvYjpw8rnrHHOLPVr4rWa8D/preview", icon: "🚦" },
-    { title: "Motor ve Araç Tekniği", sub: "Araç Bilgisi", file: "https://drive.google.com/file/d/1XU2aWUVH1UllpC4X-j62f7QPtKFiT36p/preview", icon: "⚙️" },
-    { title: "İlk Yardım", sub: "Hayat Kurtaran Bilgiler", file: "https://drive.google.com/file/d/1enU_1G0Twa--SJl1KHVPEG1kAXW3d2Du/preview", icon: "🚑" },
-    { title: "İş Makineleri", sub: "Operatörlük Bilgisi", file: "https://drive.google.com/file/d/1YzmE_dhrkE2ez1IweNBoktSICWKn_X5b/preview", icon: '<i class="fa-solid fa-truck-ramp-box icon-yellow-black"></i>' }
+    { key: "trafik_ve_cevre", title: "Trafik ve Çevre Bilgisi", sub: "Kurallar ve İşaretler", file: "https://drive.google.com/file/d/1BKbYjx6vPanzWYw66DCpP8tWowP6C1fa/preview", icon: "🛑" },
+    { key: "trafik_adabi", title: "Trafik Adabı", sub: "Genel Bilgiler", file: "https://drive.google.com/file/d/1sCpU-oJFGwvYjpw8rnrHHOLPVr4rWa8D/preview", icon: "🚦" },
+    { key: "motor_ve_arac_teknigi", title: "Motor ve Araç Tekniği", sub: "Araç Bilgisi", file: "https://drive.google.com/file/d/1XU2aWUVH1UllpC4X-j62f7QPtKFiT36p/preview", icon: "⚙️" },
+    { key: "ilk_yardim", title: "İlk Yardım", sub: "Hayat Kurtaran Bilgiler", file: "https://drive.google.com/file/d/1enU_1G0Twa--SJl1KHVPEG1kAXW3d2Du/preview", icon: "🚑" },
+    { key: "is_makineleri", title: "İş Makineleri", sub: "Operatörlük Bilgisi", file: "https://drive.google.com/file/d/1YzmE_dhrkE2ez1IweNBoktSICWKn_X5b/preview", icon: '<i class="fa-solid fa-truck-ramp-box icon-yellow-black"></i>' }
+];
+
+const defaultVideoLinks = [
+    { title: "Video Deneme Sınavı - 1", url: "https://www.youtube.com/watch?v=N_qpw37ISk4" },
+    { title: "Video Deneme Sınavı - 2", url: "https://www.youtube.com/watch?v=cYUy1wMNJ-M" },
+    { title: "Video Deneme Sınavı - 3", url: "https://www.youtube.com/watch?v=Rbcz1C7rsEg" },
+    { title: "Video Deneme Sınavı - 4", url: "https://www.youtube.com/watch?v=yDasA7FIOXU" },
+    { title: "Video Deneme Sınavı - 5", url: "https://www.youtube.com/watch?v=Bz6suP6NWE4" },
+    { title: "Video Deneme Sınavı - 6", url: "https://www.youtube.com/watch?v=CmKWq7qs9rI" },
+    { title: "Video Deneme Sınavı - 7", url: "https://www.youtube.com/watch?v=m7nNDGN06Gc" },
+    { title: "Video Deneme Sınavı - 8", url: "https://www.youtube.com/watch?v=uIKwSKXZh8Y" },
+    { title: "Video Deneme Sınavı - 9", url: "https://www.youtube.com/watch?v=EhaJtToEOC8" },
+    { title: "Video Deneme Sınavı - 10", url: "https://www.youtube.com/watch?v=c1cnJ8VA5VI" },
+    { title: "Video Deneme Sınavı - 11", url: "https://www.youtube.com/watch?v=lIrMFzTeHss" }
 ];
 
 // --- ARAÇ REHBERİ VERİLERİ ---
@@ -924,6 +928,10 @@ function switchTab(tabId) {
     
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     document.getElementById('nav-' + tabId).classList.add('active');
+
+    if (tabId === 'videos' || tabId === 'notes') {
+        ensureContentLoaded(true);
+    }
 }
 
 // --- İLETİŞİM ---
@@ -995,6 +1003,7 @@ const exam1Questions = [
 
 window.onload = function() {
     renderList('pdf-list', lectureNotes);
+    renderList('video-list', defaultVideoLinks.map(v => ({ title: v.title, sub: '', file: v.url, icon: '▶️' })));
 }
 function renderList(containerId, dataArray) {
     const container = document.getElementById(containerId);
@@ -1261,5 +1270,19 @@ function returnHome() {
 
 function formatTime(sec) { const s = Math.max(0, Math.floor(sec)); const mm = String(Math.floor(s/60)).padStart(2,'0'); const ss = String(s%60).padStart(2,'0'); return `${mm}:${ss}`; }
 </script>
+
+<script>
+    window.FIREBASE_CONFIG = {
+        apiKey: "AIzaSyCpOESMP9HOvjY_Z-fv0w5G0MC-UVI5D_0",
+        authDomain: "surucuakademisi-f5e1f.firebaseapp.com",
+        projectId: "surucuakademisi-f5e1f",
+        storageBucket: "surucuakademisi-f5e1f.firebasestorage.app",
+        messagingSenderId: "268662659371",
+        appId: "1:268662659371:web:f7e2da8733af296ce74d6e",
+        measurementId: "G-JVZBFSS905"
+    };
+</script>
+
+<script type="module" src="./firebase_app.js"></script>
 </body>
 </html>
