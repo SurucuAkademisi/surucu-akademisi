@@ -1,5 +1,5 @@
-/* Sürücü Akademisi SW - V9 (Offline-first auth + admin panel) */
-const CACHE_NAME = 'surucu-v9';
+/* Sürücü Akademisi SW - V10 (Offline-first auth + admin panel) */
+const CACHE_NAME = 'surucu-v10';
 const ASSETS = [
     './',
     './index.html',
@@ -65,6 +65,21 @@ self.addEventListener('fetch', e => {
     if (req.method !== 'GET') return;
 
     const url = new URL(req.url);
+
+    // Navigasyon / doküman istekleri: Network-first.
+    // Amaç: GitHub Pages'te eski index.html'in cache-first ile "takılı" kalmasını önlemek.
+    if (req.mode === 'navigate' || req.destination === 'document') {
+        e.respondWith(
+            fetch(req)
+                .then(res => {
+                    const copy = res.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(req, copy)).catch(() => {});
+                    return res;
+                })
+                .catch(() => caches.match(req).then(r => r || caches.match('./index.html')))
+        );
+        return;
+    }
 
     // Cross-origin (CDN vb.): normal fetch, offline ise cache fallback.
     if (url.origin !== self.location.origin) {
