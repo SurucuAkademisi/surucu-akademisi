@@ -8,6 +8,11 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    if (typeof firebase !== 'undefined') {
+      const error = document.querySelector('.login-error');
+      if (error) error.style.display = 'none';
+    }
+
     if (typeof firebase === 'undefined') {
       console.error('Firebase not loaded');
       return;

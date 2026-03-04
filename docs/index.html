@@ -616,7 +616,10 @@ function showLogin() {
     const loginScreen = document.getElementById('login-screen');
     loginScreen.style.display = 'flex';
     const err = document.getElementById('login-error');
-    if (err) err.textContent = '';
+    if (err) {
+        err.textContent = '';
+        err.style.display = 'none';
+    }
     const userEl = document.getElementById('login-username');
     if (userEl) userEl.focus();
 }
@@ -630,16 +633,25 @@ async function handleLogin() {
     const err = document.getElementById('login-error');
     const email = (document.getElementById('login-username').value || '').trim();
     const password = (document.getElementById('login-password').value || '');
-    if (err) err.textContent = '';
+    if (err) {
+        err.textContent = '';
+        err.style.display = 'none';
+    }
 
     try {
-        if (typeof firebase === 'undefined' || !firebase || !firebase.auth) throw new Error('Giriş sistemi yüklenemedi.');
+        if (typeof firebase === 'undefined' || !firebase || !firebase.auth) {
+            console.error('Firebase not loaded');
+            return;
+        }
         if (!email || !password) throw new Error('Kullanıcı adı/şifre boş olamaz.');
         await firebase.auth().signInWithEmailAndPassword(email, password);
         showApp();
         await ensureContentLoaded(true);
     } catch (e) {
-        if (err) err.textContent = (e && e.message) ? e.message : 'Giriş başarısız.';
+        if (err) {
+            err.textContent = (e && e.message) ? e.message : 'Giriş başarısız.';
+            err.style.display = err.textContent ? 'block' : 'none';
+        }
     }
 }
 
@@ -656,8 +668,6 @@ function handleLogout() {
 function initAuthGate() {
     if (typeof firebase === 'undefined' || !firebase || !firebase.auth) {
         showLogin();
-        const err = document.getElementById('login-error');
-        if (err) err.textContent = 'Giriş sistemi yüklenemedi.';
         return;
     }
 
