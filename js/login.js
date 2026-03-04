@@ -2,26 +2,6 @@
 (function () {
   'use strict';
 
-  function normalizeUsername(input) {
-    return String(input || '')
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, '.')
-      .replace(/[^a-z0-9._-]/g, '');
-  }
-
-  function usernameToEmail(input) {
-    const raw = String(input || '').trim();
-    if (!raw) return '';
-
-    // If user typed a real email, use it as-is.
-    if (raw.includes('@')) return raw;
-
-    const normalized = normalizeUsername(raw);
-    if (!normalized) return '';
-    return normalized + '@surucu.local';
-  }
-
   function mapAuthErrorToMessage(error) {
     const code = (error && error.code) ? String(error.code) : '';
     switch (code) {
@@ -29,19 +9,20 @@
         return 'Kullanıcı adı geçersiz.';
       case 'auth/user-not-found':
       case 'auth/wrong-password':
+      case 'auth/invalid-login-credentials':
         return 'Kullanıcı adı veya şifre hatalı.';
       case 'auth/too-many-requests':
-        return 'Çok fazla deneme. Biraz sonra tekrar deneyin.';
+        return 'Çok fazla deneme. Lütfen biraz sonra tekrar deneyin.';
       default:
         return 'Giriş başarısız.';
     }
   }
 
-  async function signIn(username, password) {
-    const email = usernameToEmail(username);
+  async function signIn(email, password) {
+    const userEmail = String(email || '').trim();
     const pass = String(password || '');
 
-    if (!email || !pass) {
+    if (!userEmail || !pass) {
       const err = new Error('Kullanıcı adı veya şifre hatalı.');
       err.userMessage = 'Kullanıcı adı veya şifre hatalı.';
       throw err;
@@ -54,7 +35,7 @@
     }
 
     try {
-      await firebase.auth().signInWithEmailAndPassword(email, pass);
+      await firebase.auth().signInWithEmailAndPassword(userEmail, pass);
       return true;
     } catch (e) {
       const message = mapAuthErrorToMessage(e);
@@ -65,8 +46,6 @@
   }
 
   window.SA_LOGIN = {
-    signIn,
-    usernameToEmail,
-    normalizeUsername,
+    signIn
   };
 })();

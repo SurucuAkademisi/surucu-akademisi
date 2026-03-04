@@ -493,6 +493,12 @@
       firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
           const email = user.email || '';
+          const allowedAdmin = 'admin@surucu.local';
+          if (String(email).toLowerCase() !== allowedAdmin) {
+            try { await firebase.auth().signOut(); } catch {}
+            location.href = 'index.html';
+            return;
+          }
           const display = email.toLowerCase().endsWith('@surucu.local') ? String(email).split('@')[0] : (email || 'admin');
           elPill.textContent = 'Giriş: ' + display;
           showOnly('panel');
