@@ -617,8 +617,8 @@ function showLogin() {
     loginScreen.style.display = 'flex';
     const err = document.getElementById('login-error');
     if (err) err.textContent = '';
-    const codeEl = document.getElementById('login-code');
-    if (codeEl) codeEl.focus();
+    const userEl = document.getElementById('login-username');
+    if (userEl) userEl.focus();
 }
 
 function showApp() {
@@ -628,14 +628,14 @@ function showApp() {
 
 async function handleLogin() {
     const err = document.getElementById('login-error');
-    const code = (document.getElementById('login-code').value || '').trim();
+    const email = (document.getElementById('login-username').value || '').trim();
+    const password = (document.getElementById('login-password').value || '');
     if (err) err.textContent = '';
 
     try {
-        if (!window.SAFBReady) throw new Error('Giriş sistemi yüklenemedi.');
-        await window.SAFBReady;
-        if (!window.SAFB) throw new Error('Giriş sistemi yüklenemedi.');
-        await window.SAFB.studentLoginWithCode(code);
+        if (typeof firebase === 'undefined' || !firebase || !firebase.auth) throw new Error('Giriş sistemi yüklenemedi.');
+        if (!email || !password) throw new Error('Kullanıcı adı/şifre boş olamaz.');
+        await firebase.auth().signInWithEmailAndPassword(email, password);
         showApp();
         await ensureContentLoaded(true);
     } catch (e) {
@@ -645,26 +645,30 @@ async function handleLogin() {
 
 function handleLogout() {
     try {
-        if (window.SAFB) window.SAFB.studentLogout();
+        if (typeof firebase !== 'undefined' && firebase && firebase.auth) {
+            firebase.auth().signOut();
+        }
     } finally {
         location.reload();
     }
 }
 
 function initAuthGate() {
-    if (!window.SAFB) {
+    if (typeof firebase === 'undefined' || !firebase || !firebase.auth) {
         showLogin();
         const err = document.getElementById('login-error');
         if (err) err.textContent = 'Giriş sistemi yüklenemedi.';
         return;
     }
-    const session = window.SAFB.getStudentSession();
-    if (session) {
-        showApp();
-        ensureContentLoaded(true);
-    } else {
-        showLogin();
-    }
+
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            showApp();
+            ensureContentLoaded(true);
+        } else {
+            showLogin();
+        }
+    });
 }
 
 // --- CONTENT LINKS (Firestore -> UI) ---
@@ -691,10 +695,15 @@ function applyContentLinksToUI(links) {
 
 async function ensureContentLoaded(preferServer) {
     try {
-        if (!window.SAFBReady) return;
-        await window.SAFBReady;
-        if (!window.SAFB) return;
-        const links = await window.SAFB.getContentLinks({ preferServer: !!preferServer });
+        if (typeof firebase === 'undefined' || !firebase || !firebase.firestore) return;
+        const ref = firebase.firestore().collection('content').doc('links');
+        let snap;
+        try {
+            snap = preferServer ? await ref.get({ source: 'server' }) : await ref.get();
+        } catch {
+            snap = await ref.get();
+        }
+        const links = (snap && snap.exists) ? (snap.data() || {}) : {};
         applyContentLinksToUI(links);
         __contentLoadedOnce = true;
     } catch {
@@ -722,11 +731,6 @@ document.addEventListener('keydown', (e) => {
 });
 
 window.addEventListener('DOMContentLoaded', async () => {
-    try {
-        if (window.SAFBReady) await window.SAFBReady;
-    } catch {
-        // ignore
-    }
     initAuthGate();
 });
 

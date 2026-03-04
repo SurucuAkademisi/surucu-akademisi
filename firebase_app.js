@@ -19,10 +19,4 @@ if (!firebase.apps || !firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-window.SAFirebase = {
-  auth: firebase.auth(),
-  db: firebase.firestore()
-};
-
-window.SAFBReady = true;
 console.log('Firebase loaded:', typeof firebase);

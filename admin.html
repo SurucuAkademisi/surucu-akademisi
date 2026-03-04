@@ -475,14 +475,12 @@
     }
 
     async function init() {
-      if (!window.SAFBReady) {
+      if (typeof firebase === 'undefined' || !firebase || !firebase.auth || !firebase.firestore) {
         document.body.innerHTML = '<div style="padding:18px; color:#fff; font-family:Segoe UI, sans-serif;">Firebase yüklenemedi.</div>';
         return;
       }
-      try {
-        await window.SAFBReady;
-      } catch (e) {
-        document.body.innerHTML = '<div style="padding:18px; color:#fff; font-family:Segoe UI, sans-serif;">' + (e && e.message ? e.message : 'Firebase başlatılamadı.') + '</div>';
+      if (!window.SAFB) {
+        document.body.innerHTML = '<div style="padding:18px; color:#fff; font-family:Segoe UI, sans-serif;">Giriş sistemi yüklenemedi.</div>';
         return;
       }
 

@@ -2,15 +2,24 @@
 (function () {
   'use strict';
 
-  if (!window.SAFirebase) {
+  if (!window.firebase || typeof firebase === 'undefined') {
     console.error('Firebase not loaded');
     return;
   }
 
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof firebase === 'undefined') {
+      console.error('Firebase not loaded');
+      return;
+    }
+    firebase.auth();
+    console.log('Firebase Auth ready');
+  });
+
   console.log('Firebase loaded:', typeof firebase);
 
-  const auth = window.SAFirebase.auth;
-  const db = window.SAFirebase.db;
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
   function normalizeCode(code) {
     return String(code || '').trim().toUpperCase();
