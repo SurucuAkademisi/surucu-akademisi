@@ -219,8 +219,8 @@
       <h2>Admin Girişi</h2>
       <div class="grid">
         <div class="field">
-          <label>Kullanıcı Adı / E-posta</label>
-          <input id="admin-username" value="" autocomplete="username" placeholder="admin" />
+          <label>E-posta</label>
+          <input id="admin-username" value="" autocomplete="username" placeholder="admin@surucu.local" />
         </div>
         <div class="field">
           <label>Şifre</label>
@@ -235,45 +235,45 @@
 
     <div id="box-panel" style="display:none;">
       <div class="card">
-        <h2>Erişim Kodu Oluştur</h2>
+        <h2>Öğrenci Kullanıcı Oluştur</h2>
         <div class="grid">
           <div class="field">
-            <label>Not (opsiyonel)</label>
-            <input id="student-username" autocomplete="off" placeholder="ör: Mart grubu" />
+            <label>Kullanıcı adı</label>
+            <input id="student-username" autocomplete="off" placeholder="ör: omer.aksoy" />
+          </div>
+          <div class="field">
+            <label>Şifre</label>
+            <input id="student-password" type="password" autocomplete="new-password" placeholder="Şifre" />
           </div>
           <div class="field">
             <label>Süre (gün)</label>
-            <input id="student-password" type="number" inputmode="numeric" min="1" value="30" placeholder="30" />
-          </div>
-          <div class="field">
-            <label>Maks. Cihaz</label>
-            <input id="code-max-devices" type="number" inputmode="numeric" min="1" value="3" placeholder="3" />
+            <input id="student-days" type="number" inputmode="numeric" min="1" value="30" placeholder="30" />
           </div>
         </div>
         <div class="row" style="margin-top:12px;">
-          <button class="btn" id="btn-create"><i class="fa-solid fa-user-plus"></i> Oluştur</button>
+          <button class="btn" id="btn-create"><i class="fa-solid fa-user-plus"></i> Kullanıcı Oluştur</button>
           <span id="create-msg" class="muted"></span>
         </div>
       </div>
 
       <div class="card">
-        <h2>Erişim Kodları</h2>
+        <h2>Öğrenci Kullanıcıları</h2>
         <div class="row" style="justify-content:space-between;">
-          <span class="muted">Cihaz limiti ve süre erişim kodu bazındadır.</span>
+          <span class="muted">Süre yönetimi kullanıcı bazındadır.</span>
           <button class="btn" id="btn-refresh"><i class="fa-solid fa-rotate"></i> Yenile</button>
         </div>
         <div style="margin-top:10px; overflow:auto;">
           <table>
             <thead>
               <tr>
-                <th>Kod</th>
-                <th>Durum</th>
-                <th>Süre</th>
-                <th>Cihaz</th>
+                <th>Kullanıcı adı</th>
+                <th>E-posta</th>
+                <th>Kalan Gün</th>
+                <th>Bitiş Tarihi</th>
                 <th>İşlem</th>
               </tr>
             </thead>
-            <tbody id="students-tbody"></tbody>
+            <tbody id="users-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -363,59 +363,135 @@
       }
     }
 
-    function countDevices(devices) {
-      if (!devices || typeof devices !== 'object') return 0;
-      return Object.keys(devices).length;
+    function normalizeStudentUsername(input) {
+      return String(input || '')
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, '.')
+        .replace(/[^a-z0-9._-]/g, '');
     }
 
-    async function renderAccessCodes() {
-      const tbody = document.getElementById('students-tbody');
+    function studentEmailFromInput(input) {
+      const raw = String(input || '').trim();
+      if (!raw) return '';
+      if (raw.includes('@')) return raw.toLowerCase();
+      const normalized = normalizeStudentUsername(raw);
+      return normalized ? (normalized + '@surucu.app') : '';
+    }
+
+    function daysFromNow(days) {
+      const totalDays = Math.max(1, Number(days || 1));
+      return firebase.firestore.Timestamp.fromMillis(Date.now() + totalDays * 24 * 60 * 60 * 1000);
+    }
+
+    function remainingDays(expiresAt) {
+      if (!expiresAt || typeof expiresAt.toMillis !== 'function') return 0;
+      const diff = expiresAt.toMillis() - Date.now();
+      return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+    }
+
+    function toDateInputValue(expiresAt) {
+      if (!expiresAt || typeof expiresAt.toMillis !== 'function') return '-';
+      return new Date(expiresAt.toMillis()).toLocaleString('tr-TR');
+    }
+
+    function adminErrorMessage(e, fallback) {
+      const code = String((e && e.code) || '');
+      if (code === 'auth/email-already-in-use') return 'Bu kullanıcı adı zaten kullanılıyor.';
+      if (code === 'auth/invalid-email') return 'Geçersiz kullanıcı adı/e-posta.';
+      if (code === 'auth/weak-password') return 'Şifre en az 6 karakter olmalı.';
+      if (code === 'permission-denied') return 'Yetkiniz yok. Kurum yöneticisiyle görüşün.';
+      return fallback || 'İşlem başarısız.';
+    }
+
+    function getSecondaryAuth() {
+      let app;
+      try {
+        app = firebase.app('secondary');
+      } catch {
+        app = firebase.initializeApp(firebase.app().options, 'secondary');
+      }
+      return app.auth();
+    }
+
+    async function renderStudentUsers() {
+      const tbody = document.getElementById('users-tbody');
       tbody.innerHTML = '';
 
-      const codes = await window.SAFB.listAccessCodes();
-      if (!codes.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="muted">Kayıtlı erişim kodu yok.</td></tr>';
+      const snap = await firebase.firestore().collection('users').orderBy('createdAt', 'desc').get();
+      const users = snap.docs.map((d) => ({ id: d.id, ...(d.data() || {}) }));
+
+      if (!users.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="muted">Kayıtlı öğrenci kullanıcı yok.</td></tr>';
         return;
       }
 
-      for (const c of codes) {
-        const isActive = c.active === true;
-        const maxDevices = Number(c.maxDevices || 3);
-        const used = countDevices(c.devices);
+      for (const user of users) {
+        const active = user.isActive !== false;
+        const rDays = remainingDays(user.expiresAt);
+        const displayUsername = user.username || (String(user.email || '').split('@')[0] || '-');
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><strong>${c.id}</strong></td>
-          <td><span class="badge" style="${isActive ? '' : 'opacity:0.7;'}">${isActive ? 'aktif' : 'pasif'}</span></td>
-          <td>${fmtDate(c.expiresAt)}</td>
-          <td>${used} / ${maxDevices}</td>
+          <td><strong>${displayUsername}</strong></td>
+          <td>${user.email || '-'}</td>
+          <td>${rDays}</td>
+          <td>${toDateInputValue(user.expiresAt)}</td>
           <td>
-            <button class="btn" data-act="toggle" data-code="${c.id}"><i class="fa-solid fa-toggle-${isActive ? 'on' : 'off'}"></i> ${isActive ? 'Pasifleştir' : 'Aktifleştir'}</button>
-            <button class="btn" data-act="copy" data-code="${c.id}"><i class="fa-solid fa-copy"></i> Kopyala</button>
-            <button class="btn danger" data-act="delete" data-code="${c.id}"><i class="fa-solid fa-trash"></i> Sil</button>
+            <input type="number" min="1" value="30" data-days="${user.id}" style="width:74px;" />
+            <button class="btn" data-act="extend" data-id="${user.id}"><i class="fa-solid fa-calendar-plus"></i> Uzat</button>
+            <button class="btn" data-act="toggle" data-id="${user.id}"><i class="fa-solid fa-toggle-${active ? 'on' : 'off'}"></i> ${active ? 'Pasifleştir' : 'Aktifleştir'}</button>
           </td>
         `;
 
         tr.querySelectorAll('button').forEach(btn => {
           btn.addEventListener('click', async (e) => {
             const act = e.currentTarget.getAttribute('data-act');
-            const code = e.currentTarget.getAttribute('data-code');
-
-            if (act === 'copy') {
-              try { await navigator.clipboard.writeText(code); } catch {}
-              return;
-            }
+            const uid = e.currentTarget.getAttribute('data-id');
 
             if (act === 'toggle') {
-              await window.SAFB.setAccessCodeActive(code, !isActive);
-              await renderAccessCodes();
+              try {
+                await firebase.firestore().collection('users').doc(uid).set(
+                  { isActive: !active, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+                  { merge: true }
+                );
+                await renderStudentUsers();
+              } catch (err) {
+                alert(adminErrorMessage(err, 'Durum güncellenemedi.'));
+              }
               return;
             }
 
-            if (act === 'delete') {
-              if (!confirm(code + ' silinsin mi?')) return;
-              await window.SAFB.deleteAccessCode(code);
-              await renderAccessCodes();
+            if (act === 'extend') {
+              const daysInput = tr.querySelector('input[data-days="' + uid + '"]');
+              const addDays = Math.max(1, Number((daysInput && daysInput.value) || '30'));
+
+              try {
+                const docRef = firebase.firestore().collection('users').doc(uid);
+                const snap = await docRef.get();
+                if (!snap.exists) {
+                  alert('Kullanıcı bulunamadı.');
+                  return;
+                }
+
+                const data = snap.data() || {};
+                const nowMs = Date.now();
+                const prevMs = data.expiresAt && typeof data.expiresAt.toMillis === 'function' ? data.expiresAt.toMillis() : 0;
+                const baseMs = prevMs > nowMs ? prevMs : nowMs;
+                const nextMs = baseMs + addDays * 24 * 60 * 60 * 1000;
+
+                await docRef.set(
+                  {
+                    expiresAt: firebase.firestore.Timestamp.fromMillis(nextMs),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                  },
+                  { merge: true }
+                );
+
+                await renderStudentUsers();
+              } catch (err) {
+                alert(adminErrorMessage(err, 'Uzatma işlemi başarısız.'));
+              }
               return;
             }
           });
@@ -502,7 +578,7 @@
           const display = email.toLowerCase().endsWith('@surucu.local') ? String(email).split('@')[0] : (email || 'admin');
           elPill.textContent = 'Giriş: ' + display;
           showOnly('panel');
-          await renderAccessCodes();
+          await renderStudentUsers();
           await loadContentForm();
         } else {
           elPill.textContent = 'Admin girişi gerekli';
@@ -532,16 +608,10 @@
       const msg = document.getElementById('login-msg');
       try {
         setMsg(msg, 'Kontrol ediliyor...', 'muted');
-        const username = document.getElementById('admin-username').value;
+        const email = (document.getElementById('admin-username').value || '').trim().toLowerCase();
         const password = document.getElementById('admin-password').value;
-        if (window.SA_LOGIN && typeof window.SA_LOGIN.signIn === 'function') {
-          await window.SA_LOGIN.signIn(username, password);
-        } else {
-          const raw = String(username || '').trim();
-          const email = raw.includes('@') ? raw : (raw ? (raw.toLowerCase() + '@surucu.local') : '');
-          if (!email || !password) throw { code: 'auth/wrong-password' };
-          await firebase.auth().signInWithEmailAndPassword(email, password);
-        }
+        if (!email || !password) throw { code: 'auth/wrong-password' };
+        await firebase.auth().signInWithEmailAndPassword(email, password);
         setMsg(msg, 'Giriş başarılı.', 'ok');
       } catch (e) {
         setMsg(msg, authErrorToMessage(e), 'error');
@@ -552,22 +622,41 @@
       const msg = document.getElementById('create-msg');
       try {
         setMsg(msg, 'Oluşturuluyor...', 'muted');
-        const note = document.getElementById('student-username').value;
-        const days = Number(document.getElementById('student-password').value || '30') || 30;
-        const maxDevices = Number(document.getElementById('code-max-devices').value || '3') || 3;
-        const code = await window.SAFB.createAccessCode({ note, days, maxDevices });
+        const usernameInput = document.getElementById('student-username').value;
+        const password = document.getElementById('student-password').value || '';
+        const days = Math.max(1, Number(document.getElementById('student-days').value || '30'));
+
+        const username = normalizeStudentUsername(usernameInput);
+        const email = studentEmailFromInput(usernameInput);
+        if (!username || !email || !password) throw new Error('Kullanıcı adı, şifre ve süre zorunludur.');
+
+        const secondaryAuth = getSecondaryAuth();
+        const cred = await secondaryAuth.createUserWithEmailAndPassword(email, password);
+        const uid = cred && cred.user ? cred.user.uid : '';
+        await secondaryAuth.signOut();
+        if (!uid) throw new Error('Kullanıcı oluşturulamadı.');
+
+        await firebase.firestore().collection('users').doc(uid).set({
+          username,
+          email,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          expiresAt: daysFromNow(days),
+          isActive: true,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
         document.getElementById('student-username').value = '';
-        document.getElementById('student-password').value = '30';
-        document.getElementById('code-max-devices').value = '3';
-        setMsg(msg, 'Kod oluşturuldu: ' + code, 'ok');
-        await renderAccessCodes();
+        document.getElementById('student-password').value = '';
+        document.getElementById('student-days').value = '30';
+        setMsg(msg, 'Öğrenci kullanıcı oluşturuldu.', 'ok');
+        await renderStudentUsers();
       } catch (e) {
-        setMsg(msg, (e && e.message) ? e.message : 'Oluşturma başarısız.', 'error');
+        setMsg(msg, adminErrorMessage(e, 'Kullanıcı oluşturma başarısız.'), 'error');
       }
     });
 
     document.getElementById('btn-refresh').addEventListener('click', async () => {
-      await renderAccessCodes();
+      await renderStudentUsers();
     });
 
     btnAdminLogout.addEventListener('click', async () => {

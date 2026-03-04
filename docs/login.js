@@ -24,6 +24,131 @@
   const auth = firebase.auth();
   const db = firebase.firestore();
 
+  function normalizeStudentUsername(input) {
+    return String(input || '').trim().toLowerCase();
+  }
+
+  function studentInputToEmail(input) {
+    const raw = String(input || '').trim();
+    if (!raw) return '';
+    if (raw.includes('@')) return raw.toLowerCase();
+    const normalized = normalizeStudentUsername(raw);
+    return normalized ? (normalized + '@surucu.app') : '';
+  }
+
+  function remainingDaysFromMillis(expiresAtMs) {
+    const diff = Number(expiresAtMs || 0) - Date.now();
+    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  }
+
+  function setRemainingDaysBadge(days) {
+    const host = document.querySelector('.header-actions');
+    if (!host) return;
+
+    let badge = document.getElementById('student-remaining-days');
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.id = 'student-remaining-days';
+      badge.style.fontSize = '0.85rem';
+      badge.style.color = '#fff';
+      badge.style.background = 'rgba(0,0,0,0.35)';
+      badge.style.border = '1px solid rgba(255,255,255,0.2)';
+      badge.style.borderRadius = '999px';
+      badge.style.padding = '6px 10px';
+      host.appendChild(badge);
+    }
+    badge.textContent = 'Kalan gün: ' + Math.max(0, Number(days || 0));
+  }
+
+  function clearRemainingDaysBadge() {
+    const badge = document.getElementById('student-remaining-days');
+    if (badge) badge.remove();
+  }
+
+  function studentAuthErrorMessage(error) {
+    const code = String((error && error.code) || '');
+    const message = String((error && error.message) || '');
+
+    if (code === 'auth/invalid-email') return 'Geçersiz kullanıcı adı.';
+    if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-login-credentials') {
+      return 'Kullanıcı adı veya şifre hatalı.';
+    }
+    if (message.includes('INVALID_LOGIN_CREDENTIALS')) return 'Kullanıcı adı veya şifre hatalı.';
+    if (code === 'auth/too-many-requests') return 'Çok fazla deneme. Lütfen biraz sonra tekrar deneyin.';
+    return 'Giriş başarısız.';
+  }
+
+  async function validateStudentAccess(user) {
+    if (!user || !user.uid) {
+      return { ok: false, userMessage: 'Giriş başarısız.' };
+    }
+
+    try {
+      const snap = await db.collection('users').doc(user.uid).get();
+      if (!snap.exists) {
+        await auth.signOut();
+        clearRemainingDaysBadge();
+        return { ok: false, userMessage: 'Hesabınız pasif. Kurumunuzla iletişime geçin.' };
+      }
+
+      const data = snap.data() || {};
+      if (data.isActive === false) {
+        await auth.signOut();
+        clearRemainingDaysBadge();
+        return { ok: false, userMessage: 'Hesabınız pasif. Kurumunuzla iletişime geçin.' };
+      }
+
+      const expiresAtMs = data.expiresAt && typeof data.expiresAt.toMillis === 'function' ? data.expiresAt.toMillis() : 0;
+      if (!expiresAtMs || expiresAtMs <= Date.now()) {
+        await auth.signOut();
+        clearRemainingDaysBadge();
+        return { ok: false, userMessage: 'Süreniz dolmuş. Kurumunuzla iletişime geçin.' };
+      }
+
+      setRemainingDaysBadge(remainingDaysFromMillis(expiresAtMs));
+      return { ok: true, remainingDays: remainingDaysFromMillis(expiresAtMs) };
+    } catch {
+      await auth.signOut();
+      clearRemainingDaysBadge();
+      return { ok: false, userMessage: 'Giriş başarısız.' };
+    }
+  }
+
+  async function studentSignIn(usernameOrEmail, password) {
+    const email = studentInputToEmail(usernameOrEmail);
+    const pass = String(password || '');
+
+    if (!email || !pass) {
+      const err = new Error('Kullanıcı adı veya şifre hatalı.');
+      err.userMessage = 'Kullanıcı adı veya şifre hatalı.';
+      throw err;
+    }
+
+    try {
+      await auth.signInWithEmailAndPassword(email, pass);
+      const access = await validateStudentAccess(auth.currentUser);
+      if (!access.ok) {
+        const err = new Error(access.userMessage || 'Giriş başarısız.');
+        err.userMessage = access.userMessage || 'Giriş başarısız.';
+        throw err;
+      }
+      return true;
+    } catch (error) {
+      const message = error && error.userMessage ? String(error.userMessage) : studentAuthErrorMessage(error);
+      const err = new Error(message);
+      err.userMessage = message;
+      throw err;
+    }
+  }
+
+  async function validateCurrentStudent() {
+    if (!auth.currentUser) {
+      clearRemainingDaysBadge();
+      return { ok: false, userMessage: 'Giriş başarısız.' };
+    }
+    return validateStudentAccess(auth.currentUser);
+  }
+
   function normalizeCode(code) {
     return String(code || '').trim().toUpperCase();
   }
@@ -257,5 +382,10 @@
     listAccessCodes,
     setAccessCodeActive,
     deleteAccessCode
+  };
+
+  window.SA_LOGIN = {
+    signIn: studentSignIn,
+    validateCurrentUser: validateCurrentStudent
   };
 })();

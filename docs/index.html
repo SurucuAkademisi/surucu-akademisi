@@ -630,10 +630,12 @@ function showApp() {
 }
 
 function authErrorToMessage(e) {
+    if (e && e.userMessage) return String(e.userMessage);
+
     const code = (e && e.code) ? String(e.code) : '';
     switch (code) {
         case 'auth/invalid-email':
-            return 'Kullanıcı adı geçersiz.';
+            return 'Geçersiz kullanıcı adı.';
         case 'auth/user-not-found':
         case 'auth/wrong-password':
         case 'auth/invalid-login-credentials':
@@ -647,7 +649,7 @@ function authErrorToMessage(e) {
 
 async function handleLogin() {
     const err = document.getElementById('login-error');
-    const email = (document.getElementById('login-username').value || '').trim();
+    const username = (document.getElementById('login-username').value || '').trim();
     const password = (document.getElementById('login-password').value || '');
     if (err) {
         err.textContent = '';
@@ -655,15 +657,15 @@ async function handleLogin() {
     }
 
     try {
-        if (typeof firebase === 'undefined' || !firebase || !firebase.auth) {
+        if (!window.SA_LOGIN || typeof window.SA_LOGIN.signIn !== 'function') {
             if (err) {
                 err.textContent = 'Giriş sistemi yüklenemedi.';
                 err.style.display = 'block';
             }
             return;
         }
-        if (!email || !password) throw new Error('Kullanıcı adı/şifre boş olamaz.');
-        await firebase.auth().signInWithEmailAndPassword(email, password);
+
+        await window.SA_LOGIN.signIn(username, password);
         showApp();
         await ensureContentLoaded(true);
     } catch (e) {
@@ -695,8 +697,20 @@ function initAuthGate() {
         return;
     }
 
-    firebase.auth().onAuthStateChanged((user) => {
+    firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
+            if (window.SA_LOGIN && typeof window.SA_LOGIN.validateCurrentUser === 'function') {
+                const check = await window.SA_LOGIN.validateCurrentUser();
+                if (!check.ok) {
+                    showLogin();
+                    const err = document.getElementById('login-error');
+                    if (err) {
+                        err.textContent = check.userMessage || 'Giriş başarısız.';
+                        err.style.display = 'block';
+                    }
+                    return;
+                }
+            }
             showApp();
             ensureContentLoaded(true);
         } else {

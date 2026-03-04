@@ -680,8 +680,20 @@ function initAuthGate() {
         return;
     }
 
-    firebase.auth().onAuthStateChanged((user) => {
+    firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
+            if (window.SA_LOGIN && typeof window.SA_LOGIN.validateCurrentUser === 'function') {
+                const check = await window.SA_LOGIN.validateCurrentUser();
+                if (!check.ok) {
+                    showLogin();
+                    const err = document.getElementById('login-error');
+                    if (err) {
+                        err.textContent = check.userMessage || 'Giriş başarısız.';
+                        err.style.display = 'block';
+                    }
+                    return;
+                }
+            }
             showApp();
             ensureContentLoaded(true);
         } else {
