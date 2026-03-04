@@ -1293,22 +1293,11 @@ function returnHome() {
 function formatTime(sec) { const s = Math.max(0, Math.floor(sec)); const mm = String(Math.floor(s/60)).padStart(2,'0'); const ss = String(s%60).padStart(2,'0'); return `${mm}:${ss}`; }
 </script>
 
-<script>
-    window.FIREBASE_CONFIG = {
-        apiKey: "AIzaSyCpOESMP9HOvjY_Z-fv0w5G0MC-UVI5D_0",
-        authDomain: "surucuakademisi-f5e1f.firebaseapp.com",
-        projectId: "surucuakademisi-f5e1f",
-        storageBucket: "surucuakademisi-f5e1f.firebasestorage.app",
-        messagingSenderId: "268662659371",
-        appId: "1:268662659371:web:f7e2da8733af296ce74d6e",
-        measurementId: "G-JVZBFSS905"
-    };
-</script>
-
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-<script src="./firebase_app.js"></script>
+<script src="firebase_app.js"></script>
+<script src="login.js"></script>
 </body>
 </html>

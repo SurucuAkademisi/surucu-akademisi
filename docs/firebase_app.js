@@ -1,40 +1,26 @@
-/* Firebase init (v8 compat - global firebase) */
-(function () {
-  'use strict';
+// Firebase v8 (global) init
+const firebaseConfig = {
+  apiKey: "AIzaSyCpOESMP9HOvjY_Z-fv0w5G0MC-UVI5D_0",
+  authDomain: "surucuakademisi-f5e1f.firebaseapp.com",
+  projectId: "surucuakademisi-f5e1f",
+  storageBucket: "surucuakademisi-f5e1f.firebasestorage.app",
+  messagingSenderId: "268662659371",
+  appId: "1:268662659371:web:f7e2da8733af296ce74d6e"
+};
 
-  const cfg =
-    (typeof window !== 'undefined' && (window.firebaseConfig || window.FIREBASE_CONFIG)) ||
-    (typeof globalThis !== 'undefined' && (globalThis.firebaseConfig || globalThis.FIREBASE_CONFIG)) ||
-    null;
+if (typeof firebase === 'undefined') {
+  console.error('Firebase loaded:', typeof firebase);
+  throw new Error('firebase is not defined');
+}
 
-  function fail(err) {
-    try {
-      // Kullanıcı kodu bazı yerlerde SAFBReady bekliyor olabilir.
-      window.SAFBReady = Promise.reject(err);
-    } catch {}
-    throw err;
-  }
+if (!firebase.apps || !firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 
-  if (!cfg) {
-    fail(new Error('firebaseConfig bulunamadı. Önce FIREBASE_CONFIG değişkenini sayfada tanımlayın.'));
-  }
+window.SAFirebase = {
+  auth: firebase.auth(),
+  db: firebase.firestore()
+};
 
-  if (typeof firebase === 'undefined' || !firebase || typeof firebase.initializeApp !== 'function') {
-    fail(new Error('Firebase yüklenemedi. Firebase v8 scriptlerini (firebase-app.js) önce yükleyin.'));
-  }
-
-  // Aynı sayfada iki kez yüklenirse tekrar initialize etme.
-  if (!firebase.apps || !firebase.apps.length) {
-    firebase.initializeApp(cfg);
-  }
-
-  const app = firebase.app();
-  const auth = (typeof firebase.auth === 'function') ? firebase.auth() : null;
-  const db = (typeof firebase.firestore === 'function') ? firebase.firestore() : null;
-
-  // Diğer scriptler için global erişim
-  window.SAFirebase = { app, auth, db };
-
-  // Uyum amaçlı (varsa bekleyen kodlar)
-  window.SAFBReady = Promise.resolve();
-})();
+window.SAFBReady = true;
+console.log('Firebase loaded:', typeof firebase);
