@@ -1,0 +1,27 @@
+{
+  "name": "surucu-akademisi-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sürücü Akademisi Capacitor mobile wrapper",
+  "scripts": {
+    "build": "echo Web assets hazir",
+    "copy": "npx cap copy",
+    "sync": "npx cap sync",
+    "add:android": "npx cap add android",
+    "add:ios": "npx cap add ios",
+    "android": "npx cap open android",
+    "ios": "npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/action-sheet": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor-community/admob": "^5.3.1"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "typescript": "^5.7.0"
+  }
+}
