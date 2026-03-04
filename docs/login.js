@@ -21,8 +21,6 @@
     console.log('Firebase Auth ready');
   });
 
-  console.log('Firebase loaded:', typeof firebase);
-
   const auth = firebase.auth();
   const db = firebase.firestore();
 
@@ -158,8 +156,31 @@
     });
   }
 
+  function toAuthEmail(input) {
+    const raw = String(input || '').trim();
+    if (!raw) return '';
+
+    if (raw.includes('@')) return raw.toLowerCase();
+
+    let u = raw.toLowerCase();
+    u = u
+      .replace(/ç/g, 'c')
+      .replace(/ğ/g, 'g')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ş/g, 's')
+      .replace(/ü/g, 'u');
+
+    u = u.replace(/\s+/g, '.');
+    u = u.replace(/[^a-z0-9._-]/g, '');
+    u = u.replace(/\.+/g, '.').replace(/^\.+|\.+$/g, '');
+
+    if (!u) return '';
+    return u + '@surucu.local';
+  }
+
   async function adminSignIn(email, password) {
-    const e = String(email || '').trim();
+    const e = toAuthEmail(email);
     const p = String(password || '');
     if (!e || !p) throw new Error('Kullanıcı adı/şifre boş olamaz.');
     await auth.signInWithEmailAndPassword(e, p);

@@ -631,7 +631,7 @@ function showApp() {
 
 async function handleLogin() {
     const err = document.getElementById('login-error');
-    const email = (document.getElementById('login-username').value || '').trim();
+    const username = (document.getElementById('login-username').value || '').trim();
     const password = (document.getElementById('login-password').value || '');
     if (err) {
         err.textContent = '';
@@ -639,17 +639,21 @@ async function handleLogin() {
     }
 
     try {
-        if (typeof firebase === 'undefined' || !firebase || !firebase.auth) {
-            console.error('Firebase not loaded');
+        if (!window.SA_LOGIN || typeof window.SA_LOGIN.signIn !== 'function') {
+            if (err) {
+                err.textContent = 'Giriş sistemi yüklenemedi.';
+                err.style.display = 'block';
+            }
             return;
         }
-        if (!email || !password) throw new Error('Kullanıcı adı/şifre boş olamaz.');
-        await firebase.auth().signInWithEmailAndPassword(email, password);
+
+        await window.SA_LOGIN.signIn(username, password);
         showApp();
         await ensureContentLoaded(true);
     } catch (e) {
         if (err) {
-            err.textContent = (e && e.message) ? e.message : 'Giriş başarısız.';
+            // Ham Firebase hata metnini asla kullanıcıya gösterme.
+            err.textContent = (e && e.userMessage) ? String(e.userMessage) : 'Giriş başarısız.';
             err.style.display = err.textContent ? 'block' : 'none';
         }
     }
@@ -668,6 +672,11 @@ function handleLogout() {
 function initAuthGate() {
     if (typeof firebase === 'undefined' || !firebase || !firebase.auth) {
         showLogin();
+        const err = document.getElementById('login-error');
+        if (err) {
+            err.textContent = 'Giriş sistemi yüklenemedi.';
+            err.style.display = 'block';
+        }
         return;
     }
 
@@ -1311,7 +1320,7 @@ function formatTime(sec) { const s = Math.max(0, Math.floor(sec)); const mm = St
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-<script src="firebase_app.js"></script>
-<script src="login.js"></script>
+<script src="./firebase_app.js"></script>
+<script src="./js/login.js"></script>
 </body>
 </html>

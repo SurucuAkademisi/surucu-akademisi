@@ -219,8 +219,8 @@
       <h2>Admin Girişi</h2>
       <div class="grid">
         <div class="field">
-          <label>E-posta</label>
-          <input id="admin-username" value="" autocomplete="username" placeholder="admin@ornek.com" />
+          <label>Kullanıcı Adı / E-posta</label>
+          <input id="admin-username" value="" autocomplete="username" placeholder="admin" />
         </div>
         <div class="field">
           <label>Şifre</label>
@@ -475,18 +475,26 @@
     }
 
     async function init() {
+      const msg = document.getElementById('login-msg');
+
       if (typeof firebase === 'undefined' || !firebase || !firebase.auth || !firebase.firestore) {
-        document.body.innerHTML = '<div style="padding:18px; color:#fff; font-family:Segoe UI, sans-serif;">Firebase yüklenemedi.</div>';
+        showOnly('login');
+        setMsg(msg, 'Giriş sistemi yüklenemedi.', 'error');
         return;
       }
       if (!window.SAFB) {
-        document.body.innerHTML = '<div style="padding:18px; color:#fff; font-family:Segoe UI, sans-serif;">Giriş sistemi yüklenemedi.</div>';
+        showOnly('login');
+        setMsg(msg, 'Giriş sistemi yüklenemedi.', 'error');
         return;
       }
 
-      window.SAFB.onAdminAuth(async (user) => {
+      try { console.log("Project:", firebase.app().options.projectId); } catch {}
+
+      firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
-          elPill.textContent = 'Giriş: ' + (user.email || 'admin');
+          const email = user.email || '';
+          const display = email.toLowerCase().endsWith('@surucu.local') ? String(email).split('@')[0] : (email || 'admin');
+          elPill.textContent = 'Giriş: ' + display;
           showOnly('panel');
           await renderAccessCodes();
           await loadContentForm();
@@ -497,16 +505,40 @@
       });
     }
 
+    function authErrorToMessage(e) {
+      if (e && e.userMessage) return String(e.userMessage);
+
+      const code = (e && e.code) ? String(e.code) : '';
+      switch (code) {
+        case 'auth/invalid-email':
+          return 'Kullanıcı adı geçersiz.';
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+          return 'Kullanıcı adı veya şifre hatalı.';
+        case 'auth/too-many-requests':
+          return 'Çok fazla deneme. Lütfen biraz sonra tekrar deneyin.';
+        default:
+          return 'Giriş başarısız.';
+      }
+    }
+
     document.getElementById('btn-login').addEventListener('click', async () => {
       const msg = document.getElementById('login-msg');
       try {
         setMsg(msg, 'Kontrol ediliyor...', 'muted');
-        const email = document.getElementById('admin-username').value;
+        const username = document.getElementById('admin-username').value;
         const password = document.getElementById('admin-password').value;
-        await window.SAFB.adminSignIn(email, password);
+        if (window.SA_LOGIN && typeof window.SA_LOGIN.signIn === 'function') {
+          await window.SA_LOGIN.signIn(username, password);
+        } else {
+          const raw = String(username || '').trim();
+          const email = raw.includes('@') ? raw : (raw ? (raw.toLowerCase() + '@surucu.local') : '');
+          if (!email || !password) throw { code: 'auth/wrong-password' };
+          await firebase.auth().signInWithEmailAndPassword(email, password);
+        }
         setMsg(msg, 'Giriş başarılı.', 'ok');
       } catch (e) {
-        setMsg(msg, (e && e.message) ? e.message : 'Giriş başarısız.', 'error');
+        setMsg(msg, authErrorToMessage(e), 'error');
       }
     });
 
@@ -554,7 +586,8 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-  <script src="firebase_app.js"></script>
-  <script src="login.js"></script>
+  <script src="./firebase_app.js"></script>
+  <script src="./js/login.js"></script>
+  <script src="./login.js"></script>
 </body>
 </html>

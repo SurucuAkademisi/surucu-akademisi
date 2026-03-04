@@ -629,9 +629,52 @@ function showApp() {
     document.getElementById('app-container').style.display = 'flex';
 }
 
+function toAuthEmail(input) {
+    const raw = String(input || '').trim();
+    if (!raw) return '';
+
+    if (raw.includes('@')) return raw.toLowerCase();
+
+    let u = raw.toLowerCase();
+    u = u
+        .replace(/ç/g, 'c')
+        .replace(/ğ/g, 'g')
+        .replace(/ı/g, 'i')
+        .replace(/ö/g, 'o')
+        .replace(/ş/g, 's')
+        .replace(/ü/g, 'u');
+
+    u = u.replace(/\s+/g, '.');
+    u = u.replace(/[^a-z0-9._-]/g, '');
+    u = u.replace(/\.+/g, '.').replace(/^\.+|\.+$/g, '');
+
+    if (!u) return '';
+    return u + '@surucu.local';
+}
+
+function authErrorToMessage(e) {
+    const code = (e && e.code) ? String(e.code) : '';
+    switch (code) {
+        case 'auth/invalid-email':
+            return 'Kullanıcı adı/e-posta formatı hatalı.';
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-login-credentials':
+            return 'Kullanıcı adı veya şifre hatalı.';
+        case 'auth/user-disabled':
+            return 'Bu hesap devre dışı.';
+        case 'auth/too-many-requests':
+            return 'Çok fazla deneme yapıldı. Lütfen biraz sonra tekrar deneyin.';
+        case 'auth/network-request-failed':
+            return 'Ağ hatası. İnternet bağlantınızı kontrol edin.';
+        default:
+            return (e && e.message) ? String(e.message) : 'Giriş başarısız.';
+    }
+}
+
 async function handleLogin() {
     const err = document.getElementById('login-error');
-    const email = (document.getElementById('login-username').value || '').trim();
+    const username = (document.getElementById('login-username').value || '').trim();
     const password = (document.getElementById('login-password').value || '');
     if (err) {
         err.textContent = '';
@@ -640,16 +683,20 @@ async function handleLogin() {
 
     try {
         if (typeof firebase === 'undefined' || !firebase || !firebase.auth) {
-            console.error('Firebase not loaded');
+            if (err) {
+                err.textContent = 'Giriş sistemi yüklenemedi.';
+                err.style.display = 'block';
+            }
             return;
         }
+        const email = toAuthEmail(username);
         if (!email || !password) throw new Error('Kullanıcı adı/şifre boş olamaz.');
         await firebase.auth().signInWithEmailAndPassword(email, password);
         showApp();
         await ensureContentLoaded(true);
     } catch (e) {
         if (err) {
-            err.textContent = (e && e.message) ? e.message : 'Giriş başarısız.';
+            err.textContent = authErrorToMessage(e);
             err.style.display = err.textContent ? 'block' : 'none';
         }
     }
@@ -668,6 +715,11 @@ function handleLogout() {
 function initAuthGate() {
     if (typeof firebase === 'undefined' || !firebase || !firebase.auth) {
         showLogin();
+        const err = document.getElementById('login-error');
+        if (err) {
+            err.textContent = 'Giriş sistemi yüklenemedi.';
+            err.style.display = 'block';
+        }
         return;
     }
 

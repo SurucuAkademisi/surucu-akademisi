@@ -1,11 +1,12 @@
-/* Sürücü Akademisi SW - V12 (Offline-first auth + admin panel) */
-const CACHE_NAME = 'surucu-v12';
+/* Sürücü Akademisi SW - V13 (Offline-first auth + admin panel) */
+const CACHE_NAME = 'surucu-v13';
 const ASSETS = [
     './',
     './index.html',
     './admin.html',
     './auth.js',
     './firebase_app.js',
+    './login.js',
     './manifest.json',
     './sw.js',
 
