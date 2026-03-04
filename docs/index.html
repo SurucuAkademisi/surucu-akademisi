@@ -29,7 +29,7 @@
                 };
             </script>
         -->
-        <script type="module" src="firebase_app.js"></script>
+        <!-- Firebase scriptleri (v8) sayfa sonunda yüklenecek -->
 
     <style>
         /* --- 1. CANLI ARKA PLAN (PARTICLE ANIMATION) --- */
@@ -1305,6 +1305,10 @@ function formatTime(sec) { const s = Math.max(0, Math.floor(sec)); const mm = St
     };
 </script>
 
-<script type="module" src="./firebase_app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script src="./firebase_app.js"></script>
 </body>
 </html>

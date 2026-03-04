@@ -334,7 +334,7 @@
       window.FIREBASE_CONFIG = { ... };
     </script>
   -->
-  <script type="module" src="firebase_app.js"></script>
+  <!-- Firebase scriptleri (v8) sayfa sonunda yüklenecek -->
   <script>
     const elSetup = document.getElementById('box-setup');
     const elLogin = document.getElementById('box-login');
@@ -564,6 +564,10 @@
     };
   </script>
 
-  <script type="module" src="./firebase_app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <script src="./firebase_app.js"></script>
 </body>
 </html>
