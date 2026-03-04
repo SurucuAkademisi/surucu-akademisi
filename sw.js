@@ -1,5 +1,5 @@
-/* Sürücü Akademisi SW - V11 (Offline-first auth + admin panel) */
-const CACHE_NAME = 'surucu-v11';
+/* Sürücü Akademisi SW - V12 (Offline-first auth + admin panel) */
+const CACHE_NAME = 'surucu-v12';
 const ASSETS = [
     './',
     './index.html',
@@ -36,14 +36,7 @@ const ASSETS = [
     './resimler/mekanik.jpg',
     './resimler/motor.gosterge.jpg',
     './resimler/surusemniyeti.jpg',
-    './resimler/yakit.yaglama.jpg',
-
-    // Notlar (offline)
-    './notlar/ilkyardim.pdf',
-    './notlar/ismakineleri.pdf',
-    './notlar/motor.pdf',
-    './notlar/trafik.pdf',
-    './notlar/trafikvecevre.pdf'
+    './resimler/yakit.yaglama.jpg'
 ];
 
 self.addEventListener('install', e => {
@@ -66,6 +59,9 @@ self.addEventListener('fetch', e => {
     if (req.method !== 'GET') return;
 
     const url = new URL(req.url);
+
+    // PDF'leri asla cache'leme / SW ile yakalama.
+    if (url.pathname.toLowerCase().endsWith('.pdf')) return;
 
     // Navigasyon / doküman istekleri: Network-first.
     // Amaç: GitHub Pages'te eski index.html'in cache-first ile "takılı" kalmasını önlemek.
