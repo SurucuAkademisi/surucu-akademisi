@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Yönetim Paneli</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="apple-touch-icon" href="resimler/logo.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      color: #ecf0f1;
+      background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+      margin-bottom: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: contain;
+      box-shadow: 0 0 10px rgba(0, 153, 255, 0.25);
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .title {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #f1c40f;
+    }
+
+    .pill {
+      font-size: 0.85rem;
+      color: #bdc3c7;
+    }
+
+    .btn {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(0, 153, 255, 0.2);
+      border: 2px solid rgba(0, 153, 255, 0.45);
+      color: #00d4ff;
+      cursor: pointer;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn:active { transform: scale(0.98); }
+
+    .card {
+      background: rgba(15, 23, 42, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 14px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+      margin-bottom: 12px;
+    }
+
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      color: #e67e22;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    @media (max-width: 720px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 0.9rem;
+      color: #bdc3c7;
+    }
+
+    .field input {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(0, 0, 0, 0.25);
+      color: #fff;
+      outline: none;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .muted { color: #bdc3c7; font-size: 0.9rem; }
+    .error { color: #ffb3b3; font-weight: 700; }
+    .ok { color: #2ecc71; font-weight: 700; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: left;
+    }
+
+    th { color: #f1c40f; font-size: 0.9rem; }
+    td { color: #ecf0f1; font-size: 0.92rem; }
+
+    .danger {
+      background: rgba(231, 76, 60, 0.12);
+      border-color: rgba(231, 76, 60, 0.45);
+      color: #ffb3b3;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      background: rgba(255, 255, 255, 0.08);
+      color: #bdc3c7;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div class="brand">
+        <img class="logo" src="resimler/logo.png" alt="Logo" />
+        <div>
+          <p class="title">Yönetim Paneli</p>
+          <div class="pill" id="admin-pill"></div>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn" onclick="location.href='index.html'" title="Uygulamaya Dön">
+          <i class="fa-solid fa-house"></i> Uygulama
+        </button>
+        <button class="btn danger" id="btn-admin-logout" style="display:none;" title="Çıkış Yap">
+          <i class="fa-solid fa-right-from-bracket"></i> Çıkış
+        </button>
+      </div>
+    </div>
+
+    <div class="card" id="box-setup" style="display:none;">
+      <h2>Admin Kurulumu</h2>
+      <p class="muted">İlk kullanım: admin hesabı oluşturun (offline).</p>
+      <div class="grid">
+        <div class="field">
+          <label>Admin kullanıcı adı</label>
+          <input id="setup-admin-username" value="admin" disabled />
+        </div>
+        <div class="field">
+          <label>Admin şifre</label>
+          <input id="setup-admin-password" type="password" autocomplete="new-password" placeholder="Şifre" />
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <button class="btn" id="btn-setup"><i class="fa-solid fa-wrench"></i> Kurulumu Tamamla</button>
+        <span id="setup-msg" class="muted"></span>
+      </div>
+    </div>
+
+    <div class="card" id="box-login" style="display:none;">
+      <h2>Admin Girişi</h2>
+      <div class="grid">
+        <div class="field">
+          <label>E-posta</label>
+          <input id="admin-username" value="" autocomplete="username" placeholder="admin@ornek.com" />
+        </div>
+        <div class="field">
+          <label>Şifre</label>
+          <input id="admin-password" type="password" autocomplete="current-password" placeholder="Şifre" />
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <button class="btn" id="btn-login"><i class="fa-solid fa-lock"></i> Giriş Yap</button>
+        <span id="login-msg" class="muted"></span>
+      </div>
+    </div>
+
+    <div id="box-panel" style="display:none;">
+      <div class="card">
+        <h2>Erişim Kodu Oluştur</h2>
+        <div class="grid">
+          <div class="field">
+            <label>Not (opsiyonel)</label>
+            <input id="student-username" autocomplete="off" placeholder="ör: Mart grubu" />
+          </div>
+          <div class="field">
+            <label>Süre (gün)</label>
+            <input id="student-password" type="number" inputmode="numeric" min="1" value="30" placeholder="30" />
+          </div>
+          <div class="field">
+            <label>Maks. Cihaz</label>
+            <input id="code-max-devices" type="number" inputmode="numeric" min="1" value="3" placeholder="3" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px;">
+          <button class="btn" id="btn-create"><i class="fa-solid fa-user-plus"></i> Oluştur</button>
+          <span id="create-msg" class="muted"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Erişim Kodları</h2>
+        <div class="row" style="justify-content:space-between;">
+          <span class="muted">Cihaz limiti ve süre erişim kodu bazındadır.</span>
+          <button class="btn" id="btn-refresh"><i class="fa-solid fa-rotate"></i> Yenile</button>
+        </div>
+        <div style="margin-top:10px; overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Kod</th>
+                <th>Durum</th>
+                <th>Süre</th>
+                <th>Cihaz</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="students-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>İçerik Linkleri</h2>
+        <p class="muted">Uygulamadaki PDF ve Video kartları bu linklerden beslenir.</p>
+
+        <div class="grid">
+          <div class="field">
+            <label>PDF - Trafik ve Çevre</label>
+            <input id="pdf-trafik-ve-cevre" placeholder="https://..." />
+          </div>
+          <div class="field">
+            <label>PDF - Trafik Adabı</label>
+            <input id="pdf-trafik-adabi" placeholder="https://..." />
+          </div>
+          <div class="field">
+            <label>PDF - Motor ve Araç Tekniği</label>
+            <input id="pdf-motor" placeholder="https://..." />
+          </div>
+          <div class="field">
+            <label>PDF - İlk Yardım</label>
+            <input id="pdf-ilk-yardim" placeholder="https://..." />
+          </div>
+          <div class="field">
+            <label>PDF - İş Makineleri</label>
+            <input id="pdf-is-makineleri" placeholder="https://..." />
+          </div>
+        </div>
+
+        <div class="muted" style="margin: 12px 0 8px;">Video Linkleri (11 adet)</div>
+        <div class="grid">
+          <div class="field"><label>Video 1</label><input id="video-url-1" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 2</label><input id="video-url-2" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 3</label><input id="video-url-3" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 4</label><input id="video-url-4" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 5</label><input id="video-url-5" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 6</label><input id="video-url-6" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 7</label><input id="video-url-7" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 8</label><input id="video-url-8" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 9</label><input id="video-url-9" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 10</label><input id="video-url-10" placeholder="https://www.youtube.com/watch?v=..." /></div>
+          <div class="field"><label>Video 11</label><input id="video-url-11" placeholder="https://www.youtube.com/watch?v=..." /></div>
+        </div>
+
+        <div class="row" style="margin-top:12px;">
+          <button class="btn" id="btn-content-load"><i class="fa-solid fa-download"></i> Yükle</button>
+          <button class="btn" id="btn-content-save"><i class="fa-solid fa-floppy-disk"></i> Kaydet</button>
+          <span id="content-msg" class="muted"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase config'i buraya yapıştırın (yeni proje):
+    <script>
+      window.FIREBASE_CONFIG = { ... };
+    </script>
+  -->
+  <script type="module" src="firebase_app.js"></script>
+  <script>
+    const elSetup = document.getElementById('box-setup');
+    const elLogin = document.getElementById('box-login');
+    const elPanel = document.getElementById('box-panel');
+    const elPill = document.getElementById('admin-pill');
+    const btnAdminLogout = document.getElementById('btn-admin-logout');
+
+    function showOnly(which) {
+      elSetup.style.display = 'none';
+      elLogin.style.display = which === 'login' ? 'block' : 'none';
+      elPanel.style.display = which === 'panel' ? 'block' : 'none';
+      btnAdminLogout.style.display = which === 'panel' ? 'inline-flex' : 'none';
+    }
+
+    function setMsg(el, text, cls) {
+      el.className = cls || 'muted';
+      el.textContent = text || '';
+    }
+
+    function fmtDate(ts) {
+      try {
+        if (!ts || typeof ts.toMillis !== 'function') return '-';
+        return new Date(ts.toMillis()).toLocaleString('tr-TR');
+      } catch {
+        return '-';
+      }
+    }
+
+    function countDevices(devices) {
+      if (!devices || typeof devices !== 'object') return 0;
+      return Object.keys(devices).length;
+    }
+
+    async function renderAccessCodes() {
+      const tbody = document.getElementById('students-tbody');
+      tbody.innerHTML = '';
+
+      const codes = await window.SAFB.listAccessCodes();
+      if (!codes.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="muted">Kayıtlı erişim kodu yok.</td></tr>';
+        return;
+      }
+
+      for (const c of codes) {
+        const isActive = c.active === true;
+        const maxDevices = Number(c.maxDevices || 3);
+        const used = countDevices(c.devices);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${c.id}</strong></td>
+          <td><span class="badge" style="${isActive ? '' : 'opacity:0.7;'}">${isActive ? 'aktif' : 'pasif'}</span></td>
+          <td>${fmtDate(c.expiresAt)}</td>
+          <td>${used} / ${maxDevices}</td>
+          <td>
+            <button class="btn" data-act="toggle" data-code="${c.id}"><i class="fa-solid fa-toggle-${isActive ? 'on' : 'off'}"></i> ${isActive ? 'Pasifleştir' : 'Aktifleştir'}</button>
+            <button class="btn" data-act="copy" data-code="${c.id}"><i class="fa-solid fa-copy"></i> Kopyala</button>
+            <button class="btn danger" data-act="delete" data-code="${c.id}"><i class="fa-solid fa-trash"></i> Sil</button>
+          </td>
+        `;
+
+        tr.querySelectorAll('button').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const act = e.currentTarget.getAttribute('data-act');
+            const code = e.currentTarget.getAttribute('data-code');
+
+            if (act === 'copy') {
+              try { await navigator.clipboard.writeText(code); } catch {}
+              return;
+            }
+
+            if (act === 'toggle') {
+              await window.SAFB.setAccessCodeActive(code, !isActive);
+              await renderAccessCodes();
+              return;
+            }
+
+            if (act === 'delete') {
+              if (!confirm(code + ' silinsin mi?')) return;
+              await window.SAFB.deleteAccessCode(code);
+              await renderAccessCodes();
+              return;
+            }
+          });
+        });
+
+        tbody.appendChild(tr);
+      }
+    }
+
+    async function loadContentForm() {
+      const msg = document.getElementById('content-msg');
+      try {
+        setMsg(msg, 'Yükleniyor...', 'muted');
+        const links = await window.SAFB.getContentLinks({ preferServer: true });
+        const pdf = links && links.pdfLinks ? links.pdfLinks : {};
+        const videos = links && Array.isArray(links.videoLinks) ? links.videoLinks : [];
+
+        document.getElementById('pdf-trafik-ve-cevre').value = pdf.trafik_ve_cevre || '';
+        document.getElementById('pdf-trafik-adabi').value = pdf.trafik_adabi || '';
+        document.getElementById('pdf-motor').value = pdf.motor_ve_arac_teknigi || '';
+        document.getElementById('pdf-ilk-yardim').value = pdf.ilk_yardim || '';
+        document.getElementById('pdf-is-makineleri').value = pdf.is_makineleri || '';
+
+        for (let i = 1; i <= 11; i++) {
+          const item = videos[i - 1];
+          document.getElementById('video-url-' + i).value = (item && item.url) ? item.url : '';
+        }
+        setMsg(msg, 'Yüklendi.', 'ok');
+      } catch (e) {
+        setMsg(msg, (e && e.message) ? e.message : 'Yükleme başarısız.', 'error');
+      }
+    }
+
+    async function saveContentForm() {
+      const msg = document.getElementById('content-msg');
+      try {
+        setMsg(msg, 'Kaydediliyor...', 'muted');
+        const pdfLinks = {
+          trafik_ve_cevre: (document.getElementById('pdf-trafik-ve-cevre').value || '').trim(),
+          trafik_adabi: (document.getElementById('pdf-trafik-adabi').value || '').trim(),
+          motor_ve_arac_teknigi: (document.getElementById('pdf-motor').value || '').trim(),
+          ilk_yardim: (document.getElementById('pdf-ilk-yardim').value || '').trim(),
+          is_makineleri: (document.getElementById('pdf-is-makineleri').value || '').trim(),
+        };
+
+        const videoLinks = [];
+        for (let i = 1; i <= 11; i++) {
+          const url = (document.getElementById('video-url-' + i).value || '').trim();
+          videoLinks.push({ title: 'Video Deneme Sınavı - ' + i, url });
+        }
+
+        await window.SAFB.saveContentLinks({ pdfLinks, videoLinks });
+        setMsg(msg, 'Kaydedildi.', 'ok');
+      } catch (e) {
+        setMsg(msg, (e && e.message) ? e.message : 'Kaydetme başarısız.', 'error');
+      }
+    }
+
+    async function init() {
+      if (!window.SAFBReady) {
+        document.body.innerHTML = '<div style="padding:18px; color:#fff; font-family:Segoe UI, sans-serif;">Firebase yüklenemedi.</div>';
+        return;
+      }
+      try {
+        await window.SAFBReady;
+      } catch (e) {
+        document.body.innerHTML = '<div style="padding:18px; color:#fff; font-family:Segoe UI, sans-serif;">' + (e && e.message ? e.message : 'Firebase başlatılamadı.') + '</div>';
+        return;
+      }
+
+      window.SAFB.onAdminAuth(async (user) => {
+        if (user) {
+          elPill.textContent = 'Giriş: ' + (user.email || 'admin');
+          showOnly('panel');
+          await renderAccessCodes();
+          await loadContentForm();
+        } else {
+          elPill.textContent = 'Admin girişi gerekli';
+          showOnly('login');
+        }
+      });
+    }
+
+    document.getElementById('btn-login').addEventListener('click', async () => {
+      const msg = document.getElementById('login-msg');
+      try {
+        setMsg(msg, 'Kontrol ediliyor...', 'muted');
+        const email = document.getElementById('admin-username').value;
+        const password = document.getElementById('admin-password').value;
+        await window.SAFB.adminSignIn(email, password);
+        setMsg(msg, 'Giriş başarılı.', 'ok');
+      } catch (e) {
+        setMsg(msg, (e && e.message) ? e.message : 'Giriş başarısız.', 'error');
+      }
+    });
+
+    document.getElementById('btn-create').addEventListener('click', async () => {
+      const msg = document.getElementById('create-msg');
+      try {
+        setMsg(msg, 'Oluşturuluyor...', 'muted');
+        const note = document.getElementById('student-username').value;
+        const days = Number(document.getElementById('student-password').value || '30') || 30;
+        const maxDevices = Number(document.getElementById('code-max-devices').value || '3') || 3;
+        const code = await window.SAFB.createAccessCode({ note, days, maxDevices });
+        document.getElementById('student-username').value = '';
+        document.getElementById('student-password').value = '30';
+        document.getElementById('code-max-devices').value = '3';
+        setMsg(msg, 'Kod oluşturuldu: ' + code, 'ok');
+        await renderAccessCodes();
+      } catch (e) {
+        setMsg(msg, (e && e.message) ? e.message : 'Oluşturma başarısız.', 'error');
+      }
+    });
+
+    document.getElementById('btn-refresh').addEventListener('click', async () => {
+      await renderAccessCodes();
+    });
+
+    btnAdminLogout.addEventListener('click', async () => {
+      try { await window.SAFB.adminSignOut(); } catch {}
+    });
+
+    document.getElementById('btn-content-load').addEventListener('click', async () => {
+      await loadContentForm();
+    });
+
+    document.getElementById('btn-content-save').addEventListener('click', async () => {
+      await saveContentForm();
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      showOnly('login');
+      init();
+    });
+  </script>
+
+  <script>
+    window.FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCpOESMP9HOvjY_Z-fv0w5G0MC-UVI5D_0",
+      authDomain: "surucuakademisi-f5e1f.firebaseapp.com",
+      projectId: "surucuakademisi-f5e1f",
+      storageBucket: "surucuakademisi-f5e1f.firebasestorage.app",
+      messagingSenderId: "268662659371",
+      appId: "1:268662659371:web:f7e2da8733af296ce74d6e",
+      measurementId: "G-JVZBFSS905"
+    };
+  </script>
+
+  <script type="module" src="./firebase_app.js"></script>
+</body>
+</html>
