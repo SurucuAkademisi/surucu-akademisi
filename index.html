@@ -192,33 +192,77 @@
 
         /* --- İÇERİK SAYFASI HEADER --- */
         /* Header da hafif şeffaf olsun */
-        .app-header { background: rgba(15, 23, 42, 0.85); padding: 10px 15px; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); z-index: 10; position: relative; backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .header-back { position: absolute; left: 15px; font-size: 1.5rem; color: #95a5a6; cursor: pointer; padding: 5px; }
+        .app-header { background: rgba(15, 23, 42, 0.85); padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); z-index: 11; position: relative; backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.05); min-height: 64px; }
+        .header-back { position: static; font-size: 1.35rem; color: #95a5a6; cursor: pointer; padding: 6px; flex: 0 0 auto; }
         .header-title-small { display: none; margin: 0; font-family: 'Dancing Script', cursive; font-size: 1.5rem; font-weight: 700; color: #f1c40f; }
         
         /* ANA SAYFA BUTONU */
-        .header-home-btn { display: flex; align-items: center; justify-content: center;
+        .header-home-btn { display: inline-flex; align-items: center; justify-content: center;
             width: 40px; height: 40px; border-radius: 50%; background: rgba(0, 153, 255, 0.2); border: 2px solid rgba(0, 153, 255, 0.5); 
             cursor: pointer; color: #00d4ff; font-size: 1.2rem; transition: all 0.3s; }
         .header-home-btn:active { background: rgba(0, 153, 255, 0.4); box-shadow: 0 0 15px rgba(0, 153, 255, 0.5); transform: scale(0.95); }
+
+        .header-logout-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 36px;
+            padding: 0 10px;
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(231, 76, 60, 0.18);
+            color: #fff;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            flex: 0 0 auto;
+        }
+        .header-logout-btn i { font-size: 0.95rem; }
         
         /* HEADER ACTIONS CONTAINER */
-        .header-actions { position: fixed; top: 20px; right: 20px; display: flex; align-items: center; gap: 12px; z-index: 1001; }
+        .header-actions { position: relative; display: flex; align-items: center; gap: 8px; z-index: 2; margin-left: auto; flex: 0 0 auto; }
+        .header-clock {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.05rem;
+            color: #e67e22;
+            text-shadow: 0 0 5px rgba(230, 126, 34, 0.5);
+            white-space: nowrap;
+            pointer-events: none;
+        }
         
         @media (max-width: 480px) {
-            .header-actions { gap: 8px; }
-            .header-home-btn { width: 36px; height: 36px; font-size: 1rem; }
-            .header-clock { font-size: 1rem; }
+            .app-header { min-height: 60px; padding: 8px 10px; }
+            .header-actions { gap: 6px; }
+            .header-home-btn { width: 34px; height: 34px; font-size: 0.95rem; }
+            .header-clock { font-size: 0.95rem; }
+            .header-logout-btn { min-height: 34px; padding: 0 8px; font-size: 0.76rem; }
+        }
+
+        @media (max-width: 420px) {
+            .header-logout-btn .logout-text { display: none; }
+            .header-logout-btn { width: 34px; min-width: 34px; padding: 0; border-radius: 50%; }
+            .header-clock { font-size: 0.88rem; }
         }
         
         #content-wrapper { display: none; height: 100vh; flex-direction: column; }
-        .content-area { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 120px; }
+        .content-area { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
         
         /* ALT MENÜ */
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: rgba(15, 23, 42, 0.9); display: flex; border-top: 1px solid rgba(255,255,255,0.1); padding: 10px 0; z-index: 20; backdrop-filter: blur(10px); }
-        .nav-item { flex: 1; text-align: center; color: #95a5a6; cursor: pointer; font-size: 0.7rem; transition: color 0.3s; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15, 23, 42, 0.9); display: flex; border-top: 1px solid rgba(255,255,255,0.1); padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); z-index: 1000; backdrop-filter: blur(10px); }
+        .nav-item { flex: 1 1 25%; min-width: 0; text-align: center; color: #95a5a6; cursor: pointer; font-size: 0.66rem; transition: color 0.3s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .nav-item.active { color: #e67e22; font-weight: bold; text-shadow: 0 0 8px rgba(230, 126, 34, 0.4); }
-        .nav-icon { display: block; font-size: 1.4rem; margin-bottom: 2px; }
+        .nav-icon { display: block; font-size: 1.18rem; margin-bottom: 2px; }
+
+        @media (max-width: 420px) {
+            .nav-item { font-size: 0.6rem; }
+            .nav-icon { font-size: 1.05rem; }
+            .content-area { padding: 16px; padding-bottom: calc(118px + env(safe-area-inset-bottom)); }
+        }
         
         /* KARTLAR */
         .tab-content { display: none; animation: fadeIn 0.3s; }
@@ -475,9 +519,10 @@
                 <div class="header-home-btn" onclick="goBackToHome()" title="Ana Sayfa">
                     <i class="fa-solid fa-home"></i>
                 </div>
-                <div class="header-home-btn" onclick="handleLogout()" title="Çıkış Yap">
+                <button class="header-logout-btn" onclick="handleLogout()" title="Çıkış Yap">
                     <i class="fa-solid fa-right-from-bracket"></i>
-                </div>
+                    <span class="logout-text">Çıkış</span>
+                </button>
                 <div id="header-clock" class="header-clock">00:00</div>
             </div>
         </div>
