@@ -174,6 +174,66 @@
       color: #bdc3c7;
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
+
+    .content-section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 12px 0 8px;
+    }
+
+    .content-section-title .label {
+      font-weight: 700;
+      color: #f1c40f;
+    }
+
+    .content-section-title.video .label {
+      color: #e67e22;
+      font-weight: 800;
+    }
+
+    .dynamic-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .dynamic-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .dynamic-row input {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(0, 0, 0, 0.25);
+      color: #fff;
+      outline: none;
+    }
+
+    .btn-save-content {
+      width: 100%;
+      justify-content: center;
+      font-size: 1rem;
+      padding: 12px;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 720px) {
+      .dynamic-row {
+        grid-template-columns: 1fr;
+      }
+
+      .dynamic-row .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
   </style>
 </head>
 <body>
@@ -282,51 +342,22 @@
         <h2>İçerik Linkleri</h2>
         <p class="muted">Uygulamadaki PDF ve Video kartları bu linklerden beslenir.</p>
 
-        <div class="grid">
-          <div class="field">
-            <label>PDF - Trafik ve Çevre</label>
-            <input id="pdf-trafik-ve-cevre" placeholder="https://..." />
-          </div>
-          <div class="field">
-            <label>PDF - Trafik Adabı</label>
-            <input id="pdf-trafik-adabi" placeholder="https://..." />
-          </div>
-          <div class="field">
-            <label>PDF - Motor ve Araç Tekniği</label>
-            <input id="pdf-motor" placeholder="https://..." />
-          </div>
-          <div class="field">
-            <label>PDF - İlk Yardım</label>
-            <input id="pdf-ilk-yardim" placeholder="https://..." />
-          </div>
-          <div class="field">
-            <label>PDF - İş Makineleri</label>
-            <input id="pdf-is-makineleri" placeholder="https://..." />
-          </div>
-          <div class="field">
-            <label>PDF - Trafik İşaretleri</label>
-            <input id="pdf-trafik-isaretleri" placeholder="https://..." />
-          </div>
+        <div class="content-section-title">
+          <div class="label">PDF Ders Notları</div>
+          <button class="btn" id="btn-add-pdf"><i class="fa-solid fa-plus"></i> Yeni PDF Ekle</button>
         </div>
+        <div id="pdf-rows" class="dynamic-list"></div>
 
-        <div class="muted" style="margin: 12px 0 8px;">Video Linkleri (11 adet)</div>
-        <div class="grid">
-          <div class="field"><label>Video 1</label><input id="video-url-1" placeholder="https://www.youtube.com/watch?v=..." /></div>
-          <div class="field"><label>Video 2</label><input id="video-url-2" placeholder="https://www.youtube.com/watch?v=..." /></div>
-          <div class="field"><label>Video 3</label><input id="video-url-3" placeholder="https://www.youtube.com/watch?v=..." /></div>
-          <div class="field"><label>Video 4</label><input id="video-url-4" placeholder="https://www.youtube.com/watch?v=..." /></div>
-          <div class="field"><label>Video 5</label><input id="video-url-5" placeholder="https://www.youtube.com/watch?v=..." /></div>
-          <div class="field"><label>Video 6</label><input id="video-url-6" placeholder="https://www.youtube.com/watch?v=..." /></div>
-          <div class="field"><label>Video 7</label><input id="video-url-7" placeholder="https://www.youtube.com/watch?v=..." /></div>
-          <div class="field"><label>Video 8</label><input id="video-url-8" placeholder="https://www.youtube.com/watch?v=..." /></div>
-          <div class="field"><label>Video 9</label><input id="video-url-9" placeholder="https://www.youtube.com/watch?v=..." /></div>
-          <div class="field"><label>Video 10</label><input id="video-url-10" placeholder="https://www.youtube.com/watch?v=..." /></div>
-          <div class="field"><label>Video 11</label><input id="video-url-11" placeholder="https://www.youtube.com/watch?v=..." /></div>
+        <div class="content-section-title video">
+          <div class="label">Video Linkleri</div>
+          <button class="btn" id="btn-add-video"><i class="fa-solid fa-plus"></i> Yeni Video Ekle</button>
         </div>
+        <div id="video-rows" class="dynamic-list"></div>
 
-        <div class="row" style="margin-top:12px;">
-          <button class="btn" id="btn-content-load"><i class="fa-solid fa-download"></i> Yükle</button>
-          <button class="btn" id="btn-content-save"><i class="fa-solid fa-floppy-disk"></i> Kaydet</button>
+        <div class="row" style="margin-top:6px;">
+          <button class="btn btn-save-content" id="btn-content-save"><i class="fa-solid fa-floppy-disk"></i> 💾 Değişiklikleri Kaydet</button>
+        </div>
+        <div class="row" style="margin-top:8px;">
           <span id="content-msg" class="muted"></span>
         </div>
       </div>
@@ -524,44 +555,83 @@
       try {
         setMsg(msg, 'Yükleniyor...', 'muted');
         const links = await window.SAFB.getContentLinks({ preferServer: true });
-        const pdf = links && links.pdfLinks ? links.pdfLinks : {};
-        const videos = links && Array.isArray(links.videoLinks) ? links.videoLinks : [];
+        const pdfLinks = (links && Array.isArray(links.pdfLinks)) ? links.pdfLinks : [];
+        const videoLinks = (links && Array.isArray(links.videoLinks)) ? links.videoLinks : [];
 
-        document.getElementById('pdf-trafik-ve-cevre').value = pdf.trafik_ve_cevre || '';
-        document.getElementById('pdf-trafik-adabi').value = pdf.trafik_adabi || '';
-        document.getElementById('pdf-motor').value = pdf.motor_ve_arac_teknigi || '';
-        document.getElementById('pdf-ilk-yardim').value = pdf.ilk_yardim || '';
-        document.getElementById('pdf-is-makineleri').value = pdf.is_makineleri || '';
-        document.getElementById('pdf-trafik-isaretleri').value = pdf.pdf_trafik_isaretleri || '';
-
-        for (let i = 1; i <= 11; i++) {
-          const item = videos[i - 1];
-          document.getElementById('video-url-' + i).value = (item && item.url) ? item.url : '';
-        }
+        renderContentRows('pdf-rows', 'pdf', pdfLinks);
+        renderContentRows('video-rows', 'video', videoLinks);
         setMsg(msg, 'Yüklendi.', 'ok');
       } catch (e) {
         setMsg(msg, (e && e.message) ? e.message : 'Yükleme başarısız.', 'error');
       }
     }
 
+    function createContentRow(type, item) {
+      const row = document.createElement('div');
+      row.className = 'dynamic-row';
+
+      const titleInput = document.createElement('input');
+      titleInput.type = 'text';
+      titleInput.className = 'content-title';
+      titleInput.placeholder = type === 'pdf' ? 'Icerik basligi (or: Trafik Isaretleri)' : 'Icerik basligi (or: Video 1)';
+      titleInput.value = String((item && item.title) || '');
+
+      const urlInput = document.createElement('input');
+      urlInput.type = 'text';
+      urlInput.className = 'content-url';
+      urlInput.placeholder = 'Link (https://...)';
+      urlInput.value = String((item && item.url) || '');
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn danger';
+      deleteBtn.type = 'button';
+      deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i> Sil';
+      deleteBtn.addEventListener('click', () => row.remove());
+
+      row.appendChild(titleInput);
+      row.appendChild(urlInput);
+      row.appendChild(deleteBtn);
+      return row;
+    }
+
+    function renderContentRows(containerId, type, items) {
+      const host = document.getElementById(containerId);
+      if (!host) return;
+
+      host.innerHTML = '';
+      const rows = Array.isArray(items) ? items : [];
+      if (!rows.length) {
+        host.appendChild(createContentRow(type, { title: '', url: '' }));
+        return;
+      }
+
+      rows.forEach((item) => host.appendChild(createContentRow(type, item)));
+    }
+
+    function collectContentRows(containerId, fallbackPrefix) {
+      const host = document.getElementById(containerId);
+      if (!host) return [];
+
+      const rows = Array.from(host.querySelectorAll('.dynamic-row'));
+      const result = [];
+
+      rows.forEach((row, idx) => {
+        const title = String((row.querySelector('.content-title') && row.querySelector('.content-title').value) || '').trim();
+        const url = String((row.querySelector('.content-url') && row.querySelector('.content-url').value) || '').trim();
+        if (!title && !url) return;
+        if (!url) return;
+        result.push({ title: title || (fallbackPrefix + ' ' + (idx + 1)), url });
+      });
+
+      return result;
+    }
+
     async function saveContentForm() {
       const msg = document.getElementById('content-msg');
       try {
         setMsg(msg, 'Kaydediliyor...', 'muted');
-        const pdfLinks = {
-          trafik_ve_cevre: (document.getElementById('pdf-trafik-ve-cevre').value || '').trim(),
-          trafik_adabi: (document.getElementById('pdf-trafik-adabi').value || '').trim(),
-          motor_ve_arac_teknigi: (document.getElementById('pdf-motor').value || '').trim(),
-          ilk_yardim: (document.getElementById('pdf-ilk-yardim').value || '').trim(),
-          is_makineleri: (document.getElementById('pdf-is-makineleri').value || '').trim(),
-          pdf_trafik_isaretleri: (document.getElementById('pdf-trafik-isaretleri').value || '').trim(),
-        };
-
-        const videoLinks = [];
-        for (let i = 1; i <= 11; i++) {
-          const url = (document.getElementById('video-url-' + i).value || '').trim();
-          videoLinks.push({ title: 'Video Deneme Sınavı - ' + i, url });
-        }
+        const pdfLinks = collectContentRows('pdf-rows', 'PDF Ders Notu');
+        const videoLinks = collectContentRows('video-rows', 'Video');
 
         await window.SAFB.saveContentLinks({ pdfLinks, videoLinks });
         setMsg(msg, 'Kaydedildi.', 'ok');
@@ -683,8 +753,16 @@
       try { await window.SAFB.adminSignOut(); } catch {}
     });
 
-    document.getElementById('btn-content-load').addEventListener('click', async () => {
-      await loadContentForm();
+    document.getElementById('btn-add-pdf').addEventListener('click', () => {
+      const host = document.getElementById('pdf-rows');
+      if (!host) return;
+      host.appendChild(createContentRow('pdf', { title: '', url: '' }));
+    });
+
+    document.getElementById('btn-add-video').addEventListener('click', () => {
+      const host = document.getElementById('video-rows');
+      if (!host) return;
+      host.appendChild(createContentRow('video', { title: '', url: '' }));
     });
 
     document.getElementById('btn-content-save').addEventListener('click', async () => {

@@ -212,19 +212,50 @@
 
   function normalizeContentLinksData(data) {
     const source = data && typeof data === 'object' ? data : {};
-    const pdf = source.pdfLinks && typeof source.pdfLinks === 'object' ? source.pdfLinks : {};
-    const videos = Array.isArray(source.videoLinks) ? source.videoLinks : [];
+    const legacyPdfTitles = {
+      trafik_ve_cevre: 'Trafik ve Cevre Bilgisi',
+      trafik_adabi: 'Trafik Adabi',
+      motor_ve_arac_teknigi: 'Motor ve Arac Teknigi',
+      ilk_yardim: 'Ilk Yardim',
+      is_makineleri: 'Is Makineleri',
+      pdf_trafik_isaretleri: 'Trafik Isaretleri',
+    };
+
+    function sanitizeRows(rows, fallbackPrefix) {
+      if (!Array.isArray(rows)) return [];
+      const result = [];
+      rows.forEach((row, idx) => {
+        const title = String((row && row.title) || '').trim();
+        const url = String((row && row.url) || '').trim();
+        if (!title && !url) return;
+        if (!url) return;
+        result.push({ title: title || (fallbackPrefix + ' ' + (idx + 1)), url });
+      });
+      return result;
+    }
+
+    function normalizePdfRows(pdfSource) {
+      if (Array.isArray(pdfSource)) {
+        return sanitizeRows(pdfSource, 'PDF Ders Notu');
+      }
+
+      if (pdfSource && typeof pdfSource === 'object') {
+        const legacyRows = Object.keys(pdfSource).map((key) => ({
+          title: legacyPdfTitles[key] || key,
+          url: String(pdfSource[key] || '').trim(),
+        }));
+        return sanitizeRows(legacyRows, 'PDF Ders Notu');
+      }
+
+      return [];
+    }
+
+    const pdfLinks = normalizePdfRows(source.pdfLinks);
+    const videoLinks = sanitizeRows(source.videoLinks, 'Video');
 
     return {
-      pdfLinks: {
-        trafik_ve_cevre: String(pdf.trafik_ve_cevre || ''),
-        trafik_adabi: String(pdf.trafik_adabi || ''),
-        motor_ve_arac_teknigi: String(pdf.motor_ve_arac_teknigi || ''),
-        ilk_yardim: String(pdf.ilk_yardim || ''),
-        is_makineleri: String(pdf.is_makineleri || ''),
-        pdf_trafik_isaretleri: String(pdf.pdf_trafik_isaretleri || ''),
-      },
-      videoLinks: videos,
+      pdfLinks,
+      videoLinks,
     };
   }
 
