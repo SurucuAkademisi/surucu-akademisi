@@ -18,22 +18,34 @@
         position: fixed;
         inset: 0;
         width: 100%;
-        height: 100%;
+        height: 100vh;
         border: 0;
+        display: block;
+        z-index: 1;
         background: #0f172a;
       }
-      .native-menu-btn {
+      .native-top-actions {
         position: fixed;
         top: calc(12px + env(safe-area-inset-top));
         right: 12px;
         z-index: 9999;
+        display: none;
+        align-items: center;
+        gap: 10px;
+      }
+      .native-top-btn {
         border: 0;
         border-radius: 999px;
         padding: 8px 12px;
         font-size: 13px;
         font-weight: 600;
         color: #fff;
+      }
+      .native-menu-btn {
         background: rgba(0, 0, 0, 0.45);
+      }
+      .native-logout-btn {
+        background: rgba(231, 76, 60, 0.85);
       }
       .hint {
         position: fixed;
@@ -52,12 +64,118 @@
     <iframe
       class="app-frame"
       title="Sürücü Akademisi"
-      src="https://surucuakademisi.github.io/surucu-akademisi/"
+      src="docs/index.html"
       allow="autoplay; fullscreen"
+      style="width:100%; height:100vh; border:0; display:block;"
       referrerpolicy="no-referrer-when-downgrade"
     ></iframe>
-    <button id="nativeMenuBtn" class="native-menu-btn">Menü</button>
+    <div id="nativeTopActions" class="native-top-actions">
+      <button id="nativeLogoutBtn" class="native-top-btn native-logout-btn">Çıkış</button>
+      <button id="nativeMenuBtn" class="native-top-btn native-menu-btn">Menü</button>
+    </div>
     <div class="hint">AdMob test modunda çalışır. Gerçek yayında reklam birim ID'lerini değiştirin.</div>
+    <script>
+      const homeVisibilityPollMs = 400;
+      let topActionsForcedVisible = null;
+
+      function applyTopActionsVisibility(show) {
+        const topActions = document.getElementById('nativeTopActions');
+        if (!topActions) return;
+        topActions.style.display = show ? 'flex' : 'none';
+      }
+
+      function ensureFrameVisible() {
+        const frame = document.querySelector('.app-frame');
+        if (!frame) return;
+        frame.style.display = 'block';
+        frame.style.visibility = 'visible';
+        frame.style.opacity = '1';
+      }
+
+      function syncTopActionsVisibility() {
+        const frame = document.querySelector('.app-frame');
+        if (!frame || !frame.contentWindow) return;
+
+        if (typeof topActionsForcedVisible === 'boolean') {
+          applyTopActionsVisibility(topActionsForcedVisible);
+          return;
+        }
+
+        let showTopActions = false;
+        try {
+          const frameDoc = frame.contentWindow.document;
+          const appContainer = frameDoc.getElementById('app-container');
+          const homeScreen = frameDoc.getElementById('home-screen');
+          if (appContainer && homeScreen) {
+            const appVisible = frame.contentWindow.getComputedStyle(appContainer).display !== 'none';
+            const homeVisible = frame.contentWindow.getComputedStyle(homeScreen).display !== 'none';
+            showTopActions = appVisible && homeVisible;
+          }
+        } catch {
+          showTopActions = false;
+        }
+
+        applyTopActionsVisibility(showTopActions);
+      }
+
+      function triggerIframeLogout() {
+        const frame = document.querySelector('.app-frame');
+        if (!frame || !frame.contentWindow) return;
+
+        try {
+          if (typeof frame.contentWindow.handleLogout === 'function') {
+            frame.contentWindow.handleLogout();
+            return;
+          }
+        } catch {}
+
+        try {
+          frame.contentWindow.location.reload();
+        } catch {}
+      }
+
+      function triggerIframeGoHome() {
+        const frame = document.querySelector('.app-frame');
+        if (!frame || !frame.contentWindow) return;
+
+        try {
+          frame.contentWindow.postMessage({ type: 'ui:reset-tabs' }, '*');
+          frame.contentWindow.postMessage({ type: 'ui:go-home' }, '*');
+        } catch {}
+      }
+
+      window.addEventListener('DOMContentLoaded', () => {
+        const logoutBtn = document.getElementById('nativeLogoutBtn');
+        if (logoutBtn) logoutBtn.addEventListener('click', triggerIframeLogout);
+        const menuBtn = document.getElementById('nativeMenuBtn');
+        if (menuBtn) menuBtn.addEventListener('click', triggerIframeGoHome);
+
+        const frame = document.querySelector('.app-frame');
+        if (frame) {
+          frame.addEventListener('load', () => {
+            topActionsForcedVisible = null;
+            syncTopActionsVisibility();
+          });
+        }
+
+        window.addEventListener('message', (event) => {
+          if (event.source !== frame?.contentWindow) return;
+          const data = event?.data;
+          if (!data || data.type !== 'ui:home-state') return;
+          topActionsForcedVisible = Boolean(data.isHome);
+          syncTopActionsVisibility();
+        });
+
+        syncTopActionsVisibility();
+        setInterval(syncTopActionsVisibility, homeVisibilityPollMs);
+      });
+
+      window.addEventListener('DOMContentLoaded', ensureFrameVisible);
+      window.addEventListener('focus', ensureFrameVisible);
+      window.addEventListener('pageshow', ensureFrameVisible);
+      window.addEventListener('focus', syncTopActionsVisibility);
+      window.addEventListener('pageshow', syncTopActionsVisibility);
+    </script>
     <script type="module" src="./main.js"></script>
   </body>
 </html>

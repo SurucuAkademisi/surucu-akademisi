@@ -4,9 +4,6 @@ const config: CapacitorConfig = {
   appId: 'io.surucuakademisi.app',
   appName: 'Sürücü Akademisi',
   webDir: 'src',
-  server: {
-    allowNavigation: ['surucuakademisi.github.io']
-  },
   plugins: {
     AdMob: {
       initializeForTesting: true

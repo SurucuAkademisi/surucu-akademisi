@@ -303,6 +303,10 @@
             <label>PDF - İş Makineleri</label>
             <input id="pdf-is-makineleri" placeholder="https://..." />
           </div>
+          <div class="field">
+            <label>PDF - Trafik İşaretleri</label>
+            <input id="pdf-trafik-isaretleri" placeholder="https://..." />
+          </div>
         </div>
 
         <div class="muted" style="margin: 12px 0 8px;">Video Linkleri (11 adet)</div>
@@ -441,6 +445,7 @@
             <input type="number" min="1" value="30" data-days="${user.id}" style="width:74px;" />
             <button class="btn" data-act="extend" data-id="${user.id}"><i class="fa-solid fa-calendar-plus"></i> Uzat</button>
             <button class="btn" data-act="toggle" data-id="${user.id}"><i class="fa-solid fa-toggle-${active ? 'on' : 'off'}"></i> ${active ? 'Pasifleştir' : 'Aktifleştir'}</button>
+            <button class="btn danger" data-act="delete" data-id="${user.id}"><i class="fa-solid fa-trash"></i> Sil</button>
           </td>
         `;
 
@@ -494,6 +499,19 @@
               }
               return;
             }
+
+            if (act === 'delete') {
+              const ok = window.confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?');
+              if (!ok) return;
+
+              try {
+                await firebase.firestore().collection('users').doc(uid).delete();
+                await renderStudentUsers();
+              } catch (err) {
+                alert(adminErrorMessage(err, 'Kullanıcı silinemedi.'));
+              }
+              return;
+            }
           });
         });
 
@@ -514,6 +532,7 @@
         document.getElementById('pdf-motor').value = pdf.motor_ve_arac_teknigi || '';
         document.getElementById('pdf-ilk-yardim').value = pdf.ilk_yardim || '';
         document.getElementById('pdf-is-makineleri').value = pdf.is_makineleri || '';
+        document.getElementById('pdf-trafik-isaretleri').value = pdf.pdf_trafik_isaretleri || '';
 
         for (let i = 1; i <= 11; i++) {
           const item = videos[i - 1];
@@ -535,6 +554,7 @@
           motor_ve_arac_teknigi: (document.getElementById('pdf-motor').value || '').trim(),
           ilk_yardim: (document.getElementById('pdf-ilk-yardim').value || '').trim(),
           is_makineleri: (document.getElementById('pdf-is-makineleri').value || '').trim(),
+          pdf_trafik_isaretleri: (document.getElementById('pdf-trafik-isaretleri').value || '').trim(),
         };
 
         const videoLinks = [];

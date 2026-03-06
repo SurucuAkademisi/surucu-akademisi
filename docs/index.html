@@ -841,6 +841,7 @@ const standardExams = [
     { title: "Çıkmış Sorular Deneme Sınavları-2", sub: "İnteraktif Test", file: "#", icon: "📝" },
     { title: "Çıkmış Sorular Deneme Sınavları-3", sub: "İnteraktif Test", file: "#", icon: "📝" }
 ];
+let lastExamListType = 'standard';
 const lectureNotes = [
     { key: "trafik_ve_cevre", title: "Trafik ve Çevre Bilgisi", sub: "Kurallar ve İşaretler", file: "https://drive.google.com/file/d/1BKbYjx6vPanzWYw66DCpP8tWowP6C1fa/preview", icon: "🛑" },
     { key: "trafik_adabi", title: "Trafik Adabı", sub: "Genel Bilgiler", file: "https://drive.google.com/file/d/1sCpU-oJFGwvYjpw8rnrHHOLPVr4rWa8D/preview", icon: "🚦" },
@@ -895,6 +896,7 @@ function openContentDirectly(tabId) {
 }
 
 function loadExamList(type) {
+    lastExamListType = type;
     const listTitle = document.getElementById('exam-list-title');
     const listContainer = document.getElementById('dynamic-exam-list');
     let data = (type === 'visual') ? visualExams : standardExams;
@@ -907,6 +909,43 @@ function loadExamList(type) {
         document.getElementById('content-wrapper').style.display = 'flex';
         switchTab('exams');
     }, 300);
+}
+
+function ensureExamListVisible() {
+    console.log('[ExamBridgeWeb] ensureExamListVisible');
+    const content = document.getElementById('content-wrapper');
+    const examsTab = document.getElementById('tab-exams');
+    const quizUI = document.getElementById('quiz-ui');
+    const resultUI = document.getElementById('quiz-result');
+    const dashboard = document.getElementById('dashboard-ui');
+    if (quizUI) quizUI.style.display = 'none';
+    if (resultUI) resultUI.style.display = 'none';
+    if (dashboard) dashboard.style.display = 'none';
+    if (content) content.style.display = 'flex';
+
+    const listTitle = document.getElementById('exam-list-title');
+    const listContainer = document.getElementById('dynamic-exam-list');
+    if (listContainer) {
+        const data = (lastExamListType === 'visual') ? visualExams : standardExams;
+        if (listTitle) {
+            listTitle.innerText = (lastExamListType === 'visual')
+                ? 'Resimli Çıkmış Sorular (PDF)'
+                : 'Çıkmış Sorular (Deneme)';
+        }
+        renderList2(listContainer, data);
+    }
+
+    document.querySelectorAll('.tab-content').forEach(el => {
+        el.classList.remove('active');
+        if (el !== examsTab) el.style.display = '';
+    });
+    if (examsTab) {
+        examsTab.style.display = 'block';
+        examsTab.classList.add('active');
+    }
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    const navExams = document.getElementById('nav-exams');
+    if (navExams) navExams.classList.add('active');
 }
 
 // --- ARAÇ REHBERİ FONKSİYONLARI ---
@@ -1018,7 +1057,9 @@ function goBackToHome() {
 }
 
 function handleContentBack() {
+    console.log('[ExamBridgeWeb] handleContentBack');
     if (document.getElementById('tab-exams').classList.contains('active')) {
+        ensureExamListVisible();
         document.getElementById('content-wrapper').style.display = 'none';
         const examScreen = document.getElementById('exam-select-screen');
         examScreen.style.display = 'flex';
@@ -1133,12 +1174,39 @@ function renderList2(container, dataArray) {
     dataArray.forEach(item => {
         const div = document.createElement('div');
         div.className = 'card';
-        div.onclick = () => {
+        div.onclick = async () => {
             // Eğer kullanıcı "Çıkmış Sorular Deneme Sınavları-1" seçerse interaktif sınav başlat
             if(item.title === "Çıkmış Sorular Deneme Sınavları-1") {
-                startQuiz(typeof exam1Questions !== 'undefined' ? exam1Questions : [], item.title);
+                const questions = (typeof exam1Questions !== 'undefined') ? exam1Questions : [];
+                if (!window.parent || window.parent === window) {
+                    startQuiz(questions, item.title);
+                    return;
+                }
+
+                emitParentEvent('exam:start');
+                pendingQuizStart = { questions, title: item.title };
+                setTimeout(() => {
+                    if (!pendingQuizStart) return;
+                    const pending = pendingQuizStart;
+                    pendingQuizStart = null;
+                    console.warn('[ExamBridgeWeb] exam:start proceed timeout, quiz forced to continue');
+                    startQuiz(pending.questions, pending.title);
+                }, 1500);
                 return;
             }
+
+            if (container.id === 'pdf-list' && item.file !== "#") {
+                emitParentEvent('note:open');
+                await maybeShowInterstitialThen('note-open', () => window.open(item.file, '_blank'));
+                return;
+            }
+
+            if (container.id === 'video-list' && item.file !== "#") {
+                emitParentEvent('video:open');
+                await maybeShowRewardedThen('video-open', () => window.open(item.file, '_blank'));
+                return;
+            }
+
             if(item.file === "#") alert("Bu içerik yakında eklenecektir.");
             else window.open(item.file, '_blank');
         };
@@ -1154,6 +1222,103 @@ function renderList2(container, dataArray) {
 }
 // --- QUIZ ENGINE ---
 let quizState = null;
+let adRequestSeq = 0;
+const pendingAdRequests = new Map();
+let pendingQuizStart = null;
+
+window.addEventListener('message', (event) => {
+    if (event.source !== window.parent) return;
+    const data = event.data;
+    if (!data || !data.type) return;
+
+    if (data.type === 'ad:result' && data.requestId) {
+        const resolver = pendingAdRequests.get(data.requestId);
+        if (!resolver) return;
+        pendingAdRequests.delete(data.requestId);
+        console.log('[AdsGate] ad:result received:', data);
+        resolver(data);
+        return;
+    }
+
+    if (data.type === 'ui:restore-exams') {
+        console.log('[ExamBridgeWeb] ui:restore-exams received');
+        ensureExamListVisible();
+        return;
+    }
+
+    if (data.type === 'exam:start:proceed' && pendingQuizStart) {
+        const pending = pendingQuizStart;
+        pendingQuizStart = null;
+        startQuiz(pending.questions, pending.title);
+    }
+});
+
+function requestNativeAd(adType, reason) {
+    if (!window.parent || window.parent === window) {
+        console.log('[AdsGate] Native bridge unavailable, bypass:', { adType, reason });
+        return Promise.resolve({ ok: false, shown: false, rewarded: false, bypass: true, reason });
+    }
+
+    const requestId = `req-${Date.now()}-${++adRequestSeq}`;
+    return new Promise((resolve) => {
+        const timeoutId = setTimeout(() => {
+            pendingAdRequests.delete(requestId);
+            console.log('[AdsGate] ad:request timeout:', { adType, reason, requestId });
+            resolve({ ok: false, shown: false, rewarded: false, timeout: true, reason });
+        }, 15000);
+
+        pendingAdRequests.set(requestId, (payload) => {
+            clearTimeout(timeoutId);
+            resolve(payload);
+        });
+
+        console.log('[AdsGate] ad:request send:', { adType, reason, requestId });
+        window.parent.postMessage({
+            type: 'ad:request',
+            requestId,
+            adType,
+            reason,
+        }, '*');
+    });
+}
+
+async function maybeShowInterstitialThen(actionName, continueFn) {
+    const result = await requestNativeAd('interstitial', actionName);
+    console.log('[AdsGate] interstitial result:', { actionName, result });
+    return continueFn();
+}
+
+async function maybeShowRewardedThen(actionName, continueFn) {
+    const result = await requestNativeAd('rewarded', actionName);
+    const rewarded = Boolean(result && result.rewarded === true);
+    console.log('[AdsGate] rewarded result:', { actionName, rewarded, result });
+    if (!rewarded) {
+        console.warn('[AdsGate] rewarded not granted, proceeding anyway:', { actionName, result });
+    }
+    return continueFn();
+}
+
+function sendExamLifecycleEvent(type, meta) {
+    const payload = { type, ...(meta || {}) };
+    console.log('[ExamBridgeWeb] sendExamLifecycleEvent:', payload);
+    try {
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage(payload, '*');
+        }
+    } catch (e) {}
+    try {
+        window.postMessage(payload, '*');
+    } catch (e) {}
+}
+
+function emitParentEvent(type) {
+    try {
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type }, '*');
+        }
+    } catch (e) {}
+}
+
 function startQuiz(questions, title) {
     if(!questions || !questions.length) { alert('Sınav verisi bulunamadı.'); return; }
     quizState = {
@@ -1163,8 +1328,12 @@ function startQuiz(questions, title) {
         totalSeconds: 45 * 60,
         remaining: 45 * 60,
         timerId: null,
-        startedAt: Date.now()
+        startedAt: Date.now(),
+        sessionId: `exam-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        sessionEnded: false,
+        resultAdShown: false
     };
+    console.log('[ExamBridgeWeb] startQuiz:', quizState.sessionId);
     // prepare UI
     const content = document.getElementById('content-wrapper'); if(content) content.style.display = 'flex';
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -1254,8 +1423,12 @@ function startTimer() {
     }, 1000);
 }
 
-function finishQuiz() {
+async function finishQuiz() {
     if(!quizState) return;
+    if (!quizState.resultAdShown) {
+        emitParentEvent('exam:results');
+        quizState.resultAdShown = true;
+    }
     clearInterval(quizState.timerId);
     const total = quizState.questions.length;
     const correct = quizState.answers.filter((a,i) => a !== null && a === quizState.questions[i].answer).length;
@@ -1291,18 +1464,21 @@ function finishQuiz() {
             </div>
         `;
     }
+    quizState.sessionEnded = true;
+    console.log('[ExamBridgeWeb] finishQuiz:', quizState.sessionId);
     document.querySelector('.app-header .header-back').setAttribute('onclick', 'handleContentBack()');
 }
 
-function closeQuiz(fromResult) {
+async function closeQuiz(fromResult) {
+    if(quizState && !quizState.sessionEnded) {
+        emitParentEvent('exam:exit');
+        console.log('[ExamBridgeWeb] closeQuiz:', quizState.sessionId);
+    }
     if(quizState && quizState.timerId) clearInterval(quizState.timerId);
     quizState = null;
     const quizUI = document.getElementById('quiz-ui'); if(quizUI) quizUI.style.display = 'none';
     const res = document.getElementById('quiz-result'); if(res) res.style.display = 'none';
-    // return to exams tab
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    const examsTab = document.getElementById('tab-exams'); if(examsTab) { examsTab.style.display = 'block'; examsTab.classList.add('active'); }
-    document.getElementById('content-wrapper').style.display = 'flex';
+    ensureExamListVisible();
     document.querySelector('.app-header .header-back').setAttribute('onclick', 'handleContentBack()');
 }
 
@@ -1372,6 +1548,10 @@ function showResults() {
 }
 
 function returnHome() {
+    console.log('[ExamBridgeWeb] returnHome');
+    if (quizState && !quizState.sessionEnded) {
+        emitParentEvent('exam:exit');
+    }
     if(quizState && quizState.timerId) clearInterval(quizState.timerId);
     quizState = null;
     const quizUI = document.getElementById('quiz-ui'); if(quizUI) quizUI.style.display = 'none';

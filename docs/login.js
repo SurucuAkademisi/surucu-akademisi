@@ -2,11 +2,13 @@
 (function () {
   'use strict';
 
+  // Firebase global kontrolü
   if (!window.firebase || typeof firebase === 'undefined') {
     console.error('Firebase not loaded');
     return;
   }
 
+  // DOM + Auth hazır kontrolü (log)
   document.addEventListener('DOMContentLoaded', () => {
     if (typeof firebase !== 'undefined') {
       const error = document.querySelector('.login-error');
@@ -196,7 +198,7 @@
       if (auth.currentUser) return;
       await auth.signInAnonymously();
     } catch {
-      // ignore
+      // kurallar anonymous login'i kapatmış olabilir; sessiz geç
     }
   }
 
@@ -206,6 +208,24 @@
 
   function contentDoc() {
     return db.collection('content').doc('links');
+  }
+
+  function normalizeContentLinksData(data) {
+    const source = data && typeof data === 'object' ? data : {};
+    const pdf = source.pdfLinks && typeof source.pdfLinks === 'object' ? source.pdfLinks : {};
+    const videos = Array.isArray(source.videoLinks) ? source.videoLinks : [];
+
+    return {
+      pdfLinks: {
+        trafik_ve_cevre: String(pdf.trafik_ve_cevre || ''),
+        trafik_adabi: String(pdf.trafik_adabi || ''),
+        motor_ve_arac_teknigi: String(pdf.motor_ve_arac_teknigi || ''),
+        ilk_yardim: String(pdf.ilk_yardim || ''),
+        is_makineleri: String(pdf.is_makineleri || ''),
+        pdf_trafik_isaretleri: String(pdf.pdf_trafik_isaretleri || ''),
+      },
+      videoLinks: videos,
+    };
   }
 
   async function studentLoginWithCode(codeInput) {
@@ -255,20 +275,19 @@
 
     try {
       const snap = preferServer ? await ref.get({ source: 'server' }) : await ref.get();
-      return snap.exists ? (snap.data() || {}) : {};
+      return normalizeContentLinksData(snap.exists ? (snap.data() || {}) : {});
     } catch {
       const snap = await ref.get();
-      return snap.exists ? (snap.data() || {}) : {};
+      return normalizeContentLinksData(snap.exists ? (snap.data() || {}) : {});
     }
   }
 
   async function saveContentLinks(payload) {
-    const pdfLinks = (payload && payload.pdfLinks) ? payload.pdfLinks : {};
-    const videoLinks = (payload && payload.videoLinks) ? payload.videoLinks : [];
+    const normalized = normalizeContentLinksData(payload);
     await contentDoc().set(
       {
-        pdfLinks,
-        videoLinks,
+        pdfLinks: normalized.pdfLinks,
+        videoLinks: normalized.videoLinks,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       },
       { merge: true }
@@ -366,18 +385,23 @@
     await accessCodesCol().doc(code).delete();
   }
 
+  // Uygulamanın beklediği global API
   window.SAFB = {
+    // Student
     studentLoginWithCode,
     studentLogout,
     getStudentSession,
 
+    // Content
     getContentLinks,
     saveContentLinks,
 
+    // Admin
     onAdminAuth,
     adminSignIn,
     adminSignOut,
 
+    // Access codes
     createAccessCode,
     listAccessCodes,
     setAccessCodeActive,
