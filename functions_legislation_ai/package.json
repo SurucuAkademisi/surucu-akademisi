@@ -1,0 +1,22 @@
+{
+  "name": "surucu-akademisi-functions-legislation-ai",
+  "description": "Isolated Gen2 Mevzuat AI assistant (OpenAI + deterministic retrieval)",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "22"
+  },
+  "main": "index.js",
+  "scripts": {
+    "lint": "echo \"no lint configured\"",
+    "build": "echo \"no build step (plain JS)\"",
+    "serve": "firebase emulators:start --only functions:legislation-ai",
+    "deploy": "firebase deploy --only functions:legislation-ai",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^7.2.5",
+    "openai": "^4.104.0"
+  }
+}
