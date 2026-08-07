@@ -1,0 +1,19 @@
+# Örnek Firestore kuralları — mevzuat koleksiyonu (üretime eklemeden önce projenize uyarlayın)
+#
+# Koleksiyon: mevzuat
+# Alanlar: title, body, published, createdAt, updatedAt, createdBy
+#
+# Süper admin yazabilir; giriş yapmış kurum admini yalnızca published==true dokümanları okuyabilir.
+# platformUsers / users rol kontrolünü kendi şemanıza göre değiştirin.
+
+# match /mevzuat/{docId} {
+#   allow read: if request.auth != null &&
+#     (resource.data.published == true || isSuperAdmin());
+#   allow create, update, delete: if request.auth != null && isSuperAdmin();
+# }
+#
+# Kurum admini mevzuat rozeti için users/{uid} üzerinde mevzuatLastSeenAt (merge):
+# match /users/{userId} {
+#   allow update: if request.auth != null && request.auth.uid == userId
+#     && onlyMevzuatLastSeenPatch();  // yalnızca bu alanın güncellenmesine izin verin
+# }

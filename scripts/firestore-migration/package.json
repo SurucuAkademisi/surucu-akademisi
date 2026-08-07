@@ -1,0 +1,16 @@
+{
+  "name": "firestore-migration",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sürücü Akademisi Firestore V1 migration araçları",
+  "type": "commonjs",
+  "scripts": {
+    "audit": "node audit.js",
+    "migrate:dry": "node migrate.js --dry-run",
+    "migrate": "node migrate.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0",
+    "dotenv": "^16.4.0"
+  }
+}
