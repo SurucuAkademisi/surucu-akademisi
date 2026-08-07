@@ -1,0 +1,1362 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Yetki kontrolü: users/{uid}.role == 'super_admin'
+    function isSuperAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') == 'super_admin';
+    }
+
+    // Public website CMS page keys (Phase 1 — siteContent)
+    function isAllowedSiteContentPageId(pageId) {
+      return pageId in ['about', 'services', 'contact'];
+    }
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Pending duel invites often have no duelId; plain == on missing fields can deny legitimate updates.
+    function duelInviteDuelIdUnchanged() {
+      return (!('duelId' in resource.data) && !('duelId' in request.resource.data))
+        || request.resource.data.duelId == resource.data.duelId;
+    }
+
+    // Kurum admini: tenantMemberships/{uid}_{tenantId} dokümanında role==institution_admin, status==active
+    function isInstitutionAdminForTenant(tenantId) {
+      return request.auth != null
+        && tenantId != null
+        && tenantId is string
+        && tenantId != ''
+        && exists(/databases/$(database)/documents/tenantMemberships/$(request.auth.uid + '_' + tenantId))
+        && get(/databases/$(database)/documents/tenantMemberships/$(request.auth.uid + '_' + tenantId)).data.get('role', '') == 'institution_admin'
+        && get(/databases/$(database)/documents/tenantMemberships/$(request.auth.uid + '_' + tenantId)).data.get('status', '') == 'active';
+    }
+
+    // Kurumlar-İletişim için role bazlı erişim: users/{uid}.role == institution_admin
+    function isInstitutionAdminRole() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') == 'institution_admin';
+    }
+
+    function canInstitutionAdminMarkTenantMailboxRead(tenantId) {
+      return request.auth != null
+        && isInstitutionAdminForTenant(tenantId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'isReadByTenant',
+          'isRead',
+          'readAtByTenant',
+          'readAt',
+          'updatedAt'
+        ]);
+    }
+
+    // Kurum öğrencisi: tenantMemberships/{uid}_{tenantId} role==student, status==active
+    function isStudentForTenant(tenantId) {
+      return request.auth != null
+        && tenantId != null
+        && tenantId is string
+        && tenantId != ''
+        && exists(/databases/$(database)/documents/tenantMemberships/$(request.auth.uid + '_' + tenantId))
+        && get(/databases/$(database)/documents/tenantMemberships/$(request.auth.uid + '_' + tenantId)).data.get('role', '') == 'student'
+        && get(/databases/$(database)/documents/tenantMemberships/$(request.auth.uid + '_' + tenantId)).data.get('status', '') == 'active';
+    }
+
+    // Patch B3: scoped tenantMailbox read (no public_user, no blanket isAuthenticated)
+    function canReadTenantMailboxMessage(tenantId) {
+      return isSuperAdmin()
+        || isInstitutionAdminForTenant(tenantId)
+        || (
+          isStudentForTenant(tenantId)
+          && (
+            resource.data.recipientId == request.auth.uid
+            || resource.data.senderUid == request.auth.uid
+          )
+        );
+    }
+
+    function canStudentCreateTenantMailboxReply(tenantId) {
+      return isStudentForTenant(tenantId)
+        && request.resource.data.tenantId == tenantId
+        && request.resource.data.senderType == 'student'
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.recipientType == 'tenant'
+        && request.resource.data.recipientId == tenantId
+        && request.resource.data.isReadByStudent == true
+        && request.resource.data.isReadByTenant == false
+        && request.resource.data.inReplyTo is string
+        && request.resource.data.inReplyTo.size() > 0
+        && request.resource.data.subject is string
+        && request.resource.data.body is string;
+    }
+
+    // D1B-SA-CORE: student-visible Super Admin reply mirror under tenantMailbox.
+    // Admin-facing copy remains on platformMailbox; this only allows own outgoing timeline copy.
+    function canStudentCreateTenantMailboxPlatformMirror(tenantId) {
+      return isStudentForTenant(tenantId)
+        && request.resource.data.tenantId == tenantId
+        && request.resource.data.senderType == 'student'
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.recipientType == 'super_admin'
+        && request.resource.data.recipientId == 'super_admin'
+        && request.resource.data.replyTargetType == 'super_admin'
+        && request.resource.data.messageChannel == 'student_to_platform'
+        && request.resource.data.subject is string
+        && request.resource.data.body is string
+        && request.resource.data.body.size() > 0
+        && request.resource.data.inReplyTo is string
+        && request.resource.data.inReplyTo.size() > 0
+        && request.resource.data.parentMessageId is string
+        && request.resource.data.parentMessageId == request.resource.data.inReplyTo
+        && request.resource.data.threadId is string
+        && request.resource.data.threadId.size() > 0
+        && request.resource.data.rootMessageId is string
+        && request.resource.data.rootMessageId.size() > 0
+        && request.resource.data.isReadByStudent == true
+        && (!('isBulk' in request.resource.data) || request.resource.data.isBulk == false)
+        && (
+          !('bulkBatchId' in request.resource.data)
+          || request.resource.data.bulkBatchId == null
+          || request.resource.data.bulkBatchId == ''
+        )
+        && !('audienceProgramType' in request.resource.data)
+        && !('audiencePeriodGroup' in request.resource.data);
+    }
+
+    function isPublicUser() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') == 'public_user';
+    }
+
+    // Patch 1A: owner may update profile fields, but must not change/add privileged keys.
+    function hasNoPrivilegedUserFieldChanges() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+        'role',
+        'globalRole',
+        'tenantId',
+        'tenantIds',
+        'activeTenantId',
+        'isActive',
+        'status',
+        'accountType',
+        'signupSource',
+        'createdAt',
+        'isAdmin',
+        'isSuperAdmin',
+        'premium',
+        'isPremium',
+        'entitlement',
+        'entitlements',
+        'userEntitlements',
+        'subscription',
+        'subscriptionStatus',
+        'plan',
+        'payment',
+        'paymentStatus',
+        'billing',
+        'permissions',
+        'claims'
+      ]);
+    }
+
+    // Create: deny privilege/payment/tenant fields. Signup may set role/accountType/isActive/signupSource
+    // only with non-privileged bootstrap values (public_user|student / public / true / string).
+    function hasNoPrivilegedUserFieldsOnCreate() {
+      return !request.resource.data.keys().hasAny([
+        'globalRole',
+        'tenantId',
+        'tenantIds',
+        'activeTenantId',
+        'status',
+        'isAdmin',
+        'isSuperAdmin',
+        'premium',
+        'isPremium',
+        'entitlement',
+        'entitlements',
+        'userEntitlements',
+        'subscription',
+        'subscriptionStatus',
+        'plan',
+        'payment',
+        'paymentStatus',
+        'billing',
+        'permissions',
+        'claims'
+      ])
+        && (
+          !('role' in request.resource.data)
+          || request.resource.data.role in ['public_user', 'student']
+        )
+        && (
+          !('accountType' in request.resource.data)
+          || request.resource.data.accountType == 'public'
+        )
+        && (
+          !('isActive' in request.resource.data)
+          || request.resource.data.isActive == true
+        )
+        && (
+          !('signupSource' in request.resource.data)
+          || request.resource.data.signupSource is string
+        );
+    }
+
+    function canStudentCreatePlatformMailboxReply() {
+      return request.auth != null
+        && ('sourceTenantId' in request.resource.data)
+        && request.resource.data.sourceTenantId is string
+        && request.resource.data.sourceTenantId.size() > 0
+        && isStudentForTenant(request.resource.data.sourceTenantId)
+        && request.resource.data.senderType == 'student'
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.recipientType == 'super_admin'
+        && request.resource.data.recipientId == 'super_admin'
+        && request.resource.data.replyTargetType == 'super_admin'
+        && request.resource.data.messageChannel == 'student_to_platform'
+        && request.resource.data.body is string
+        && request.resource.data.inReplyTo is string
+        && request.resource.data.inReplyTo.size() > 0
+        && request.resource.data.subject is string;
+    }
+
+    function canPublicUserCreatePlatformMailboxReply() {
+      return isPublicUser()
+        && request.resource.data.senderType == 'public_user'
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.recipientType == 'super_admin'
+        && request.resource.data.recipientId == 'super_admin'
+        && request.resource.data.replyTargetType == 'super_admin'
+        && request.resource.data.messageChannel == 'public_to_platform'
+        && request.resource.data.body is string
+        && request.resource.data.inReplyTo is string
+        && request.resource.data.inReplyTo.size() > 0
+        && request.resource.data.subject is string;
+    }
+
+    // Super Admin outbound Public reply mirror for Mesaj Merkezi timeline (M3C).
+    // Delivery to the public user remains on userMailbox; this only allows a narrow
+    // platformMailbox audit/timeline copy (platform_to_public_user).
+    function canSuperAdminCreatePlatformPublicMirror() {
+      return isSuperAdmin()
+        && request.resource.data.messageChannel == 'platform_to_public_user'
+        && request.resource.data.senderType in ['super_admin', 'platform']
+        && request.resource.data.recipientType in ['public_user', 'public']
+        && request.resource.data.recipientId is string
+        && request.resource.data.recipientId.size() > 0
+        && request.resource.data.body is string
+        && request.resource.data.subject is string;
+    }
+
+    // Mobile public timeline: own sent mirror under userMailbox/{uid}/messages (M4A).
+    // Delivery to Super Admin remains on platformMailbox; this only allows a narrow
+    // self-mailbox copy so the public client can show "Sen" after refresh.
+    function canPublicUserCreateOwnUserMailboxSentMirror(userId) {
+      return isPublicUser()
+        && request.auth.uid == userId
+        && request.resource.data.senderType == 'public_user'
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.messageChannel == 'public_to_platform'
+        && request.resource.data.recipientType in ['super_admin', 'platform']
+        && request.resource.data.recipientId in ['super_admin', 'platform']
+        && request.resource.data.body is string
+        && request.resource.data.body.size() > 0
+        && request.resource.data.subject is string
+        && request.resource.data.inReplyTo is string
+        && request.resource.data.inReplyTo.size() > 0;
+    }
+
+    function canStudentMarkOwnMailboxMessageRead(tenantId) {
+      return isStudentForTenant(tenantId)
+        && resource.data.recipientType == 'student'
+        && resource.data.recipientId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'isReadByStudent',
+          'studentReadAt',
+          'readAt'
+        ]);
+    }
+
+    function canCreateOwnTenantNotification() {
+      return request.auth != null
+        && ('tenantId' in request.resource.data)
+        && request.resource.data.tenantId is string
+        && request.resource.data.tenantId != ''
+        && isInstitutionAdminForTenant(request.resource.data.tenantId)
+        && request.resource.data.type == 'tenant'
+        && request.resource.data.status == 'active'
+        && ('title' in request.resource.data)
+        && request.resource.data.title is string
+        && ('message' in request.resource.data)
+        && request.resource.data.message is string
+        && ('targetType' in request.resource.data)
+        && (
+          request.resource.data.targetType == 'all_students'
+          || (
+            request.resource.data.targetType == 'single_student'
+            && ('targetId' in request.resource.data)
+            && request.resource.data.targetId is string
+            && request.resource.data.targetId.size() > 0
+          )
+        );
+    }
+
+    function canUpdateOwnTenantNotification() {
+      return request.auth != null
+        && ('tenantId' in resource.data)
+        && resource.data.tenantId is string
+        && resource.data.tenantId != ''
+        && isInstitutionAdminForTenant(resource.data.tenantId)
+        && resource.data.type == 'tenant'
+        && request.resource.data.type == 'tenant'
+        && request.resource.data.tenantId == resource.data.tenantId
+        && request.resource.data.type == resource.data.type
+        && request.resource.data.targetType == resource.data.targetType
+        && request.resource.data.get('targetId', null) == resource.data.get('targetId', null)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'title',
+          'message',
+          'status',
+          'updatedAt'
+        ]);
+    }
+
+    function canDeleteOwnTenantNotification() {
+      return request.auth != null
+        && ('tenantId' in resource.data)
+        && resource.data.tenantId is string
+        && resource.data.tenantId != ''
+        && resource.data.type == 'tenant'
+        && isInstitutionAdminForTenant(resource.data.tenantId);
+    }
+
+    function canInstitutionAdminWriteStudentPaymentSummary(tenantId) {
+      return request.auth != null
+        && isInstitutionAdminForTenant(tenantId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'totalAmount',
+          'paidAmount',
+          'installmentEnabled',
+          'monthlyInstallmentAmount',
+          'note',
+          'updatedAt',
+          'updatedBy'
+        ]);
+    }
+
+    function canInstitutionAdminCreateStudentPaymentSummary(tenantId) {
+      return request.auth != null
+        && isInstitutionAdminForTenant(tenantId)
+        && request.resource.data.keys().hasOnly([
+          'totalAmount',
+          'paidAmount',
+          'installmentEnabled',
+          'monthlyInstallmentAmount',
+          'note',
+          'updatedAt',
+          'updatedBy'
+        ]);
+    }
+
+    function canInstitutionAdminCreateStudentPaymentLog(tenantId) {
+      return request.auth != null
+        && isInstitutionAdminForTenant(tenantId)
+        && request.resource.data.keys().hasOnly([
+          'amount',
+          'date',
+          'remainingAfter',
+          'note',
+          'updatedBy'
+        ]);
+    }
+
+    // Mobil push: users/{userId}/deviceTokens/{tokenId}
+    function isValidDeviceTokenPlatform(platform) {
+      return platform == 'android'
+        || platform == 'ios'
+        || platform == 'web'
+        || platform == 'unknown';
+    }
+
+    function deviceTokenCoreFieldsValid(userId, tokenId) {
+      return request.resource.data.uid == userId
+        && request.resource.data.token == tokenId
+        && request.resource.data.tenantId is string
+        && request.resource.data.tenantId.size() > 0
+        && request.resource.data.isActive is bool
+        && isValidDeviceTokenPlatform(request.resource.data.platform);
+    }
+
+    function deviceTokenCreateAllowed(userId, tokenId) {
+      return request.auth != null
+        && request.auth.uid == userId
+        && deviceTokenCoreFieldsValid(userId, tokenId)
+        && request.resource.data.isActive == true;
+    }
+
+    function deviceTokenUpdateAllowed(userId, tokenId) {
+      return request.auth != null
+        && request.auth.uid == userId
+        && resource.data.uid == userId
+        && resource.data.token == tokenId
+        && deviceTokenCoreFieldsValid(userId, tokenId)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.token == resource.data.token
+        && (!('createdAt' in resource.data) || request.resource.data.createdAt == resource.data.createdAt);
+    }
+
+    // Kullanıcı profilleri: users/{userId}
+    // Okuma: sahibi veya super_admin
+    // Create: super_admin; veya sahip + privileged alan kilidi
+    // Update: super_admin serbest; sahibi yalnızca privileged alanları değiştirmeden
+    // Silme: sadece super_admin
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow read: if isSuperAdmin();
+      allow create: if isSuperAdmin()
+        || (
+          isAuthenticated()
+          && request.auth.uid == userId
+          && hasNoPrivilegedUserFieldsOnCreate()
+        );
+      allow update: if request.auth != null
+        && (
+          isSuperAdmin()
+          || (request.auth.uid == userId && hasNoPrivilegedUserFieldChanges())
+        );
+      allow delete: if isSuperAdmin();
+
+      // FCM cihaz tokenleri: yalnızca sahibi okur/yazar; Admin SDK collectionGroup okuması kuralları bypass eder
+      match /deviceTokens/{tokenId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if deviceTokenCreateAllowed(userId, tokenId);
+        allow update: if deviceTokenUpdateAllowed(userId, tokenId);
+        allow delete: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // A4: per-user one-time automatic duyuru popup claim (create-once, immutable)
+      match /announcementPopupState/{stateId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null
+          && request.auth.uid == userId
+          && request.resource.data.keys().hasOnly([
+            'popupShown',
+            'popupShownAt',
+            'createdAt',
+            'source',
+            'tenantId',
+            'announcementId'
+          ])
+          && request.resource.data.popupShown == true
+          && request.resource.data.source in ['system', 'tenant']
+          && request.resource.data.announcementId is string
+          && request.resource.data.announcementId.size() > 0
+          && request.resource.data.announcementId.size() <= 256
+          && request.resource.data.tenantId is string
+          && request.resource.data.tenantId.size() > 0
+          && request.resource.data.tenantId.size() <= 128
+          && (
+            (request.resource.data.source == 'system'
+              && request.resource.data.tenantId == '__system__')
+            || (request.resource.data.source == 'tenant'
+              && request.resource.data.tenantId != '__system__')
+          )
+          && request.resource.data.popupShownAt == request.time
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+
+    // Public-safe slice for leaderboard / shared UI (no email, role, tenant, etc.)
+    match /publicProfiles/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isSuperAdmin()
+        || (
+          request.auth != null
+          && request.auth.uid == userId
+          && request.resource.data.keys().hasOnly(['username', 'displayName', 'fullName', 'photoUrl', 'updatedAt'])
+          && request.resource.data.username is string
+          && request.resource.data.username.size() >= 1
+          && request.resource.data.username.size() <= 32
+          && request.resource.data.displayName is string
+          && request.resource.data.displayName.size() >= 1
+          && request.resource.data.displayName.size() <= 32
+          && request.resource.data.fullName is string
+          && request.resource.data.fullName.size() <= 200
+          && request.resource.data.photoUrl is string
+          && request.resource.data.photoUrl.size() <= 2048
+        );
+      allow delete: if isSuperAdmin();
+    }
+    // Ders ilerleme: users/{uid}/lessonProgress/{unitId}
+    match /users/{userId}/lessonProgress/{unitId} {
+      allow read, create, update, delete: if request.auth != null
+        && (request.auth.uid == userId || isSuperAdmin());
+    }
+
+    // Web public user lesson progress: users/{uid}/web_lesson_progress/{progressId}
+    match /users/{userId}/web_lesson_progress/{progressId} {
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.uid == userId
+        && request.resource.data.userType == "public_user";
+      allow read: if request.auth != null
+        && (request.auth.uid == userId || isSuperAdmin());
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && resource.data.uid == userId
+        && request.resource.data.uid == userId
+        && request.resource.data.userType == "public_user";
+      allow delete: if false;
+    }
+
+    // Sınav meta: tenantExams/{tenantId}/exams/{examId}
+    // Okuma: authenticated | Yazma: sadece super_admin
+    match /tenantExams/{tenantId}/exams/{examId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // Sorular: tenantExams/{tenantId}/questions/{questionId}
+    // Okuma: authenticated | Yazma: sadece super_admin
+    match /tenantExams/{tenantId}/questions/{questionId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // PDF ders notları, FAQ vb. eğitim içeriği: content/{docId}
+    // Okuma: authenticated | Yazma: sadece super_admin
+    match /content/{docId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isSuperAdmin();
+    }
+    // Global ders builder v2 kök dokümanı
+    match /content/lesson_categories {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isSuperAdmin();
+    }
+    // Global ders builder v2: kategoriler
+    match /content/lesson_categories/items/{categoryId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isSuperAdmin();
+    }
+    // Global ders builder v2: üniteler
+    match /content/lesson_categories/items/{categoryId}/units/{unitId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isSuperAdmin();
+    }
+    // Global ders builder v2: sıralı bloklar
+    match /content/lesson_categories/items/{categoryId}/units/{unitId}/blocks/{blockId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // Global öğretmen video dersleri (Super Admin yazar; authenticated okur)
+    match /content/teacher_video_lessons {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isSuperAdmin();
+    }
+    match /content/teacher_video_lessons/categories/{categoryId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isSuperAdmin();
+    }
+    match /content/teacher_video_lessons/categories/{categoryId}/videos/{videoId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isSuperAdmin();
+    }
+    match /content/teacher_video_lessons/settings/{docId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // Kurum listesi: tenants/{tenantId}
+    // Okuma: giriş öncesi kurum seçim ekranı için public (mobil where status in ['active','trial'])
+    // Yazma: sadece super_admin
+    match /tenants/{tenantId} {
+      allow read: if true;
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // Öğrenci–kurum üyelikleri: tenantMemberships/{membershipId}
+    // Okuma: giriş yapan kullanıcı kendi üyelik kayıtlarını; super_admin tümünü okuyabilir
+    // Yazma: sadece super_admin
+    match /tenantMemberships/{membershipId} {
+      allow read: if request.auth != null
+        && (resource.data.uid == request.auth.uid || resource.data.userId == request.auth.uid || isSuperAdmin());
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // Sistem duyuruları (admin paneli)
+    match /system_announcements/{docId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // Mevzuat (yayınlanmış olanlar okunabilir; yazma super_admin)
+    match /mevzuat/{docId} {
+      allow read: if isAuthenticated()
+        && (resource.data.get('published', false) == true || isSuperAdmin());
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // Kurum bildirimleri
+    match /notifications/{docId} {
+      allow read: if isAuthenticated();
+      allow create: if isSuperAdmin() || canCreateOwnTenantNotification();
+      allow update: if isSuperAdmin() || canUpdateOwnTenantNotification();
+      allow delete: if isSuperAdmin() || canDeleteOwnTenantNotification();
+    }
+
+    // Kurumlar-İletişim oda metadata
+    match /institutionProvinceRooms/{provinceId} {
+      allow read: if isSuperAdmin() || isInstitutionAdminRole();
+      allow create, update, delete: if false;
+
+      // Kurumlar-İletişim oda mesajları
+      match /messages/{messageId} {
+        allow read: if isSuperAdmin() || isInstitutionAdminRole();
+        allow create, update, delete: if false;
+      }
+    }
+
+    // Kurumlar-İletişim okundu durumu (Patch 2B: yalnızca Türkiye Geneli / genel, room_open v2)
+    function canWriteInstitutionChatReadState(tenantId, roomId) {
+      return roomId == 'genel'
+        && request.auth != null
+        && request.resource.data.updatedByUid == request.auth.uid
+        && request.resource.data.lastReadAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.readStateVersion == 2
+        && request.resource.data.readReason == 'room_open'
+        && (isSuperAdmin() || isInstitutionAdminForTenant(tenantId));
+    }
+
+    match /institutionChatReadStates/{tenantId}/rooms/{roomId} {
+      allow read: if isSuperAdmin() || isInstitutionAdminForTenant(tenantId);
+      allow create: if canWriteInstitutionChatReadState(tenantId, roomId)
+        && request.resource.data.keys().hasOnly([
+          'lastReadAt', 'updatedAt', 'updatedByUid', 'readStateVersion', 'readReason'
+        ]);
+      allow update: if canWriteInstitutionChatReadState(tenantId, roomId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'lastReadAt', 'updatedAt', 'updatedByUid', 'readStateVersion', 'readReason'
+        ]);
+      allow delete: if false;
+    }
+
+    // Tenant panel bölüm okundu durumu (Patch 1A: yalnızca mevzuat)
+    function canWriteTenantPanelReadState(tenantId, sectionId) {
+      return sectionId == 'mevzuat'
+        && request.auth != null
+        && request.resource.data.updatedByUid == request.auth.uid
+        && request.resource.data.lastReadAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.readStateVersion == 2
+        && request.resource.data.readReason == 'section_open'
+        && (isSuperAdmin() || isInstitutionAdminForTenant(tenantId));
+    }
+
+    match /tenantPanelReadStates/{tenantId}/sections/{sectionId} {
+      allow read: if isSuperAdmin() || isInstitutionAdminForTenant(tenantId);
+      allow create: if canWriteTenantPanelReadState(tenantId, sectionId)
+        && request.resource.data.keys().hasOnly([
+          'lastReadAt', 'updatedAt', 'updatedByUid', 'readStateVersion', 'readReason'
+        ]);
+      allow update: if canWriteTenantPanelReadState(tenantId, sectionId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'lastReadAt', 'updatedAt', 'updatedByUid', 'readStateVersion', 'readReason'
+        ]);
+      allow delete: if false;
+    }
+
+    // Forum create: authorship + tenant bind (P0-B). Global = missing/null/''.
+    function isForumGlobalTenantId(data) {
+      return !('tenantId' in data)
+        || data.tenantId == null
+        || data.tenantId == '';
+    }
+
+    function isForumInstitutionTenantId(data) {
+      return ('tenantId' in data)
+        && data.tenantId is string
+        && data.tenantId.size() > 0;
+    }
+
+    function canAccessForumTenant(tenantId) {
+      return isSuperAdmin()
+        || isStudentForTenant(tenantId)
+        || isInstitutionAdminForTenant(tenantId);
+    }
+
+    function forumCreateStatusOk() {
+      return !('status' in request.resource.data)
+        || request.resource.data.status == 'active';
+    }
+
+    function forumCreateUserNameOk() {
+      return !('userName' in request.resource.data)
+        || request.resource.data.userName is string;
+    }
+
+    function canCreateForumPost() {
+      return isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && forumCreateStatusOk()
+        && forumCreateUserNameOk()
+        && (
+          isForumGlobalTenantId(request.resource.data)
+          || (
+            isForumInstitutionTenantId(request.resource.data)
+            && canAccessForumTenant(request.resource.data.tenantId)
+          )
+        );
+    }
+
+    function canCreateForumComment(postId) {
+      return isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && forumCreateUserNameOk()
+        && exists(/databases/$(database)/documents/forum_posts/$(postId))
+        && (
+          (
+            isForumGlobalTenantId(get(/databases/$(database)/documents/forum_posts/$(postId)).data)
+            && isForumGlobalTenantId(request.resource.data)
+          )
+          || (
+            isForumInstitutionTenantId(get(/databases/$(database)/documents/forum_posts/$(postId)).data)
+            && ('tenantId' in request.resource.data)
+            && request.resource.data.tenantId
+              == get(/databases/$(database)/documents/forum_posts/$(postId)).data.tenantId
+            && canAccessForumTenant(
+              get(/databases/$(database)/documents/forum_posts/$(postId)).data.tenantId
+            )
+          )
+        );
+    }
+
+    // Forum paylaşımları: author 30 dk düzenle/sil; super_admin her zaman; institution_admin kendi kurumuna ait gönderilerde; count güncellemeleri serbest
+    match /forum_posts/{postId} {
+      allow read: if isAuthenticated();
+      allow create: if canCreateForumPost();
+      allow update: if isAuthenticated() && (
+        isSuperAdmin()
+        || (resource.data.userId == request.auth.uid
+            && 'createdAt' in resource.data
+            && request.time <= resource.data.createdAt + duration.value(30, 'm'))
+        || (resource.data.get('tenantId', null) != null
+            && isInstitutionAdminForTenant(resource.data.get('tenantId', '')))
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount'])
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount', 'commentCount'])
+      );
+      allow delete: if isAuthenticated() && (
+        isSuperAdmin()
+        || (resource.data.userId == request.auth.uid
+            && 'createdAt' in resource.data
+            && request.time <= resource.data.createdAt + duration.value(30, 'm'))
+        || (resource.data.get('tenantId', null) != null
+            && isInstitutionAdminForTenant(resource.data.get('tenantId', '')))
+      );
+    }
+    match /forum_posts/{postId}/comments/{commentId} {
+      allow read: if isAuthenticated();
+      allow create: if canCreateForumComment(postId);
+      allow update: if isAuthenticated() && (
+        isSuperAdmin()
+        || resource.data.userId == request.auth.uid
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['dislikeCount'])
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['replyCount'])
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount', 'dislikeCount'])
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount', 'replyCount'])
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['dislikeCount', 'replyCount'])
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount', 'dislikeCount', 'replyCount'])
+      );
+      allow delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isSuperAdmin());
+
+      match /reactions/{userId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated()
+          && request.auth.uid == userId
+          && request.resource.data.type in ['like', 'dislike'];
+        allow update: if isAuthenticated()
+          && request.auth.uid == userId
+          && request.resource.data.type in ['like', 'dislike'];
+        allow delete: if isAuthenticated() && request.auth.uid == userId;
+      }
+
+      match /replies/{replyId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated()
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.content is string
+          && request.resource.data.userName is string;
+        allow update, delete: if isAuthenticated() && (
+          resource.data.userId == request.auth.uid || isSuperAdmin()
+        );
+      }
+    }
+    match /forum_posts/{postId}/likes/{userId} {
+      allow read, create, delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function canStudentSoftDeleteOwnTenantMailboxMessage(tenantId) {
+      return isStudentForTenant(tenantId)
+        && (
+          resource.data.recipientId == request.auth.uid
+          || resource.data.senderUid == request.auth.uid
+        )
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'deletedForStudent',
+          'deletedAtForStudent',
+          'deletedByStudentUid',
+          'updatedAt'
+        ])
+        && request.resource.data.deletedForStudent == true
+        && request.resource.data.deletedByStudentUid == request.auth.uid;
+    }
+
+    function canInstitutionAdminSoftDeleteTenantMailboxMessage(tenantId) {
+      return isInstitutionAdminForTenant(tenantId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'deletedForTenant',
+          'deletedAtForTenant',
+          'deletedByTenantUid',
+          'updatedAt'
+        ])
+        && request.resource.data.deletedForTenant == true
+        && request.resource.data.deletedByTenantUid == request.auth.uid;
+    }
+
+    function canSuperAdminSoftDeleteTenantMailboxMessage() {
+      return isSuperAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'deletedForSuper',
+          'deletedAtForSuper',
+          'deletedBySuperUid',
+          'updatedAt'
+        ])
+        && request.resource.data.deletedForSuper == true
+        && request.resource.data.deletedBySuperUid == request.auth.uid;
+    }
+
+    function canSuperAdminSoftDeletePlatformMailboxMessage() {
+      return isSuperAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'deletedForSuper',
+          'deletedAtForSuper',
+          'deletedBySuperUid',
+          'updatedAt'
+        ])
+        && request.resource.data.deletedForSuper == true
+        && request.resource.data.deletedBySuperUid == request.auth.uid;
+    }
+
+    // Kurum mesaj kutusu: tenantMailbox/{tenantId}/messages/{messageId}
+    // super_admin: tam yetki; institution_admin: sadece recipientType=student ile öğrenciye doğrudan mesaj
+    // Patch B3: read — SA | institution_admin(tenant) | student own recipient/sender only
+    match /tenantMailbox/{tenantId}/messages/{messageId} {
+      allow read: if canReadTenantMailboxMessage(tenantId);
+      allow create: if isSuperAdmin()
+        || (
+            isInstitutionAdminForTenant(tenantId)
+            && request.resource.data.tenantId == tenantId
+            && (
+              (
+                request.resource.data.recipientType == 'student'
+                && request.resource.data.recipientId is string
+                && request.resource.data.recipientId.size() > 0
+              )
+              || (
+                request.resource.data.recipientType == 'super_admin'
+                && request.resource.data.senderType == 'institution_admin'
+              )
+            )
+          )
+        || canStudentCreateTenantMailboxReply(tenantId)
+        || canStudentCreateTenantMailboxPlatformMirror(tenantId);
+      allow update: if isSuperAdmin()
+        || canInstitutionAdminMarkTenantMailboxRead(tenantId)
+        || canStudentMarkOwnMailboxMessageRead(tenantId)
+        || canStudentSoftDeleteOwnTenantMailboxMessage(tenantId)
+        || canInstitutionAdminSoftDeleteTenantMailboxMessage(tenantId)
+        || canSuperAdminSoftDeleteTenantMailboxMessage();
+      allow delete: if isSuperAdmin();
+    }
+
+    // Public soft-hide (D0): owner may set only deletedFor* fields on own userMailbox messages.
+    function canPublicUserSoftDeleteOwnUserMailboxMessage(userId) {
+      return isPublicUser()
+        && request.auth.uid == userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'deletedForPublicUser',
+          'deletedAtForPublicUser',
+          'deletedByPublicUid',
+          'updatedAt'
+        ])
+        && request.resource.data.deletedForPublicUser == true
+        && request.resource.data.deletedByPublicUid == request.auth.uid;
+    }
+
+    // Public conversation hide (D0): own threadStates under userMailbox.
+    function canPublicUserWriteOwnThreadState(userId, threadId) {
+      return isPublicUser()
+        && request.auth.uid == userId
+        && request.resource.data.threadId == threadId
+        && request.resource.data.hidden is bool
+        && request.resource.data.hiddenByUid == request.auth.uid
+        && request.resource.data.mailboxScope == 'public_userMailbox'
+        && request.resource.data.keys().hasOnly([
+          'threadId',
+          'hidden',
+          'hiddenAt',
+          'hiddenByUid',
+          'mailboxScope',
+          'resurfaceOnIncoming',
+          'updatedAt'
+        ])
+        && (
+          !('resurfaceOnIncoming' in request.resource.data)
+          || request.resource.data.resurfaceOnIncoming is bool
+        );
+    }
+
+    function canStudentWriteOwnMailboxThreadState(userId, threadId) {
+      return request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.threadId == threadId
+        && request.resource.data.hidden is bool
+        && request.resource.data.hiddenByUid == request.auth.uid
+        && request.resource.data.mailboxScope in [
+          'student_tenantMailbox',
+          'student_platformMailbox',
+          'student_messages'
+        ]
+        && request.resource.data.keys().hasOnly([
+          'threadId',
+          'hidden',
+          'hiddenAt',
+          'hiddenByUid',
+          'mailboxScope',
+          'tenantId',
+          'resurfaceOnIncoming',
+          'updatedAt'
+        ])
+        && (
+          !('resurfaceOnIncoming' in request.resource.data)
+          || request.resource.data.resurfaceOnIncoming is bool
+        )
+        && (
+          !('tenantId' in request.resource.data)
+          || request.resource.data.tenantId is string
+        );
+    }
+
+    function canInstitutionAdminWriteTenantMailboxThreadState(tenantId, threadId) {
+      return isInstitutionAdminForTenant(tenantId)
+        && request.resource.data.threadId == threadId
+        && request.resource.data.hidden is bool
+        && request.resource.data.hiddenByUid == request.auth.uid
+        && request.resource.data.hiddenByTenantId == tenantId
+        && request.resource.data.mailboxScope == 'tenant_admin_mailbox'
+        && request.resource.data.keys().hasOnly([
+          'threadId',
+          'hidden',
+          'hiddenAt',
+          'hiddenByUid',
+          'hiddenByTenantId',
+          'mailboxScope',
+          'resurfaceOnIncoming',
+          'updatedAt'
+        ])
+        && (
+          !('resurfaceOnIncoming' in request.resource.data)
+          || request.resource.data.resurfaceOnIncoming is bool
+        );
+    }
+
+    function canSuperAdminWritePlatformThreadState(threadId) {
+      return isSuperAdmin()
+        && request.resource.data.threadId == threadId
+        && request.resource.data.hidden is bool
+        && request.resource.data.hiddenByUid == request.auth.uid
+        && request.resource.data.mailboxScope in [
+          'super_platform_tenant',
+          'super_public_platform',
+          'super_student_platform'
+        ]
+        && request.resource.data.keys().hasOnly([
+          'threadId',
+          'hidden',
+          'hiddenAt',
+          'hiddenByUid',
+          'mailboxScope',
+          'participantType',
+          'participantId',
+          'tenantId',
+          'resurfaceOnIncoming',
+          'updatedAt'
+        ])
+        && (
+          !('resurfaceOnIncoming' in request.resource.data)
+          || request.resource.data.resurfaceOnIncoming is bool
+        );
+    }
+
+    // Kurumsuz / public kullanıcı mesaj kutusu: userMailbox/{userId}/messages/{messageId}
+    match /userMailbox/{userId}/messages/{messageId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isSuperAdmin()
+        || canPublicUserCreateOwnUserMailboxSentMirror(userId);
+      allow update: if (isAuthenticated()
+          && request.auth.uid == userId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'readAt']))
+        || canPublicUserSoftDeleteOwnUserMailboxMessage(userId);
+      allow delete: if isSuperAdmin();
+    }
+
+    match /userMailbox/{userId}/threadStates/{threadId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create, update: if canPublicUserWriteOwnThreadState(userId, threadId);
+      allow delete: if isAuthenticated() && request.auth.uid == userId && isPublicUser();
+    }
+
+    // Student conversation hide (D2): users/{uid}/mailboxThreadStates/{threadId}
+    match /users/{userId}/mailboxThreadStates/{threadId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create, update: if canStudentWriteOwnMailboxThreadState(userId, threadId);
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Tenant Admin conversation hide (D3)
+    match /tenants/{tenantId}/mailboxThreadStates/{threadId} {
+      allow read: if isSuperAdmin() || isInstitutionAdminForTenant(tenantId);
+      allow create, update: if canInstitutionAdminWriteTenantMailboxThreadState(tenantId, threadId);
+      allow delete: if isInstitutionAdminForTenant(tenantId);
+    }
+
+    // Platform mesaj kutusu: Super Admin gelen öğrenci/kurumsuz yanıtları
+    match /platformMailbox/super_admin/messages/{messageId} {
+      allow read: if isSuperAdmin();
+      allow create: if canStudentCreatePlatformMailboxReply()
+        || canPublicUserCreatePlatformMailboxReply()
+        || canSuperAdminCreatePlatformPublicMirror();
+      allow update: if (isSuperAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isReadBySuper', 'readAt']))
+        || canSuperAdminSoftDeletePlatformMailboxMessage();
+      allow delete: if isSuperAdmin();
+    }
+
+    match /platformMailbox/super_admin/threadStates/{threadId} {
+      allow read: if isSuperAdmin();
+      allow create, update: if canSuperAdminWritePlatformThreadState(threadId);
+      allow delete: if isSuperAdmin();
+    }
+
+    // Kurum faturalama
+    match /tenantBilling/{tenantId} {
+      allow read: if isSuperAdmin() || isInstitutionAdminForTenant(tenantId);
+      allow create, update, delete: if isSuperAdmin();
+
+      match /{document=**} {
+        allow read: if isSuperAdmin() || isInstitutionAdminForTenant(tenantId);
+        allow create, update, delete: if isSuperAdmin();
+      }
+    }
+
+    // Kurum ayarları
+    match /tenantSettings/{docId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // Kullanıcı reklamsız entitlement (manuel / IAP); yazma yalnızca callable Admin SDK
+    match /userEntitlements/{userId} {
+      allow read: if request.auth != null
+        && (request.auth.uid == userId || isSuperAdmin());
+      allow create, update, delete: if false;
+    }
+
+    // Bireysel premium video siparişleri (Phase 4A); yazma yalnızca Admin SDK
+    match /paymentOrders/{orderId} {
+      allow read: if request.auth != null
+        && (resource.data.uid == request.auth.uid || isSuperAdmin());
+      allow create, update, delete: if false;
+    }
+
+    // Ödeme audit logları (append-only backend); yalnızca super_admin okur
+    match /paymentEvents/{eventId} {
+      allow read: if isSuperAdmin();
+      allow create, update, delete: if false;
+    }
+
+    // Kurum duyuruları: tenants/{tenantId}/announcements/{announcementId}
+    match /tenants/{tenantId}/announcements/{announcementId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isSuperAdmin() || isInstitutionAdminForTenant(tenantId);
+    }
+
+    // Sınav denemeleri: tenants/{tenantId}/exam_attempts/{attemptId}
+    // Öğrenci kendi denemelerini oluşturabilir; okuma kendi uid ile filtrelenir
+    // super_admin ve institution_admin (kendi kurumu) okuyabilir
+    // P1-A: kurum tenant için üyelik zorunlu; surucu_akademisi brand/public mirror istisnası
+    match /tenants/{tenantId}/exam_attempts/{attemptId} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.tenantId == tenantId
+        && (
+          isStudentForTenant(tenantId)
+          || isSuperAdmin()
+          || tenantId == 'surucu_akademisi'
+        );
+      allow read: if request.auth != null
+        && (resource.data.uid == request.auth.uid
+            || isSuperAdmin()
+            || isInstitutionAdminForTenant(tenantId));
+      allow update, delete: if false;
+    }
+
+    // Web public user exam attempts: users/{uid}/web_exam_attempts/{attemptId}
+    match /users/{userId}/web_exam_attempts/{attemptId} {
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null
+        && (request.auth.uid == userId || isSuperAdmin());
+      allow update, delete: if false;
+    }
+
+    // Web / kurum öğrenci ders ilerleme: tenants/{tenantId}/lesson_progress/{progressId}
+    // P1-A: create/update için aktif öğrenci üyeliği zorunlu (brand istisnası yok)
+    match /tenants/{tenantId}/lesson_progress/{progressId} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.tenantId == tenantId
+        && request.resource.data.userType == "institution_student"
+        && isStudentForTenant(tenantId);
+      allow read: if request.auth != null
+        && (resource.data.uid == request.auth.uid
+            || isSuperAdmin()
+            || isInstitutionAdminForTenant(tenantId));
+      allow update: if request.auth != null
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.tenantId == tenantId
+        && request.resource.data.userType == "institution_student"
+        && isStudentForTenant(tenantId);
+      allow delete: if false;
+    }
+
+    // Öğrenci ödemeleri: tenants/{tenantId}/studentPayments/{uid}
+    // Patch 1A: read — super_admin | institution_admin(tenant) | kendi uid + isStudentForTenant
+    match /tenants/{tenantId}/studentPayments/{uid} {
+      allow read: if isSuperAdmin()
+        || isInstitutionAdminForTenant(tenantId)
+        || (request.auth != null
+            && request.auth.uid == uid
+            && isStudentForTenant(tenantId));
+      allow create: if isSuperAdmin() || canInstitutionAdminCreateStudentPaymentSummary(tenantId);
+      allow update: if isSuperAdmin() || canInstitutionAdminWriteStudentPaymentSummary(tenantId);
+      allow delete: if isSuperAdmin();
+    }
+
+    // Ödeme logu: tenants/{tenantId}/studentPayments/{uid}/paymentLog/{logId}
+    // Patch 1A: aynı read kapsamı; write helpers değişmedi
+    match /tenants/{tenantId}/studentPayments/{uid}/paymentLog/{logId} {
+      allow read: if isSuperAdmin()
+        || isInstitutionAdminForTenant(tenantId)
+        || (request.auth != null
+            && request.auth.uid == uid
+            && isStudentForTenant(tenantId));
+      allow create: if isSuperAdmin() || canInstitutionAdminCreateStudentPaymentLog(tenantId);
+      allow update, delete: if isSuperAdmin();
+    }
+
+    // Duel invite MVP: duelInvites/{inviteId}
+    match /duelInvites/{inviteId} {
+      allow create: if isAuthenticated()
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.receiverId is string
+        && request.resource.data.receiverId != ''
+        && request.resource.data.senderId is string
+        && request.resource.data.senderId != ''
+        && request.resource.data.senderId != request.resource.data.receiverId
+        && request.resource.data.status == 'pending'
+        && ('expireAt' in request.resource.data);
+
+      allow read: if isAuthenticated()
+        && (resource.data.senderId == request.auth.uid
+            || resource.data.receiverId == request.auth.uid);
+
+      allow update: if isAuthenticated()
+        && (resource.data.senderId == request.auth.uid
+            || resource.data.receiverId == request.auth.uid)
+        // Invite participants must stay fixed
+        && request.resource.data.senderId == resource.data.senderId
+        && request.resource.data.receiverId == resource.data.receiverId
+        // Original creation metadata should not be rewritten
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.createdAtMs == resource.data.createdAtMs
+        // Sender-side safe transitions: pending -> cancelled|timeout
+        && (
+          (request.auth.uid == resource.data.senderId
+            && resource.data.status == 'pending'
+            && (request.resource.data.status == 'cancelled'
+                || request.resource.data.status == 'timeout')
+            && duelInviteDuelIdUnchanged())
+          // Receiver-side safe transitions: pending -> accepted|rejected|timeout
+          || (request.auth.uid == resource.data.receiverId
+            && resource.data.status == 'pending'
+            && (request.resource.data.status == 'accepted'
+                || request.resource.data.status == 'rejected'
+                || request.resource.data.status == 'timeout')
+            && (
+              (request.resource.data.status == 'accepted'
+                && request.resource.data.duelId is string
+                && request.resource.data.duelId != '')
+              || (request.resource.data.status != 'accepted'
+                && duelInviteDuelIdUnchanged())
+            ))
+        );
+    }
+
+    // Duel session MVP: duels/{duelId}
+    match /duels/{duelId} {
+      allow create: if isAuthenticated()
+        && request.resource.data.status == 'created'
+        && (
+          request.resource.data.playerA == request.auth.uid
+          || request.resource.data.playerB == request.auth.uid
+        );
+      allow read: if isAuthenticated()
+        && (
+          resource.data.playerA == request.auth.uid
+          || resource.data.playerB == request.auth.uid
+        );
+      allow update: if isAuthenticated()
+        && (
+          resource.data.playerA == request.auth.uid
+          || resource.data.playerB == request.auth.uid
+        )
+        // Players and status are immutable in MVP
+        && request.resource.data.playerA == resource.data.playerA
+        && request.resource.data.playerB == resource.data.playerB
+        && request.resource.data.status == 'created'
+        && resource.data.status == 'created'
+        && (
+          (
+            // exam assignment (single write)
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'examId', 'examTitle', 'category', 'updatedAt'
+            ])
+            && (
+              !(resource.data.examId is string) || resource.data.examId == ''
+            )
+            && request.resource.data.examId is string
+            && request.resource.data.examId != ''
+          )
+          ||
+          (
+            // result resolution write
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'resultStatus', 'winnerUid', 'resolvedAt', 'updatedAt'
+            ])
+            && request.resource.data.resultStatus == 'resolved'
+            && (
+              !('resultStatus' in resource.data)
+              || resource.data.resultStatus == null
+              || resource.data.resultStatus == ''
+            )
+            && (
+              request.resource.data.winnerUid == null
+              || request.resource.data.winnerUid == resource.data.playerA
+              || request.resource.data.winnerUid == resource.data.playerB
+            )
+          )
+        );
+
+      // Per-player duel result payload
+      match /results/{uid} {
+        allow read: if isAuthenticated()
+          && exists(/databases/$(database)/documents/duels/$(duelId))
+          && (
+            get(/databases/$(database)/documents/duels/$(duelId)).data.playerA == request.auth.uid
+            || get(/databases/$(database)/documents/duels/$(duelId)).data.playerB == request.auth.uid
+          );
+        allow create, update: if isAuthenticated()
+          && request.auth.uid == uid
+          && exists(/databases/$(database)/documents/duels/$(duelId))
+          && (
+            get(/databases/$(database)/documents/duels/$(duelId)).data.playerA == request.auth.uid
+            || get(/databases/$(database)/documents/duels/$(duelId)).data.playerB == request.auth.uid
+          )
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.keys().hasOnly([
+            'uid', 'correct', 'wrong', 'blank', 'score', 'elapsedSec', 'submittedAt'
+          ]);
+      }
+    }
+
+    // Duel league MVP (global)
+    match /duelLeague/{uid} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && request.auth.uid == uid;
+
+      match /matches/{duelId} {
+        allow read: if isAuthenticated() && request.auth.uid == uid;
+        allow create, update: if isAuthenticated() && request.auth.uid == uid;
+      }
+    }
+
+    // Duel online presence: duel_presence/{uid}
+    // Authenticated users can read all; each user can only write their own doc
+    match /duel_presence/{uid} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // -------------------------------------------------------------------------
+    // Public website CMS (Phase 1) — fixed paths only; no parent/list grants
+    // Paths: siteContent/{about|services|contact}/{draft|published}/current
+    // Draft: super_admin get/create/update only. Published: public get; SA write.
+    // Delete disabled in Phase 1. No recursive siteContent wildcard.
+    // -------------------------------------------------------------------------
+    match /siteContent/{pageId}/published/current {
+      allow get: if isAllowedSiteContentPageId(pageId);
+      allow list: if false;
+      allow create, update: if isAllowedSiteContentPageId(pageId)
+        && isSuperAdmin()
+        && request.resource.data.pageKey == pageId
+        && request.resource.data.schemaVersion == 1;
+      allow delete: if false;
+    }
+
+    match /siteContent/{pageId}/draft/current {
+      allow get: if isAllowedSiteContentPageId(pageId)
+        && isSuperAdmin();
+      allow list: if false;
+      allow create, update: if isAllowedSiteContentPageId(pageId)
+        && isSuperAdmin()
+        && request.resource.data.pageKey == pageId
+        && request.resource.data.schemaVersion == 1;
+      allow delete: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Public website contact requests — Admin SDK / callables only for writes.
+    // Paths: contactRequests/{requestId}
+    // SA: get + list. All client create/update/delete denied.
+    // -------------------------------------------------------------------------
+    match /contactRequests/{requestId} {
+      allow get, list: if isSuperAdmin();
+      allow create, update, delete: if false;
+    }
+
+    // Rate-limit counters for contact request callables (Admin SDK only).
+    match /contactRequestRateLimits/{rateKey} {
+      allow read, write: if false;
+    }
+  }
+}

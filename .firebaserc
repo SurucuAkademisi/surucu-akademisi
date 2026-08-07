@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "surucuakademisi-f5e1f"
+  },
+  "targets": {
+    "surucuakademisi-f5e1f": {
+      "hosting": {
+        "admin": [
+          "surucuakademisi-f5e1f"
+        ],
+        "web": [
+          "surucuakademisi-web"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

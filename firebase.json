@@ -1,0 +1,58 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "hosting": [
+    {
+      "target": "admin",
+      "public": "hosting-admin",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "/admin",
+          "destination": "/admin.html"
+        }
+      ]
+    },
+    {
+      "target": "web",
+      "public": "hosting-web",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default"
+    },
+    {
+      "source": "functions_student_admin",
+      "codebase": "student-admin"
+    },
+    {
+      "source": "functions_institution_chat",
+      "codebase": "institution-chat"
+    },
+    {
+      "source": "functions_legislation_ai",
+      "codebase": "legislation-ai"
+    },
+    {
+      "source": "functions_payments",
+      "codebase": "payments"
+    }
+  ]
+}
+

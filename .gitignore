@@ -1,2 +1,66 @@
 
 notlar/*.pdf
+mobile_app/src/notlar/*.pdf
+
+# Firestore migration & backup
+scripts/firestore-migration/.env
+scripts/firestore-migration/reports/*.json
+scripts/firestore-migration/*.json
+!scripts/firestore-migration/package.json
+!scripts/firestore-migration/package-lock.json
+firestore-backups/*
+!firestore-backups/.gitkeep
+*-serviceAccount*.json
+*serviceAccountKey*.json
+*service-account*.json
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+azureloginkeys*.txt
+**/local.properties
+
+# Signing credentials
+*.jks
+*.keystore
+*.p12
+*.pfx
+
+# Firebase / tooling local
+.firebase/
+*.log
+n3c3-deploy-debug.log
+
+# IDE / OS
+.cursor/
+.idea/
+.vscode/
+*.iml
+desktop.ini
+Thumbs.db
+
+# Android / Capacitor generated
+**/build/
+**/.gradle/
+*.apk
+*.aab
+*.ap_
+*.dex
+mobile_app/android/app/src/main/assets/public/
+mobile_app/android/capacitor-cordova-android-plugins/
+mobile_app/android/local.properties
+
+# Backups / dumps / junk
+*.zip
+*.rar
+*.7z
+*_BACKUP_*.html
+mobile_app/_validate_*.js
+resimler_backup/
+bject *
+ersUserDesktop*
