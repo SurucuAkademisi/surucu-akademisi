@@ -1,8 +1,8 @@
-const { Capacitor } = window;
-const { Plugins } = window.Capacitor ?? {};
-const App = Plugins?.App;
-const ActionSheet = Plugins?.ActionSheet;
-const AdMob = Plugins?.AdMob;
+const Capacitor = window.Capacitor;
+const Plugins = Capacitor?.Plugins ?? {};
+const App = Plugins?.App ?? window.Capacitor?.App;
+const ActionSheet = Plugins?.ActionSheet ?? window.Capacitor?.ActionSheet;
+const AdMob = Plugins?.AdMob ?? window.Capacitor?.AdMob;
 
 const TEST_BANNER_ANDROID = 'ca-app-pub-3940256099942544/6300978111';
 const TEST_BANNER_IOS = 'ca-app-pub-3940256099942544/2934735716';
@@ -425,13 +425,62 @@ function bindInteractionSignals() {
 
 }
 
+function bindNativeBackButton() {
+  if (!App?.addListener) return;
+
+  App.addListener('backButton', ({ canGoBack }) => {
+    const isVisible = (id) => {
+      const el = document.getElementById(id);
+      if (!el) return false;
+      const display = window.getComputedStyle(el).display;
+      return display !== 'none';
+    };
+
+    const machineSessionActive = typeof window.isMachineSessionRootVisible === 'function'
+      ? window.isMachineSessionRootVisible()
+      : (() => {
+          const machineRoot = document.getElementById('machine-session-screen');
+          return !!(machineRoot && machineRoot.style.display !== 'none');
+        })();
+
+    if (machineSessionActive && typeof window.handleMachineSystemBack === 'function') {
+      window.handleMachineSystemBack();
+      return;
+    }
+
+    if (isVisible('quiz-ui') && typeof window.closeQuiz === 'function') {
+      window.closeQuiz();
+      return;
+    }
+
+    if (isVisible('dashboard-ui') && typeof window.closeDashboard === 'function') {
+      window.closeDashboard();
+      return;
+    }
+
+    if (isVisible('content-wrapper') && typeof window.handleContentBack === 'function') {
+      window.handleContentBack();
+      return;
+    }
+
+    if (canGoBack && window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+
+    if (typeof App.exitApp === 'function') {
+      App.exitApp();
+    }
+  });
+}
+
 async function bootstrap() {
   if (!isNative()) {
     console.log('[Info] Native dışı ortam, AdMob çalıştırılmadı.');
     return;
   }
 
-  if (!AdMob || !ActionSheet || !App) {
+  if (!AdMob || !App) {
     console.warn('[Info] Capacitor pluginleri bulunamadı.');
     return;
   }
@@ -439,6 +488,7 @@ async function bootstrap() {
   await initNativeMenuPlaceholder();
   setupExamLifecycleBridge();
   bindInteractionSignals();
+  bindNativeBackButton();
 
   try {
     await AdMob.initialize({
@@ -468,4 +518,6 @@ async function bootstrap() {
   }
 }
 
-bootstrap();
+window.addEventListener("DOMContentLoaded", () => {
+  bootstrap();
+});

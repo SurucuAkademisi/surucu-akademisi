@@ -1,0 +1,1748 @@
+/*
+Canonical active runtime login for mobile_app (index.html loads ./js/login.js).
+Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after login.
+*/
+(function () {
+  'use strict';
+
+  const SELECTED_TENANT_STORAGE_KEY = 'sa_selected_tenant_id';
+  let tenantBootstrapModulesPromise = null;
+  const DEBUG_ENDPOINT = 'http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094';
+  const DEBUG_SESSION_ID = '2a11cc';
+
+  const DEBUG_STORAGE_KEY = 'debug_log_2a11cc';
+  const DEBUG_LOG_MAX = 50;
+  function debugLog(runId, hypothesisId, location, message, data) {
+    const payload = { sessionId: DEBUG_SESSION_ID, runId, hypothesisId, location, message, data: data || {}, timestamp: Date.now() };
+    // #region agent log
+    fetch(DEBUG_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': DEBUG_SESSION_ID },
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+    try {
+      let arr = [];
+      try { arr = JSON.parse(localStorage.getItem(DEBUG_STORAGE_KEY) || '[]'); } catch (_) {}
+      if (!Array.isArray(arr)) arr = [];
+      arr.push(payload);
+      if (arr.length > DEBUG_LOG_MAX) arr = arr.slice(-DEBUG_LOG_MAX);
+      localStorage.setItem(DEBUG_STORAGE_KEY, JSON.stringify(arr));
+    } catch (_) {}
+    // #endregion
+  }
+
+  function getSelectedTenantIdFromStorage() {
+    try {
+      const v = sessionStorage.getItem(SELECTED_TENANT_STORAGE_KEY);
+      return typeof v === 'string' ? v.trim() || null : null;
+    } catch { return null; }
+  }
+
+  async function loadTenantBootstrapModules() {
+    if (!tenantBootstrapModulesPromise) {
+      tenantBootstrapModulesPromise = Promise.all([
+        import('./tenant-context.resolver.js'),
+        import('./tenant-session.store.js'),
+      ]);
+    }
+    return tenantBootstrapModulesPromise;
+  }
+
+  async function tryBootstrapTenantSessionFromUser(user, selectedTenantId = null) {
+    if (!user || !user.uid) return;
+    try {
+      const [resolverModule, sessionModule] = await loadTenantBootstrapModules();
+      const tenantId = selectedTenantId || getSelectedTenantIdFromStorage();
+      const context = await resolverModule.resolveTenantContext(user, tenantId);
+      sessionModule.setActiveTenantSession(context);
+      if (context && context.tenantId && window.SA_TENANT && typeof window.SA_TENANT.setSelectedTenantId === 'function') {
+        window.SA_TENANT.setSelectedTenantId(context.tenantId);
+      }
+      try {
+        const adPolicy = await import('./ad-policy.resolver.js');
+        await adPolicy.refreshAdPolicyForCurrentUser(user);
+      } catch (adErr) {
+        console.warn('[AdPolicy] refresh after tenant bootstrap failed:', adErr);
+      }
+    } catch (error) {
+      console.warn('Tenant context bootstrap atlandi:', error);
+    }
+  }
+
+  function normalizeUsername(input) {
+    return String(input || '').trim().toLowerCase();
+  }
+
+  function usernameOrEmailToEmail(input) {
+    const raw = String(input || '').trim();
+    if (!raw) return '';
+    if (raw.includes('@')) return raw.toLowerCase();
+    const normalized = normalizeUsername(raw);
+    return normalized ? (normalized + '@surucu.app') : '';
+  }
+
+  function remainingDaysFromMillis(expiresAtMs) {
+    const diff = Number(expiresAtMs || 0) - Date.now();
+    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  }
+
+  function setRemainingDaysBadge(days) {
+    // İstenilen değişiklik: "Kalan Gün Sayısı" ibaresi ve elementi tamamen kaldırıldı.
+    // Artık badge oluşturulmayacak ve gösterilmeyecek.
+  }
+
+  function clearRemainingDaysBadge() {
+    const badge = document.getElementById('student-remaining-days');
+    if (badge) badge.remove();
+  }
+
+  function mapAuthErrorToMessage(error) {
+    const code = (error && error.code) ? String(error.code) : '';
+    const message = (error && error.message) ? String(error.message) : '';
+
+    if (code === 'auth/invalid-email') return 'Geçersiz kullanıcı adı.';
+    if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-login-credentials') {
+      return 'Kullanıcı adı veya şifre hatalı.';
+    }
+    if (message.includes('INVALID_LOGIN_CREDENTIALS')) return 'Kullanıcı adı veya şifre hatalı.';
+    if (code === 'auth/too-many-requests') return 'Çok fazla deneme. Lütfen biraz sonra tekrar deneyin.';
+    return 'Giriş başarısız.';
+  }
+
+  function mapSignupErrorToMessage(error) {
+    const code = (error && error.code) ? String(error.code) : '';
+    if (code === 'auth/invalid-email') return 'Geçersiz e-posta adresi.';
+    if (code === 'auth/email-already-in-use') return 'Bu e-posta ile kayıtlı bir hesap zaten var.';
+    if (code === 'auth/weak-password') return 'Şifre en az 6 karakter olmalıdır.';
+    if (code === 'auth/operation-not-allowed') return 'E-posta/şifre kaydı şu anda kapalı.';
+    return 'Hesap oluşturulamadı.';
+  }
+
+  function mapGoogleAuthErrorToMessage(error) {
+    const code = (error && error.code) ? String(error.code) : '';
+    const message = (error && error.message) ? String(error.message) : '';
+    if (code === 'auth/popup-closed-by-user') return 'Google giriş işlemi iptal edildi.';
+    if (code === 'auth/cancelled-popup-request') return 'Google giriş işlemi iptal edildi.';
+    if (code === 'auth/popup-blocked') return 'Google giriş işlemi engellendi.';
+    if (code === 'auth/operation-not-supported-in-this-environment') return 'Google giriş bu ortamda desteklenmiyor.';
+    if (code === 'auth/account-exists-with-different-credential') return 'Bu e-posta farklı bir giriş yöntemiyle kayıtlı.';
+    if (code === '10' || message.includes('DEVELOPER_ERROR') || message.includes('10:')) {
+      return 'Google yapılandırması eksik/hatalı (DEVELOPER_ERROR). Firebase Android OAuth istemcisi ve default_web_client_id kontrol edin.';
+    }
+    if (message.includes('default_web_client_id') || message.includes('WILL_BE_OVERRIDDEN')) {
+      return 'Google yapılandırması eksik: default_web_client_id bulunamadı. Firebase google-services.json dosyasını Web OAuth istemcisi ile yeniden indirin.';
+    }
+    return 'Google ile giriş başarısız.';
+  }
+
+  function mapMicrosoftAuthErrorToMessage(error) {
+    const code = (error && error.code) ? String(error.code) : '';
+    const message = (error && error.message) ? String(error.message) : '';
+    if (code === 'auth/popup-closed-by-user') return 'Microsoft giriş işlemi iptal edildi.';
+    if (code === 'auth/cancelled-popup-request') return 'Microsoft giriş işlemi iptal edildi.';
+    if (code === 'auth/popup-blocked') return 'Microsoft giriş işlemi engellendi.';
+    if (code === 'auth/operation-not-supported-in-this-environment') return 'Microsoft giriş bu ortamda desteklenmiyor.';
+    if (code === 'auth/account-exists-with-different-credential') return 'Bu e-posta farklı bir giriş yöntemiyle kayıtlı.';
+    if (code === 'auth/operation-not-allowed' || message.includes('OPERATION_NOT_ALLOWED')) {
+      return 'Microsoft sağlayıcısı Firebase Console\'da etkin değil. Authentication > Sign-in method > Microsoft sağlayıcısını etkinleştirin ve OAuth bilgilerini girin.';
+    }
+    if (code === 'auth/invalid-credential' || code === 'auth/invalid-oauth-client-id' || message.includes('AADSTS') || message.includes('invalid_client')) {
+      return 'Microsoft OAuth yapılandırması eksik/hatalı. Firebase Console\'daki Microsoft sağlayıcı Client ID/Secret ve Azure redirect URI ayarlarını kontrol edin.';
+    }
+    if (code === 'auth/unauthorized-domain') {
+      return 'Yetkisiz alan adı. Firebase Console > Authentication > Settings > Authorized domains bölümüne gerekli domain eklenmeli.';
+    }
+    return 'Microsoft ile giriş başarısız.';
+  }
+
+  function getNativeFirebaseAuthPlugin() {
+    return window.Capacitor?.Plugins?.FirebaseAuthentication || null;
+  }
+
+  const MS_AUTH_PENDING_STORAGE_KEY = 'sa_ms_auth_pending_v1';
+  const MS_PENDING_STORAGE_KEY = 'ms_auth_pending_v1';
+  const MS_CLIENT_ID = '06db8e75-24b1-42a3-9d43-a323a092cf4c';
+  const MS_OAUTH_AUTHORITY_BASE = 'https://login.microsoftonline.com';
+  const MS_OAUTH_TENANT = 'common';
+  const MS_OAUTH_AUTHORIZE_PATH = '/oauth2/v2.0/authorize';
+  const MS_OAUTH_REDIRECT_URI = 'surucuakademisi://auth/microsoft/callback';
+  const MS_OAUTH_RESPONSE_TYPE = 'code';
+  const MS_OAUTH_RESPONSE_MODE = 'query';
+  const MS_OAUTH_SCOPES = ['openid', 'profile', 'email'];
+  const MS_EXCHANGE_FUNCTION_URL_DEFAULT = 'https://us-central1-surucuakademisi-f5e1f.cloudfunctions.net/microsoftExchange';
+  const MS_AUTH_PENDING_MAX_AGE_MS = 10 * 60 * 1000;
+  let __msAuthCallbackConsumeInFlight = false;
+
+  function getMicrosoftOAuthClientId() {
+    return typeof MS_CLIENT_ID === 'string' ? MS_CLIENT_ID.trim() : '';
+  }
+
+  function base64UrlEncode(bytes) {
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  }
+
+  function randomBase64Url(byteLength) {
+    const bytes = new Uint8Array(byteLength);
+    crypto.getRandomValues(bytes);
+    return base64UrlEncode(bytes);
+  }
+
+  async function sha256Base64Url(input) {
+    const subtle = crypto && crypto.subtle ? crypto.subtle : null;
+    if (!subtle || typeof subtle.digest !== 'function') {
+      throw new Error('PKCE için gerekli crypto.subtle API bulunamadı.');
+    }
+    const encoder = new TextEncoder();
+    const data = encoder.encode(String(input || ''));
+    const digest = await subtle.digest('SHA-256', data);
+    return base64UrlEncode(new Uint8Array(digest));
+  }
+
+  function persistMicrosoftAuthPending(payload) {
+    window.__msAuthPending = payload;
+    try {
+      sessionStorage.setItem(MS_AUTH_PENDING_STORAGE_KEY, JSON.stringify(payload));
+    } catch (_) {}
+    try {
+      localStorage.setItem(MS_PENDING_STORAGE_KEY, JSON.stringify(payload));
+    } catch (_) {}
+  }
+
+  function loadMicrosoftAuthPending() {
+    if (window.__msAuthPending && typeof window.__msAuthPending === 'object') return window.__msAuthPending;
+    try {
+      const raw = sessionStorage.getItem(MS_AUTH_PENDING_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          window.__msAuthPending = parsed;
+          return parsed;
+        }
+      }
+    } catch (_) {}
+    try {
+      const raw = localStorage.getItem(MS_PENDING_STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return null;
+      window.__msAuthPending = parsed;
+      return parsed;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function clearMicrosoftAuthPending() {
+    window.__msAuthPending = null;
+    try { sessionStorage.removeItem(MS_AUTH_PENDING_STORAGE_KEY); } catch (_) {}
+    try { localStorage.removeItem(MS_PENDING_STORAGE_KEY); } catch (_) {}
+  }
+
+  function clearMicrosoftCallbackPayload() {
+    try { window.__msAuthCallbackPayload = null; } catch (_) {}
+  }
+
+  function getMicrosoftExchangeFunctionUrl() {
+    try {
+      const override = window && typeof window.SA_MICROSOFT_EXCHANGE_URL === 'string'
+        ? window.SA_MICROSOFT_EXCHANGE_URL.trim()
+        : '';
+      if (override) return override;
+    } catch (_) {}
+    return MS_EXCHANGE_FUNCTION_URL_DEFAULT;
+  }
+
+  function buildMicrosoftAuthorizeUrl(params) {
+    const base = MS_OAUTH_AUTHORITY_BASE + '/' + encodeURIComponent(MS_OAUTH_TENANT) + MS_OAUTH_AUTHORIZE_PATH;
+    const qs = new URLSearchParams({
+      client_id: MS_CLIENT_ID,
+      response_type: MS_OAUTH_RESPONSE_TYPE,
+      redirect_uri: params.redirectUri,
+      response_mode: MS_OAUTH_RESPONSE_MODE,
+      scope: params.scopes.join(' '),
+      state: params.state,
+      code_challenge: params.codeChallenge,
+      code_challenge_method: 'S256'
+    });
+    return base + '?' + qs.toString();
+  }
+
+  async function openExternalAuthUrl(url) {
+    window.location.href = String(url);
+  }
+
+  function trimIdentityString(value) {
+    return typeof value === 'string' ? value.trim() : '';
+  }
+
+  function isValidInternalUsername(name) {
+    if (!name) return false;
+    const n = String(name).trim();
+    if (n.length < 3 || n.length > 20) return false;
+    return /^[a-zA-Z0-9_]+$/.test(n);
+  }
+
+  function buildGoogleUsernameSlug(user, existingData) {
+    const data = existingData || {};
+    const existing = trimIdentityString(data.username);
+    if (isValidInternalUsername(existing)) return null;
+    const authDn = trimIdentityString(user && user.displayName);
+    const emailLocal = trimIdentityString(user && user.email).split('@')[0] || '';
+    let base = authDn || emailLocal || 'user';
+    base = base
+      .replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
+      .replace(/ü/g, 'u').replace(/Ü/g, 'U')
+      .replace(/ş/g, 's').replace(/Ş/g, 'S')
+      .replace(/ı/g, 'i').replace(/İ/g, 'I')
+      .replace(/ö/g, 'o').replace(/Ö/g, 'O')
+      .replace(/ç/g, 'c').replace(/Ç/g, 'C');
+    base = base.replace(/[^a-zA-Z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+    if (base.length > 20) base = base.slice(0, 20);
+    if (base.length < 3) {
+      const idPart = String(user && user.uid ? user.uid : '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 6).toLowerCase();
+      base = 'uye_' + (idPart || 'user');
+    }
+    if (base.length > 20) base = base.slice(0, 20);
+    return isValidInternalUsername(base) ? base : null;
+  }
+
+  async function ensureGoogleUserProfile(user) {
+    if (!user || !user.uid) return;
+
+    const email = String(user.email || '').trim().toLowerCase();
+    const userRef = firebase.firestore().collection('users').doc(user.uid);
+    const snap = await userRef.get();
+    const existing = snap.exists ? (snap.data() || {}) : {};
+    const patch = {
+      uid: user.uid,
+      email,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (!snap.exists) {
+      patch.role = 'student';
+      patch.isActive = true;
+      patch.signupSource = 'google';
+      patch.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    }
+
+    const authDisplayName = trimIdentityString(user.displayName);
+    if (authDisplayName) {
+      if (!trimIdentityString(existing.displayName)) patch.displayName = authDisplayName;
+      if (!trimIdentityString(existing.fullName)) patch.fullName = authDisplayName;
+    }
+
+    const photoURL = trimIdentityString(user.photoURL);
+    if (photoURL && !trimIdentityString(existing.photoUrl || existing.photoURL)) {
+      patch.photoUrl = photoURL;
+    }
+
+    const slug = buildGoogleUsernameSlug(user, existing);
+    if (slug) patch.username = slug;
+
+    try {
+      await userRef.set(patch, { merge: true });
+    } catch (e) {
+      console.warn('[UsernameGate] Google profile merge skipped', e);
+    }
+  }
+
+  async function ensureMicrosoftUserProfile(user) {
+    if (!user || !user.uid) return;
+
+    const email = String(user.email || '').trim().toLowerCase();
+    const username = (email.split('@')[0] || '').trim();
+    const userRef = firebase.firestore().collection('users').doc(user.uid);
+    const snap = await userRef.get();
+
+    if (!snap.exists) {
+      await userRef.set({
+        uid: user.uid,
+        email,
+        username,
+        role: 'student',
+        isActive: true,
+        signupSource: 'microsoft',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
+  }
+
+  async function validateStudentAccess(user) {
+    if (!user || !user.uid) {
+      return { ok: false, userMessage: 'Giriş başarısız.' };
+    }
+
+    try {
+      const userRef = firebase.firestore().collection('users').doc(user.uid);
+      const snap = await userRef.get();
+      if (!snap.exists) {
+        const email = String(user.email || '').trim().toLowerCase();
+        const username = (email.split('@')[0] || '').trim();
+        const signupSource = (Array.isArray(user.providerData) && user.providerData.some(p => p && p.providerId === 'google.com'))
+          ? 'google'
+          : 'email_password';
+
+        await userRef.set({
+          uid: user.uid,
+          email,
+          username,
+          role: 'student',
+          isActive: true,
+          signupSource,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
+
+      clearRemainingDaysBadge();
+      return { ok: true };
+    } catch (e) {
+      try {
+        console.error('[Auth] validateStudentAccess failed:', {
+          code: e && e.code ? String(e.code) : null,
+          message: e && e.message ? String(e.message) : null,
+          uid: user && user.uid ? String(user.uid) : null
+        }, e);
+      } catch (_) {}
+      try { await firebase.auth().signOut(); } catch (_) {}
+      clearRemainingDaysBadge();
+      const code = (e && e.code) ? String(e.code) : '';
+      if (code === 'permission-denied') return { ok: false, userMessage: 'Erişim izni yok (permission-denied). Lütfen destek ile iletişime geçin.' };
+      if (code === 'unauthenticated') return { ok: false, userMessage: 'Oturum doğrulanamadı (unauthenticated). Lütfen tekrar giriş yapın.' };
+      if (code === 'unavailable') return { ok: false, userMessage: 'Bağlantı sorunu (unavailable). İnternetinizi kontrol edip tekrar deneyin.' };
+      return { ok: false, userMessage: 'Giriş başarısız.' };
+    }
+  }
+
+  /**
+   * Kurum (institution) girişi için: seçilen tenant'ta kullanıcının active membership dokümanını döner.
+   * Sadece e-posta/şifre kurum girişinde / driving guard yollarında kullanılır.
+   */
+  async function getActiveMembershipForTenant(uid, tenantId) {
+    if (!uid || !tenantId || typeof firebase === 'undefined' || !firebase.firestore) return null;
+    const tid = String(tenantId).trim();
+    const db = firebase.firestore();
+    try {
+      const snap = await db.collection('tenantMemberships').where('uid', '==', uid).get();
+      if (!snap || !snap.docs) return null;
+      debugLog('tenant-login-1', 'H3', 'mobile_app/src/js/login.js:getActiveMembershipForTenant', 'membership query returned', {
+        uidPresent: Boolean(uid),
+        tenantId: tid,
+        docsCount: snap.docs.length
+      });
+      for (var i = 0; i < snap.docs.length; i++) {
+        const d2 = snap.docs[i].data() || {};
+        if ((d2.tenantId || '').trim() === tid && (d2.status || '') === 'active') {
+          return Object.assign({ id: snap.docs[i].id }, d2);
+        }
+      }
+      return null;
+    } catch (e) {
+      debugLog('tenant-login-1', 'H3', 'mobile_app/src/js/login.js:getActiveMembershipForTenant', 'membership query failed', {
+        tenantId: tid,
+        errorCode: e && e.code ? String(e.code) : null,
+        errorMessage: e && e.message ? String(e.message) : null
+      });
+      return null;
+    }
+  }
+
+  async function checkTenantMembership(uid, tenantId) {
+    const membership = await getActiveMembershipForTenant(uid, tenantId);
+    const hasActive = !!membership;
+    debugLog('tenant-login-1', 'H3', 'mobile_app/src/js/login.js:checkTenantMembership', 'membership evaluation result', {
+      tenantId: String(tenantId || '').trim(),
+      hasActive
+    });
+    return hasActive;
+  }
+
+  const MSG_MACHINE_REQUIRES_MACHINE_ENTRY =
+    'Bu hesap İş Makineleri Aday Girişi için tanımlıdır. Lütfen modül seçiminden İş Makineleri bölümünü kullanın.';
+  const MSG_MACHINE_REQUIRES_RELOGIN =
+    'Bu hesap İş Makineleri Aday Girişi için tanımlıdır. Lütfen kurumunuzu seçerek yeniden giriş yapın.';
+
+  function normalizeMembershipProgramType(value) {
+    const v = String(value == null ? '' : value).trim().toLowerCase();
+    if (v === 'machine_operator') return 'machine_operator';
+    if (v === 'driving_license') return 'driving_license';
+    return 'driving_license';
+  }
+
+  function assertDrivingCompatibleMembership(membership) {
+    if (!membership || typeof membership !== 'object') {
+      return { ok: true, programType: 'driving_license' };
+    }
+    const programType = normalizeMembershipProgramType(membership.programType);
+    if (programType === 'machine_operator') {
+      const err = new Error(MSG_MACHINE_REQUIRES_MACHINE_ENTRY);
+      err.userMessage = MSG_MACHINE_REQUIRES_MACHINE_ENTRY;
+      err.code = 'MACHINE_ACCOUNT_REQUIRES_MACHINE_ENTRY';
+      err.machineCode = 'MACHINE_ACCOUNT_REQUIRES_MACHINE_ENTRY';
+      throw err;
+    }
+    return { ok: true, programType: programType };
+  }
+
+  async function assertDrivingCompatibleTenantMembership(uid, tenantId) {
+    const membership = await getActiveMembershipForTenant(uid, tenantId);
+    if (!membership) return { ok: false, membership: null };
+    assertDrivingCompatibleMembership(membership);
+    return { ok: true, membership: membership };
+  }
+
+  async function assertRestoredSessionDrivingCompatible(user) {
+    if (!user || !user.uid) return { ok: true };
+    const tenantId = (window.SA_TENANT && typeof window.SA_TENANT.getSelectedTenantId === 'function')
+      ? window.SA_TENANT.getSelectedTenantId()
+      : null;
+    if (!tenantId) return { ok: true };
+    try {
+      const membership = await getActiveMembershipForTenant(user.uid, tenantId);
+      if (!membership) return { ok: true };
+      assertDrivingCompatibleMembership(membership);
+      return { ok: true };
+    } catch (e) {
+      return {
+        ok: false,
+        userMessage: MSG_MACHINE_REQUIRES_RELOGIN,
+        code: (e && (e.machineCode || e.code)) ? String(e.machineCode || e.code) : 'MACHINE_ACCOUNT_REQUIRES_MACHINE_ENTRY'
+      };
+    }
+  }
+
+  /** Kullanıcının aktif kurum (tenant) üyeliklerinin tenantId listesini döner. Kurumsuz kullanıcılar için []. */
+  const MSG_PUBLIC_STUDENT_ACCOUNT =
+    'Bu hesap kurum öğrencisi hesabıdır. Lütfen Sürücü Kursları Öğrenci Girişi bölümünden kurum seçerek giriş yapın.';
+  const MSG_PUBLIC_UNSUPPORTED = 'Bu hesap mobil public giriş için uygun değil.';
+  const MSG_PUBLIC_WEB_SIGNUP = 'Bireysel kayıt için web sitesindeki Kayıt Ol bölümünü kullanın.';
+
+  function isPublicEmailLoginInput(input) {
+    return String(input || '').trim().includes('@');
+  }
+
+  function buildPublicSessionFromUserDoc(user, userDoc) {
+    var data = userDoc && typeof userDoc === 'object' ? userDoc : {};
+    return {
+      uid: user && user.uid ? String(user.uid) : '',
+      email: (user && user.email) || data.email || '',
+      firstName: data.firstName,
+      lastName: data.lastName,
+      displayName: data.displayName,
+      role: 'public_user',
+      accountType: data.accountType || 'public',
+      savedAt: Date.now()
+    };
+  }
+
+  async function clearInstitutionTenantState() {
+    if (window.SA_TENANT && typeof window.SA_TENANT.clearSelectedTenantId === 'function') {
+      window.SA_TENANT.clearSelectedTenantId();
+    }
+    try {
+      const sessionModule = await import('./tenant-session.store.js');
+      if (sessionModule && typeof sessionModule.clearActiveTenantSession === 'function') {
+        sessionModule.clearActiveTenantSession();
+      }
+    } catch (e) {
+      console.warn('[PublicAuth] clearInstitutionTenantState failed', e);
+    }
+  }
+
+  async function refreshAdPolicyForUser(user) {
+    try {
+      const adPolicy = await import('./ad-policy.resolver.js');
+      await adPolicy.refreshAdPolicyForCurrentUser(user);
+    } catch (adErr) {
+      console.warn('[PublicAuth] ad policy refresh failed:', adErr);
+    }
+  }
+
+  async function validatePublicUserAccess(user) {
+    if (!user || !user.uid) {
+      return { ok: false, isPublicUser: false, userMessage: MSG_PUBLIC_UNSUPPORTED };
+    }
+    if (typeof firebase === 'undefined' || !firebase.firestore) {
+      return { ok: false, isPublicUser: false, userMessage: 'Giriş sistemi yüklenemedi.' };
+    }
+
+    try {
+      const snap = await firebase.firestore().collection('users').doc(user.uid).get();
+      if (!snap.exists) {
+        return { ok: false, isPublicUser: false, userMessage: MSG_PUBLIC_UNSUPPORTED };
+      }
+      const data = snap.data() || {};
+      const role = String(data.role || data.globalRole || '').trim().toLowerCase();
+      if (role === 'public_user') {
+        return { ok: true, isPublicUser: true, isStudent: false, userDoc: data };
+      }
+      if (role === 'student') {
+        return { ok: false, isPublicUser: false, isStudent: true, userMessage: MSG_PUBLIC_STUDENT_ACCOUNT };
+      }
+      return { ok: false, isPublicUser: false, isStudent: false, userMessage: MSG_PUBLIC_UNSUPPORTED };
+    } catch (e) {
+      console.warn('[PublicAuth] validatePublicUserAccess failed', e);
+      return { ok: false, isPublicUser: false, userMessage: MSG_PUBLIC_UNSUPPORTED };
+    }
+  }
+
+  async function applyPublicUserSession(user, userDoc) {
+    await clearInstitutionTenantState();
+    if (window.SA_PUBLIC_USER_SESSION && typeof window.SA_PUBLIC_USER_SESSION.setPublicUserSession === 'function') {
+      window.SA_PUBLIC_USER_SESSION.setPublicUserSession(buildPublicSessionFromUserDoc(user, userDoc));
+    }
+    await refreshAdPolicyForUser(user);
+  }
+
+  async function signInAsPublicUser(email, password) {
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    const pass = String(password || '');
+
+    if (!normalizedEmail || !pass) {
+      const err = new Error('E-posta veya şifre hatalı.');
+      err.userMessage = 'E-posta veya şifre hatalı.';
+      throw err;
+    }
+
+    if (typeof firebase === 'undefined' || !firebase || !firebase.auth || !firebase.firestore) {
+      const err = new Error('Giriş sistemi yüklenemedi.');
+      err.userMessage = 'Giriş sistemi yüklenemedi.';
+      throw err;
+    }
+
+    try {
+      await firebase.auth().signInWithEmailAndPassword(normalizedEmail, pass);
+      const user = firebase.auth().currentUser;
+      const access = await validatePublicUserAccess(user);
+      if (!access.ok) {
+        try { await firebase.auth().signOut(); } catch (_) {}
+        if (window.SA_PUBLIC_USER_SESSION && window.SA_PUBLIC_USER_SESSION.clearPublicUserSession) {
+          window.SA_PUBLIC_USER_SESSION.clearPublicUserSession();
+        }
+        const err = new Error(access.userMessage || MSG_PUBLIC_UNSUPPORTED);
+        err.userMessage = access.userMessage || MSG_PUBLIC_UNSUPPORTED;
+        throw err;
+      }
+      await applyPublicUserSession(user, access.userDoc);
+      return true;
+    } catch (e) {
+      const message = e && e.userMessage ? String(e.userMessage) : mapAuthErrorToMessage(e);
+      const err = new Error(message);
+      err.userMessage = message;
+      throw err;
+    }
+  }
+
+  async function bootstrapPublicUserIfAuthenticated(user) {
+    if (!user || !user.uid) {
+      return { ok: false, mode: 'institution' };
+    }
+    const access = await validatePublicUserAccess(user);
+    if (!access.ok || !access.isPublicUser) {
+      return { ok: false, mode: 'institution' };
+    }
+    await applyPublicUserSession(user, access.userDoc);
+    return { ok: true, mode: 'public' };
+  }
+
+  async function getActiveTenantIdsForUser(uid) {
+    if (!uid || typeof firebase === 'undefined' || !firebase.firestore) return [];
+    try {
+      const snap = await firebase.firestore().collection('tenantMemberships').where('uid', '==', uid).get();
+      if (!snap || !snap.docs) return [];
+      return snap.docs
+        .map((d) => {
+          const x = d.data() || {};
+          return (x.status === 'active' && x.tenantId) ? x.tenantId : null;
+        })
+        .filter(Boolean);
+    } catch {
+      return [];
+    }
+  }
+
+  async function signIn(usernameOrEmail, password, selectedTenantId = null) {
+    const rawInput = String(usernameOrEmail || '').trim();
+    if (isPublicEmailLoginInput(rawInput)) {
+      return signInAsPublicUser(rawInput.toLowerCase(), password);
+    }
+
+    const email = usernameOrEmailToEmail(usernameOrEmail);
+    const pass = String(password || '');
+    debugLog('tenant-login-1', 'H1', 'mobile_app/src/js/login.js:signIn', 'signIn called', {
+      usernameRawLength: String(usernameOrEmail || '').length,
+      emailDerived: email,
+      selectedTenantId: selectedTenantId || null
+    });
+
+    if (window.SA_PUBLIC_USER_SESSION && window.SA_PUBLIC_USER_SESSION.clearPublicUserSession) {
+      window.SA_PUBLIC_USER_SESSION.clearPublicUserSession();
+    }
+
+    if (!email || !pass) {
+      const err = new Error('Kullanıcı adı veya şifre hatalı.');
+      err.userMessage = 'Kullanıcı adı veya şifre hatalı.';
+      throw err;
+    }
+
+    if (typeof firebase === 'undefined' || !firebase || !firebase.auth || !firebase.firestore) {
+      const err = new Error('Giriş sistemi yüklenemedi.');
+      err.userMessage = 'Giriş sistemi yüklenemedi.';
+      throw err;
+    }
+
+    try {
+      await firebase.auth().signInWithEmailAndPassword(email, pass);
+      const user = firebase.auth().currentUser;
+      debugLog('tenant-login-1', 'H2', 'mobile_app/src/js/login.js:signIn', 'firebase auth succeeded', {
+        uidPresent: Boolean(user && user.uid),
+        uid: user && user.uid ? String(user.uid) : null
+      });
+      const access = await validateStudentAccess(user);
+      debugLog('tenant-login-1', 'H5', 'mobile_app/src/js/login.js:signIn', 'validateStudentAccess result', {
+        ok: Boolean(access && access.ok),
+        userMessage: access && access.userMessage ? String(access.userMessage) : null
+      });
+      if (!access.ok) {
+        const err = new Error(access.userMessage || 'Giriş başarısız.');
+        err.userMessage = access.userMessage || 'Giriş başarısız.';
+        throw err;
+      }
+      const effectiveTenantId = selectedTenantId || getSelectedTenantIdFromStorage();
+      debugLog('tenant-login-1', 'H1', 'mobile_app/src/js/login.js:signIn', 'effective tenant resolved', {
+        effectiveTenantId: effectiveTenantId || null,
+        selectedTenantId: selectedTenantId || null
+      });
+      if (effectiveTenantId) {
+        const membership = await getActiveMembershipForTenant(user.uid, effectiveTenantId);
+        debugLog('tenant-login-1', 'H3', 'mobile_app/src/js/login.js:signIn', 'tenant membership check completed', {
+          tenantId: effectiveTenantId,
+          hasMembership: !!membership
+        });
+        if (!membership) {
+          await firebase.auth().signOut();
+          const err = new Error('Bu kuruma kayıtlı değilsiniz. Kurumunuzla iletişime geçin.');
+          err.userMessage = 'Bu kuruma kayıtlı değilsiniz. Kurumunuzla iletişime geçin.';
+          throw err;
+        }
+        try {
+          assertDrivingCompatibleMembership(membership);
+        } catch (progErr) {
+          await firebase.auth().signOut();
+          throw progErr;
+        }
+      } else {
+        const tenantIds = await getActiveTenantIdsForUser(user.uid);
+        if (tenantIds.length > 0) {
+          await firebase.auth().signOut();
+          const err = new Error('Lütfen giriş yapmadan önce kurumunuzu seçin.');
+          err.userMessage = 'Lütfen giriş yapmadan önce kurumunuzu seçin.';
+          throw err;
+        }
+      }
+      await tryBootstrapTenantSessionFromUser(user, selectedTenantId);
+      return true;
+    } catch (e) {
+      const message = e && e.userMessage ? String(e.userMessage) : mapAuthErrorToMessage(e);
+      debugLog('tenant-login-1', 'H4', 'mobile_app/src/js/login.js:signIn', 'signIn failed', {
+        errorCode: e && e.code ? String(e.code) : null,
+        errorMessage: e && e.message ? String(e.message) : null,
+        mappedMessage: message
+      });
+      const err = new Error(message);
+      err.userMessage = message;
+      if (e && e.code) err.code = String(e.code);
+      if (e && e.machineCode) err.machineCode = String(e.machineCode);
+      throw err;
+    }
+  }
+
+  async function signUp(emailInput, password) {
+    const email = String(emailInput || '').trim().toLowerCase();
+    const pass = String(password || '');
+
+    if (!email) {
+      const err = new Error('Geçerli bir e-posta veya kullanıcı adı girin.');
+      err.userMessage = 'Geçerli bir e-posta veya kullanıcı adı girin.';
+      throw err;
+    }
+
+    if (email.includes('@') && !email.endsWith('@surucu.app')) {
+      const err = new Error(MSG_PUBLIC_WEB_SIGNUP);
+      err.userMessage = MSG_PUBLIC_WEB_SIGNUP;
+      throw err;
+    }
+
+    if (pass.length < 6) {
+      const err = new Error('Şifre en az 6 karakter olmalıdır.');
+      err.userMessage = 'Şifre en az 6 karakter olmalıdır.';
+      throw err;
+    }
+
+    if (typeof firebase === 'undefined' || !firebase || !firebase.auth || !firebase.firestore) {
+      const err = new Error('Kayıt sistemi yüklenemedi.');
+      err.userMessage = 'Kayıt sistemi yüklenemedi.';
+      throw err;
+    }
+
+    try {
+      const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+      const user = cred && cred.user ? cred.user : firebase.auth().currentUser;
+      if (!user || !user.uid) {
+        throw new Error('Hesap oluşturulamadı.');
+      }
+
+      const username = email.split('@')[0] || '';
+      const userRef = firebase.firestore().collection('users').doc(user.uid);
+      try {
+        await userRef.set({
+          uid: user.uid,
+          email,
+          username,
+          role: 'student',
+          isActive: true,
+          signupSource: 'email_password',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      } catch {
+        try { await firebase.auth().signOut(); } catch {}
+        const err = new Error('Hesap oluşturuldu ancak profil kaydı tamamlanamadı. Lütfen tekrar deneyin veya kurumunuzla iletişime geçin.');
+        err.userMessage = 'Hesap oluşturuldu ancak profil kaydı tamamlanamadı. Lütfen tekrar deneyin veya kurumunuzla iletişime geçin.';
+        throw err;
+      }
+
+      await firebase.auth().signOut();
+      return { ok: true, pendingApproval: true };
+    } catch (e) {
+      const message = (e && e.userMessage) ? String(e.userMessage) : mapSignupErrorToMessage(e);
+      const err = new Error(message);
+      err.userMessage = message;
+      throw err;
+    }
+  }
+
+  async function signInWithGoogle() {
+    if (typeof firebase === 'undefined' || !firebase || !firebase.auth || !firebase.firestore) {
+      const err = new Error('Google giriş sistemi yüklenemedi.');
+      err.userMessage = 'Google giriş sistemi yüklenemedi.';
+      throw err;
+    }
+
+    const nativeAuth = getNativeFirebaseAuthPlugin();
+    if (!nativeAuth || typeof nativeAuth.signInWithGoogle !== 'function') {
+      const err = new Error('Native Google giriş eklentisi bulunamadı.');
+      err.userMessage = 'Native Google giriş eklentisi bulunamadı.';
+      throw err;
+    }
+
+    try {
+      const isAndroidPlatform = !!(window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'android');
+      const nativeResult = await nativeAuth.signInWithGoogle({
+        skipNativeAuth: true,
+        scopes: ['email', 'profile'],
+        // Android only: disable Credential Manager path for stability testing.
+        ...(isAndroidPlatform ? { useCredentialManager: false } : {})
+      });
+
+      const credential = (nativeResult && nativeResult.credential) ? nativeResult.credential : null;
+      const idToken =
+        (credential && credential.idToken ? credential.idToken : null)
+        || (nativeResult && nativeResult.idToken ? nativeResult.idToken : null)
+        || null;
+      const accessToken =
+        (credential && credential.accessToken ? credential.accessToken : null)
+        || (nativeResult && nativeResult.accessToken ? nativeResult.accessToken : null)
+        || null;
+
+      if (!idToken && !accessToken) {
+        const summary = {
+          hasCredential: Boolean(credential),
+          hasCredentialIdToken: Boolean(credential && credential.idToken),
+          hasCredentialAccessToken: Boolean(credential && credential.accessToken),
+          hasTopLevelIdToken: Boolean(nativeResult && nativeResult.idToken),
+          hasTopLevelAccessToken: Boolean(nativeResult && nativeResult.accessToken),
+          hasServerAuthCode: Boolean(credential && credential.serverAuthCode),
+          credentialProviderId: credential && credential.providerId ? String(credential.providerId) : null
+        };
+        console.error('[GoogleAuth] Native signInWithGoogle token extraction failed:', summary);
+        const err = new Error('Google kimlik doğrulama bilgisi alınamadı.');
+        err.userMessage = 'Google kimlik doğrulama bilgisi alınamadı.';
+        throw err;
+      }
+
+      // accessToken opsiyonel: idToken tek başına da credential oluşturmak için yeterlidir.
+      const firebaseCredential = firebase.auth.GoogleAuthProvider.credential(idToken, accessToken);
+      await firebase.auth().signInWithCredential(firebaseCredential);
+    } catch (e) {
+      let serialized = null;
+      try { serialized = JSON.stringify(e, Object.getOwnPropertyNames(e)); } catch (_) {}
+      console.error('[GoogleAuth] Native sign-in stage failed:', {
+        code: e && e.code ? String(e.code) : null,
+        message: e && e.message ? String(e.message) : null,
+        name: e && e.name ? String(e.name) : null,
+        serialized
+      }, e);
+      const message = mapGoogleAuthErrorToMessage(e);
+      const err = new Error(message);
+      err.userMessage = message;
+      throw err;
+    }
+
+    try {
+      const user = firebase.auth().currentUser;
+      await ensureGoogleUserProfile(user);
+      const access = await validateStudentAccess(user);
+      if (!access.ok) {
+        const err = new Error(access.userMessage || 'Giriş başarısız.');
+        err.userMessage = access.userMessage || 'Giriş başarısız.';
+        throw err;
+      }
+      const selectedTenantId = getSelectedTenantIdFromStorage();
+      if (!selectedTenantId) {
+        const tenantIds = await getActiveTenantIdsForUser(user.uid);
+        if (tenantIds.length > 0) {
+          await firebase.auth().signOut();
+          const err = new Error('Lütfen giriş yapmadan önce kurumunuzu seçin.');
+          err.userMessage = 'Lütfen giriş yapmadan önce kurumunuzu seçin.';
+          throw err;
+        }
+      } else {
+        const membership = await getActiveMembershipForTenant(user.uid, selectedTenantId);
+        if (membership) {
+          try {
+            assertDrivingCompatibleMembership(membership);
+          } catch (progErr) {
+            await firebase.auth().signOut();
+            try { await clearInstitutionTenantState(); } catch (_) {}
+            throw progErr;
+          }
+        }
+      }
+      await tryBootstrapTenantSessionFromUser(user);
+      return { ok: true };
+    } catch (e) {
+      const code = (e && e.code) ? String(e.code) : '';
+      const rawMsg = (e && e.message) ? String(e.message) : '';
+      try {
+        console.error('[GoogleAuth] Post-login finalize failed:', {
+          code: code || null,
+          message: rawMsg || null,
+          userMessage: e && e.userMessage ? String(e.userMessage) : null,
+          uid: firebase && firebase.auth && firebase.auth().currentUser && firebase.auth().currentUser.uid ? String(firebase.auth().currentUser.uid) : null
+        }, e);
+      } catch (_) {}
+
+      let message = (e && e.userMessage) ? String(e.userMessage) : '';
+      if (!message) {
+        if (code === 'MACHINE_ACCOUNT_REQUIRES_MACHINE_ENTRY') message = MSG_MACHINE_REQUIRES_MACHINE_ENTRY;
+        else if (code === 'permission-denied') message = 'Google girişi tamamlanamadı: erişim izni yok (permission-denied).';
+        else if (code === 'unauthenticated') message = 'Google girişi tamamlanamadı: oturum doğrulanamadı (unauthenticated).';
+        else if (code === 'unavailable') message = 'Google girişi tamamlanamadı: bağlantı sorunu (unavailable).';
+        else if (code) message = 'Google girişi tamamlanamadı (' + code + ').';
+        else message = 'Google ile giriş tamamlanamadı.';
+      }
+
+      const err = new Error(message);
+      err.userMessage = message;
+      if (code) err.code = code;
+      if (e && e.machineCode) err.machineCode = String(e.machineCode);
+      err.cause = e;
+      throw err;
+    }
+  }
+
+  async function signInWithMicrosoft() {
+    try {
+      const clientId = getMicrosoftOAuthClientId();
+      if (!clientId) {
+        const err = new Error('Microsoft OAuth istemci kimliği bulunamadı.');
+        err.userMessage = 'Microsoft giriş yapılandırması eksik (client id).';
+        throw err;
+      }
+
+      const state = randomBase64Url(16);
+      const codeVerifier = randomBase64Url(48);
+      const codeChallenge = await sha256Base64Url(codeVerifier);
+      const startedAt = Date.now();
+
+      const pending = {
+        state,
+        codeVerifier,
+        redirectUri: MS_OAUTH_REDIRECT_URI,
+        startedAt,
+        authority: MS_OAUTH_AUTHORITY_BASE,
+        tenant: MS_OAUTH_TENANT
+      };
+      persistMicrosoftAuthPending(pending);
+      try {
+        console.info('[MicrosoftAuth] PKCE transaction created', {
+          hasState: Boolean(state),
+          hasCodeVerifier: Boolean(codeVerifier),
+          startedAt
+        });
+      } catch (_) {}
+
+      const authorizeUrl = buildMicrosoftAuthorizeUrl({
+        clientId,
+        redirectUri: MS_OAUTH_REDIRECT_URI,
+        scopes: MS_OAUTH_SCOPES,
+        state,
+        codeChallenge
+      });
+      try {
+        console.info('[MicrosoftAuth] Browser authorize launch starting', {
+          tenant: MS_OAUTH_TENANT,
+          hasClientId: Boolean(clientId),
+          redirectUri: MS_OAUTH_REDIRECT_URI
+        });
+      } catch (_) {}
+
+      await openExternalAuthUrl(authorizeUrl);
+      try { console.info('[MicrosoftAuth] Browser authorize launch success'); } catch (_) {}
+      return { ok: false, pending: true, stage: 'microsoft_browser_auth_started' };
+    } catch (e) {
+      try {
+        console.error('[MicrosoftAuth] Browser auth start failed:', {
+          code: e && e.code ? String(e.code) : null,
+          message: e && e.message ? String(e.message) : null
+        }, e);
+      } catch (_) {}
+      const message = (e && e.userMessage)
+        ? String(e.userMessage)
+        : mapMicrosoftAuthErrorToMessage(e);
+      return { ok: false, pending: false, error: message };
+    }
+  }
+
+  async function exchangeMicrosoftCodeForFirebaseToken(code, state) {
+    const pending = loadMicrosoftAuthPending();
+    if (!pending) {
+      return { ok: false, errorCode: 'ms_pending_missing', message: 'Microsoft oturum bilgisi bulunamadı. Lütfen tekrar deneyin.' };
+    }
+
+    const pendingState = typeof pending.state === 'string' ? pending.state.trim() : '';
+    const codeVerifier = typeof pending.codeVerifier === 'string' ? pending.codeVerifier.trim() : '';
+    const redirectUri = typeof pending.redirectUri === 'string' ? pending.redirectUri.trim() : '';
+    const startedAt = Number(pending.startedAt || 0);
+
+    if (!pendingState || !codeVerifier || !redirectUri) {
+      clearMicrosoftAuthPending();
+      return { ok: false, errorCode: 'ms_pending_invalid', message: 'Microsoft oturum bilgisi geçersiz. Lütfen tekrar giriş yapın.' };
+    }
+    if (redirectUri !== MS_OAUTH_REDIRECT_URI) {
+      clearMicrosoftAuthPending();
+      return { ok: false, errorCode: 'ms_redirect_mismatch', message: 'Microsoft yönlendirme doğrulaması başarısız oldu.' };
+    }
+    if (!state || String(state).trim() !== pendingState) {
+      clearMicrosoftAuthPending();
+      return { ok: false, errorCode: 'ms_state_mismatch', message: 'Microsoft oturum doğrulaması başarısız oldu. Lütfen tekrar deneyin.' };
+    }
+    if (!startedAt || Number.isNaN(startedAt) || (Date.now() - startedAt) > MS_AUTH_PENDING_MAX_AGE_MS) {
+      clearMicrosoftAuthPending();
+      return { ok: false, errorCode: 'ms_pending_expired', message: 'Microsoft giriş oturumu zaman aşımına uğradı. Lütfen tekrar deneyin.' };
+    }
+
+    const endpointUrl = getMicrosoftExchangeFunctionUrl();
+    try {
+      console.warn('[MicrosoftAuth]', {
+        tag: '[MicrosoftAuth]',
+        message: 'Exchange endpoint URL',
+        endpointUrl,
+        saMicrosoftExchangeUrlExists: typeof window !== 'undefined' && typeof window.SA_MICROSOFT_EXCHANGE_URL === 'string',
+        redirectUri
+      });
+    } catch (_) {}
+    try {
+      const resp = await fetch(endpointUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: String(code || ''),
+          state: String(state || ''),
+          codeVerifier,
+          redirectUri
+        })
+      });
+
+      let data = {};
+      try { data = await resp.json(); } catch (_) { data = {}; }
+      const token =
+        data.firebaseCustomToken ||
+        data.customToken ||
+        data.token ||
+        data.firebaseToken ||
+        null;
+      // #region agent log
+      fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a445ba'},body:JSON.stringify({sessionId:'a445ba',runId:'ms-debug-v1',hypothesisId:'H2',location:'mobile_app/src/js/login.js:exchangeMicrosoftCodeForFirebaseToken',message:'ms_exchange_response',data:{status:resp.status,respOk:Boolean(resp.ok),dataOk:Boolean(data&&data.ok===true),hasFirebaseCustomToken:Boolean(data&&data.firebaseCustomToken),errorCode:data&&data.errorCode?String(data.errorCode):null,responseKeys:data&&typeof data==='object'?Object.keys(data).slice(0,8):[]},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      if (!resp.ok || !data || data.ok !== true) {
+        return {
+          ok: false,
+          errorCode: (data && data.errorCode) ? String(data.errorCode) : 'ms_exchange_failed',
+          message: (data && data.message) ? String(data.message) : 'Microsoft doğrulaması tamamlanamadı.'
+        };
+      }
+      if (!token) throw new Error('ms_token_missing');
+
+      return { ok: true, firebaseCustomToken: String(token) };
+    } catch (e) {
+      if (e && e.message === 'ms_token_missing') {
+        return { ok: false, errorCode: 'ms_token_missing', message: 'Microsoft doğrulaması tamamlanamadı.' };
+      }
+      return { ok: false, errorCode: 'ms_exchange_network', message: 'Microsoft doğrulama servisine ulaşılamadı.' };
+    }
+  }
+
+  async function consumeMicrosoftAuthCallbackPayload(payload) {
+    if (__msAuthCallbackConsumeInFlight) {
+      return { ok: false, errorCode: 'ms_consume_in_flight', message: 'Microsoft giriş işlemi devam ediyor.' };
+    }
+    __msAuthCallbackConsumeInFlight = true;
+    try {
+      const callbackPayload = payload && typeof payload === 'object' ? payload : null;
+      if (!callbackPayload) {
+        return { ok: false, errorCode: 'ms_callback_missing', message: 'Microsoft dönüş verisi bulunamadı.' };
+      }
+
+      const code = callbackPayload.code ? String(callbackPayload.code).trim() : '';
+      const state = callbackPayload.state ? String(callbackPayload.state).trim() : '';
+      const error = callbackPayload.error ? String(callbackPayload.error).trim() : '';
+      const errorDescription = callbackPayload.errorDescription ? String(callbackPayload.errorDescription).trim() : '';
+      // #region agent log
+      fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a445ba'},body:JSON.stringify({sessionId:'a445ba',runId:'ms-debug-v1',hypothesisId:'H1',location:'mobile_app/src/js/login.js:consumeMicrosoftAuthCallbackPayload',message:'ms_consume_entry',data:{hasPayload:Boolean(callbackPayload),hasCode:Boolean(code),hasState:Boolean(state),hasError:Boolean(error)},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+
+      try {
+        console.info('[MicrosoftAuth] Callback consume started', {
+          hasCode: Boolean(code),
+          hasState: Boolean(state),
+          hasError: Boolean(error)
+        });
+      } catch (_) {}
+
+      if (error) {
+        clearMicrosoftAuthPending();
+        clearMicrosoftCallbackPayload();
+        const message = errorDescription || 'Microsoft giriş işlemi tamamlanamadı.';
+        return { ok: false, errorCode: error, message };
+      }
+      if (!code || !state) {
+        clearMicrosoftAuthPending();
+        clearMicrosoftCallbackPayload();
+        return { ok: false, errorCode: 'ms_callback_invalid', message: 'Microsoft dönüş verisi eksik.' };
+      }
+
+      const pending = loadMicrosoftAuthPending();
+      if (!pending) {
+        clearMicrosoftCallbackPayload();
+        return { ok: false, errorCode: 'ms_pending_missing', message: 'Microsoft oturum bilgisi bulunamadı. Lütfen tekrar deneyin.' };
+      }
+      if (String(pending.state || '').trim() !== state) {
+        clearMicrosoftAuthPending();
+        clearMicrosoftCallbackPayload();
+        return { ok: false, errorCode: 'ms_state_mismatch', message: 'Microsoft oturum doğrulaması başarısız oldu. Lütfen tekrar deneyin.' };
+      }
+      try { console.info('[MicrosoftAuth] Callback state validated'); } catch (_) {}
+
+      const exchange = await exchangeMicrosoftCodeForFirebaseToken(code, state);
+      if (!exchange.ok || !exchange.firebaseCustomToken) {
+        // #region agent log
+        fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a445ba'},body:JSON.stringify({sessionId:'a445ba',runId:'ms-debug-v1',hypothesisId:'H2',location:'mobile_app/src/js/login.js:consumeMicrosoftAuthCallbackPayload',message:'ms_exchange_rejected_before_signin',data:{errorCode:exchange&&exchange.errorCode?String(exchange.errorCode):null,hasToken:Boolean(exchange&&exchange.firebaseCustomToken)},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+        clearMicrosoftAuthPending();
+        clearMicrosoftCallbackPayload();
+        try { console.warn('[MicrosoftAuth] Backend exchange failed', { errorCode: exchange.errorCode || null }); } catch (_) {}
+        return {
+          ok: false,
+          errorCode: exchange.errorCode || 'ms_exchange_failed',
+          message: exchange.message || 'Microsoft doğrulaması tamamlanamadı.'
+        };
+      }
+      try { console.info('[MicrosoftAuth] Backend exchange success'); } catch (_) {}
+
+      // #region agent log
+      fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a445ba'},body:JSON.stringify({sessionId:'a445ba',runId:'ms-debug-v1',hypothesisId:'H3',location:'mobile_app/src/js/login.js:consumeMicrosoftAuthCallbackPayload',message:'ms_signin_with_custom_token_start',data:{tokenLength:exchange&&exchange.firebaseCustomToken?String(exchange.firebaseCustomToken).length:0},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      const token = exchange.firebaseCustomToken;
+      const credential = await firebase.auth().signInWithCustomToken(token);
+      const user = credential && credential.user ? credential.user : null;
+      if (!user || !user.uid) {
+        clearMicrosoftAuthPending();
+        clearMicrosoftCallbackPayload();
+        return { ok: false, errorCode: 'ms_firebase_session_missing', message: 'Microsoft oturumu oluşturulamadı.' };
+      }
+      try { console.info('[MicrosoftAuth] signInWithCustomToken success', { uid: String(user.uid) }); } catch (_) {}
+
+      try {
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+          await window.Capacitor.Plugins.Browser.close();
+        }
+      } catch (e) {
+        console.warn("Browser close failed", e);
+      }
+
+      await ensureMicrosoftUserProfile(user);
+      const access = await validateStudentAccess(user);
+      if (!access.ok) {
+        clearMicrosoftAuthPending();
+        clearMicrosoftCallbackPayload();
+        return {
+          ok: false,
+          errorCode: 'ms_access_denied',
+          message: access.userMessage || 'Giriş başarısız.'
+        };
+      }
+      const selectedTenantId = getSelectedTenantIdFromStorage();
+      if (!selectedTenantId) {
+        const tenantIds = await getActiveTenantIdsForUser(user.uid);
+        if (tenantIds.length > 0) {
+          await firebase.auth().signOut();
+          clearMicrosoftAuthPending();
+          clearMicrosoftCallbackPayload();
+          return {
+            ok: false,
+            errorCode: 'ms_tenant_required',
+            message: 'Lütfen giriş yapmadan önce kurumunuzu seçin.'
+          };
+        }
+      } else {
+        const membership = await getActiveMembershipForTenant(user.uid, selectedTenantId);
+        if (membership) {
+          try {
+            assertDrivingCompatibleMembership(membership);
+          } catch (progErr) {
+            await firebase.auth().signOut();
+            try { await clearInstitutionTenantState(); } catch (_) {}
+            clearMicrosoftAuthPending();
+            clearMicrosoftCallbackPayload();
+            return {
+              ok: false,
+              errorCode: 'MACHINE_ACCOUNT_REQUIRES_MACHINE_ENTRY',
+              message: (progErr && progErr.userMessage) ? String(progErr.userMessage) : MSG_MACHINE_REQUIRES_MACHINE_ENTRY
+            };
+          }
+        }
+      }
+      await tryBootstrapTenantSessionFromUser(user);
+      // #region agent log
+      fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a445ba'},body:JSON.stringify({sessionId:'a445ba',runId:'ms-debug-v1',hypothesisId:'H4',location:'mobile_app/src/js/login.js:consumeMicrosoftAuthCallbackPayload',message:'ms_finalize_chain_success',data:{uid:user&&user.uid?String(user.uid):null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+
+      clearMicrosoftAuthPending();
+      clearMicrosoftCallbackPayload();
+      return { ok: true, user };
+    } catch (e) {
+      // #region agent log
+      fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a445ba'},body:JSON.stringify({sessionId:'a445ba',runId:'ms-debug-v1',hypothesisId:'H3',location:'mobile_app/src/js/login.js:consumeMicrosoftAuthCallbackPayload.catch',message:'ms_consume_catch',data:{errorCode:e&&e.code?String(e.code):null,errorMessage:e&&e.message?String(e.message):null,userMessage:e&&e.userMessage?String(e.userMessage):null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      clearMicrosoftAuthPending();
+      clearMicrosoftCallbackPayload();
+      return {
+        ok: false,
+        errorCode: (e && e.code) ? String(e.code) : 'ms_consume_failed',
+        message: (e && e.userMessage) ? String(e.userMessage) : ((e && e.message) ? String(e.message) : 'Microsoft ile giriş başarısız.')
+      };
+    } finally {
+      __msAuthCallbackConsumeInFlight = false;
+    }
+  }
+
+  async function validateCurrentUser() {
+    const user = firebase && firebase.auth ? firebase.auth().currentUser : null;
+    if (!user) {
+      clearRemainingDaysBadge();
+      if (window.SA_PUBLIC_USER_SESSION && window.SA_PUBLIC_USER_SESSION.clearPublicUserSession) {
+        window.SA_PUBLIC_USER_SESSION.clearPublicUserSession();
+      }
+      return { ok: false, userMessage: 'Giriş başarısız.' };
+    }
+
+    const publicAccess = await validatePublicUserAccess(user);
+    if (publicAccess.ok && publicAccess.isPublicUser) {
+      if (window.SA_PUBLIC_USER_SESSION && !window.SA_PUBLIC_USER_SESSION.isPublicUserSessionActive()) {
+        await applyPublicUserSession(user, publicAccess.userDoc);
+      }
+      return { ok: true, mode: 'public' };
+    }
+
+    if (window.SA_PUBLIC_USER_SESSION && window.SA_PUBLIC_USER_SESSION.isPublicUserSessionActive()) {
+      window.SA_PUBLIC_USER_SESSION.clearPublicUserSession();
+    }
+
+    const studentAccess = await validateStudentAccess(user);
+    if (!studentAccess.ok) {
+      return studentAccess;
+    }
+    return { ok: true, mode: 'institution' };
+  }
+
+  window.SA_TENANT = {
+    setSelectedTenantId: (tid) => {
+      try {
+        const v = typeof tid === 'string' ? tid.trim() : '';
+        if (v) {
+          sessionStorage.setItem(SELECTED_TENANT_STORAGE_KEY, v);
+          console.log('[TenantDebug] sessionStorage.setItem(sa_selected_tenant_id)=', v);
+        } else {
+          sessionStorage.removeItem(SELECTED_TENANT_STORAGE_KEY);
+          console.log('[TenantDebug] sessionStorage.removeItem(sa_selected_tenant_id)');
+        }
+      } catch (e) { console.warn('[TenantDebug] setSelectedTenantId error', e); }
+    },
+    getSelectedTenantId: () => {
+      try {
+        const v = sessionStorage.getItem(SELECTED_TENANT_STORAGE_KEY);
+        return typeof v === 'string' ? v.trim() || null : null;
+      } catch { return null; }
+    },
+    clearSelectedTenantId: () => {
+      try {
+        sessionStorage.removeItem(SELECTED_TENANT_STORAGE_KEY);
+        console.log('[TenantDebug] tenant cleared because= clearSelectedTenantId() called');
+      } catch {}
+    },
+  };
+
+  window.SA_LOGIN = {
+    signIn,
+    signInAsPublicUser,
+    signUp,
+    signInWithGoogle,
+    signInWithMicrosoft,
+    exchangeMicrosoftCodeForFirebaseToken,
+    consumeMicrosoftAuthCallbackPayload,
+    validateCurrentUser,
+    validatePublicUserAccess,
+    bootstrapPublicUserIfAuthenticated,
+    normalizeUsername,
+    restoreTenantSession: tryBootstrapTenantSessionFromUser,
+    normalizeMembershipProgramType: normalizeMembershipProgramType,
+    assertDrivingCompatibleMembership: assertDrivingCompatibleMembership,
+    assertRestoredSessionDrivingCompatible: assertRestoredSessionDrivingCompatible,
+    getActiveMembershipForTenant: getActiveMembershipForTenant,
+    MSG_MACHINE_REQUIRES_MACHINE_ENTRY: MSG_MACHINE_REQUIRES_MACHINE_ENTRY,
+    MSG_MACHINE_REQUIRES_RELOGIN: MSG_MACHINE_REQUIRES_RELOGIN
+  };
+
+  const MACHINE_SESSION_HINT_KEY = 'sa_machine_session_hint_v1';
+  const PLATFORM_MACHINE_TENANT_ID = 'surucu_akademisi';
+
+  function clearMachineSessionHint() {
+    try { localStorage.removeItem(MACHINE_SESSION_HINT_KEY); } catch (_) {}
+  }
+
+  function normalizeMachineHintPayload(parsed) {
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (Number(parsed.version) !== 1) return null;
+    const uid = String(parsed.uid || '').trim();
+    const mode = String(parsed.mode || '').trim().toLowerCase();
+    const tenantId = String(parsed.tenantId || '').trim();
+    const programType = String(parsed.programType || '').trim();
+    const enrollmentSource = String(parsed.enrollmentSource || '').trim();
+    if (!uid || programType !== 'machine_operator') return null;
+    if (mode === 'institution') {
+      if (!tenantId || enrollmentSource !== 'institution') return null;
+      return {
+        version: 1,
+        uid: uid,
+        mode: 'institution',
+        tenantId: tenantId,
+        programType: 'machine_operator',
+        enrollmentSource: 'institution'
+      };
+    }
+    if (mode === 'public') {
+      if (tenantId !== PLATFORM_MACHINE_TENANT_ID || enrollmentSource !== 'public') return null;
+      return {
+        version: 1,
+        uid: uid,
+        mode: 'public',
+        tenantId: PLATFORM_MACHINE_TENANT_ID,
+        programType: 'machine_operator',
+        enrollmentSource: 'public'
+      };
+    }
+    return null;
+  }
+
+  function readMachineSessionHint() {
+    try {
+      const raw = localStorage.getItem(MACHINE_SESSION_HINT_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      const normalized = normalizeMachineHintPayload(parsed);
+      if (!normalized) {
+        clearMachineSessionHint();
+        return null;
+      }
+      return normalized;
+    } catch (_) {
+      clearMachineSessionHint();
+      return null;
+    }
+  }
+
+  function writeMachineSessionHint(session) {
+    const src = session && typeof session === 'object' ? session : {};
+    const uid = String(src.uid || '').trim();
+    const mode = String(src.mode || src.enrollmentSource || '').trim().toLowerCase() === 'public'
+      ? 'public'
+      : (String(src.mode || '').trim().toLowerCase() === 'institution'
+        ? 'institution'
+        : (String(src.enrollmentSource || '').trim().toLowerCase() === 'institution' ? 'institution' : ''));
+    if (!uid || (mode !== 'institution' && mode !== 'public')) return false;
+    const payload = mode === 'public'
+      ? {
+          version: 1,
+          uid: uid,
+          mode: 'public',
+          tenantId: PLATFORM_MACHINE_TENANT_ID,
+          programType: 'machine_operator',
+          enrollmentSource: 'public'
+        }
+      : {
+          version: 1,
+          uid: uid,
+          mode: 'institution',
+          tenantId: String(src.tenantId || '').trim(),
+          programType: 'machine_operator',
+          enrollmentSource: 'institution'
+        };
+    if (mode === 'institution' && !payload.tenantId) return false;
+    try {
+      localStorage.setItem(MACHINE_SESSION_HINT_KEY, JSON.stringify(payload));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function isMachineSessionHintForUser(hint, uid) {
+    if (!hint || typeof hint !== 'object') return false;
+    const expected = String(uid || '').trim();
+    if (!expected) return false;
+    if (String(hint.uid || '').trim() !== expected) return false;
+    if (String(hint.programType || '') !== 'machine_operator') return false;
+    const mode = String(hint.mode || '').trim().toLowerCase();
+    if (mode === 'institution') {
+      return String(hint.enrollmentSource || '') === 'institution'
+        && String(hint.tenantId || '').trim() !== '';
+    }
+    if (mode === 'public') {
+      return String(hint.enrollmentSource || '') === 'public'
+        && String(hint.tenantId || '').trim() === PLATFORM_MACHINE_TENANT_ID;
+    }
+    return false;
+  }
+
+  function extractMachineErrorCode(error) {
+    if (!error) return '';
+    try {
+      var details = error.details;
+      if (details && typeof details === 'object') {
+        if (details.code != null && String(details.code).trim()) return String(details.code).trim();
+        if (details.errorCode != null && String(details.errorCode).trim()) return String(details.errorCode).trim();
+      }
+      if (typeof details === 'string' && details.trim()) {
+        try {
+          var parsed = JSON.parse(details);
+          if (parsed && parsed.code) return String(parsed.code).trim();
+          if (parsed && parsed.errorCode) return String(parsed.errorCode).trim();
+        } catch (_) {
+          if (/^MACHINE_[A-Z0-9_]+$/.test(details.trim())) return details.trim();
+        }
+      }
+      if (error.machineCode != null && String(error.machineCode).trim()) return String(error.machineCode).trim();
+      if (error.code != null && String(error.code).trim()) {
+        var c = String(error.code).trim();
+        if (/^MACHINE_[A-Z0-9_]+$/.test(c)) return c;
+        if (c.indexOf('/') >= 0) {
+          // keep functions/* for mapping; also try details already handled
+        }
+        return c;
+      }
+    } catch (_) {}
+    return '';
+  }
+
+  function ensureMachineFunctionsAvailable() {
+    if (typeof firebase === 'undefined' || !firebase || !firebase.app) {
+      const err = new Error('Giriş sistemi yüklenemedi.');
+      err.userMessage = 'Giriş sistemi yüklenemedi.';
+      throw err;
+    }
+    if (typeof firebase.app().functions !== 'function') {
+      const err = new Error('Bağlantı kurulamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.');
+      err.userMessage = 'Bağlantı kurulamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.';
+      throw err;
+    }
+  }
+
+  function wrapMachineCallableError(e, fallbackMessage) {
+    const machineCode = extractMachineErrorCode(e);
+    const err = new Error((e && e.message) ? String(e.message) : (fallbackMessage || 'Giriş sırasında bir sorun oluştu.'));
+    err.machineCode = machineCode;
+    err.code = (e && e.code) ? String(e.code) : (machineCode || '');
+    err.details = e && e.details;
+    err.cause = e;
+    if (e && e.userMessage) err.userMessage = String(e.userMessage);
+    return err;
+  }
+
+  async function signInInstitutionCredentials(usernameOrEmail, password) {
+    const email = usernameOrEmailToEmail(usernameOrEmail);
+    const pass = String(password || '');
+    if (!email || !pass) {
+      const err = new Error('Kullanıcı adı veya şifre hatalı.');
+      err.userMessage = 'Kullanıcı adı veya şifre hatalı.';
+      throw err;
+    }
+    if (typeof firebase === 'undefined' || !firebase || !firebase.auth) {
+      const err = new Error('Giriş sistemi yüklenemedi.');
+      err.userMessage = 'Giriş sistemi yüklenemedi.';
+      throw err;
+    }
+    try {
+      const cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
+      return {
+        ok: true,
+        user: (cred && cred.user) ? cred.user : firebase.auth().currentUser
+      };
+    } catch (e) {
+      const message = mapAuthErrorToMessage(e);
+      const err = new Error(message);
+      err.userMessage = message;
+      err.code = e && e.code ? String(e.code) : '';
+      err.cause = e;
+      throw err;
+    }
+  }
+
+  async function signInPublicCredentials(emailInput, password) {
+    const email = String(emailInput || '').trim().toLowerCase();
+    const pass = String(password || '');
+    if (!email || !pass || email.indexOf('@') < 0) {
+      const err = new Error('E-posta veya şifre hatalı.');
+      err.userMessage = 'E-posta veya şifre hatalı.';
+      err.code = 'auth/invalid-email';
+      throw err;
+    }
+    if (typeof firebase === 'undefined' || !firebase || !firebase.auth) {
+      const err = new Error('Giriş sistemi yüklenemedi.');
+      err.userMessage = 'Giriş sistemi yüklenemedi.';
+      throw err;
+    }
+    try {
+      const cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
+      return {
+        ok: true,
+        user: (cred && cred.user) ? cred.user : firebase.auth().currentUser
+      };
+    } catch (e) {
+      const message = mapAuthErrorToMessage(e);
+      const err = new Error(message);
+      err.userMessage = message;
+      err.code = e && e.code ? String(e.code) : '';
+      err.cause = e;
+      throw err;
+    }
+  }
+
+  async function createPublicAccount(emailInput, password) {
+    const email = String(emailInput || '').trim().toLowerCase();
+    const pass = String(password || '');
+    if (!email || email.indexOf('@') < 0) {
+      const err = new Error('Geçerli bir e-posta adresi girin.');
+      err.userMessage = 'Geçerli bir e-posta adresi girin.';
+      err.code = 'auth/invalid-email';
+      throw err;
+    }
+    if (pass.length < 6) {
+      const err = new Error('Şifreniz en az 6 karakter olmalıdır.');
+      err.userMessage = 'Şifreniz en az 6 karakter olmalıdır.';
+      err.code = 'auth/weak-password';
+      throw err;
+    }
+    if (typeof firebase === 'undefined' || !firebase || !firebase.auth) {
+      const err = new Error('Giriş sistemi yüklenemedi.');
+      err.userMessage = 'Giriş sistemi yüklenemedi.';
+      throw err;
+    }
+    try {
+      const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+      return {
+        ok: true,
+        user: (cred && cred.user) ? cred.user : firebase.auth().currentUser
+      };
+    } catch (e) {
+      const message = mapSignupErrorToMessage(e);
+      const err = new Error(message);
+      err.userMessage = message;
+      err.code = e && e.code ? String(e.code) : '';
+      err.cause = e;
+      throw err;
+    }
+  }
+
+  async function resolveInstitutionSession(tenantId) {
+    const tid = String(tenantId || '').trim();
+    if (!tid) {
+      const err = new Error('Lütfen kurumunuzu seçin.');
+      err.userMessage = 'Lütfen kurumunuzu seçin.';
+      err.machineCode = 'invalid-argument';
+      throw err;
+    }
+    ensureMachineFunctionsAvailable();
+    try {
+      const callable = firebase.app().functions('us-central1').httpsCallable('resolveMachineCandidateSession');
+      const result = await callable({ mode: 'institution', tenantId: tid });
+      const data = (result && result.data && typeof result.data === 'object') ? result.data : {};
+      return {
+        ok: data.ok === true,
+        uid: data.uid != null ? String(data.uid) : '',
+        tenantId: data.tenantId != null ? String(data.tenantId) : tid,
+        programType: data.programType != null ? String(data.programType) : '',
+        enrollmentSource: data.enrollmentSource != null ? String(data.enrollmentSource) : '',
+        accessStatus: data.accessStatus != null ? String(data.accessStatus) : '',
+        accessDaysRemaining: (data.accessDaysRemaining == null || data.accessDaysRemaining === '')
+          ? null
+          : Number(data.accessDaysRemaining),
+        accessExpiresAt: (data.accessExpiresAt == null || data.accessExpiresAt === '')
+          ? null
+          : Number(data.accessExpiresAt)
+      };
+    } catch (e) {
+      throw wrapMachineCallableError(e, 'Giriş sırasında bir sorun oluştu.');
+    }
+  }
+
+  async function resolvePublicSession() {
+    ensureMachineFunctionsAvailable();
+    try {
+      const callable = firebase.app().functions('us-central1').httpsCallable('resolveMachineCandidateSession');
+      const result = await callable({ mode: 'public' });
+      const data = (result && result.data && typeof result.data === 'object') ? result.data : {};
+      return {
+        ok: data.ok === true,
+        uid: data.uid != null ? String(data.uid) : '',
+        tenantId: data.tenantId != null ? String(data.tenantId) : PLATFORM_MACHINE_TENANT_ID,
+        programType: data.programType != null ? String(data.programType) : '',
+        enrollmentSource: data.enrollmentSource != null ? String(data.enrollmentSource) : '',
+        accessStatus: data.accessStatus != null ? String(data.accessStatus) : '',
+        accessDaysRemaining: (data.accessDaysRemaining == null || data.accessDaysRemaining === '')
+          ? null
+          : Number(data.accessDaysRemaining),
+        accessExpiresAt: (data.accessExpiresAt == null || data.accessExpiresAt === '')
+          ? null
+          : Number(data.accessExpiresAt)
+      };
+    } catch (e) {
+      throw wrapMachineCallableError(e, 'İş makineleri aday girişi sırasında bir sorun oluştu.');
+    }
+  }
+
+  async function bootstrapPublicCandidate(fullName) {
+    ensureMachineFunctionsAvailable();
+    try {
+      const callable = firebase.app().functions('us-central1').httpsCallable('bootstrapPublicMachineCandidate');
+      const normalizedFullName = String(fullName == null ? '' : fullName).trim().replace(/\s+/g, ' ');
+      const payload = normalizedFullName ? { fullName: normalizedFullName } : {};
+      const result = await callable(payload);
+      const data = (result && result.data && typeof result.data === 'object') ? result.data : {};
+      return {
+        ok: data.ok === true,
+        uid: data.uid != null ? String(data.uid) : '',
+        tenantId: data.tenantId != null ? String(data.tenantId) : PLATFORM_MACHINE_TENANT_ID,
+        membershipId: data.membershipId != null ? String(data.membershipId) : '',
+        programType: data.programType != null ? String(data.programType) : '',
+        enrollmentSource: data.enrollmentSource != null ? String(data.enrollmentSource) : ''
+      };
+    } catch (e) {
+      throw wrapMachineCallableError(e, 'İş makineleri aday kaydı oluşturulamadı.');
+    }
+  }
+
+  async function resolveOrBootstrapPublicSession() {
+    try {
+      return await resolvePublicSession();
+    } catch (e) {
+      const code = extractMachineErrorCode(e);
+      if (code !== 'MACHINE_ENROLLMENT_REQUIRED') throw e;
+      await bootstrapPublicCandidate();
+      return await resolvePublicSession();
+    }
+  }
+
+  async function signInPublicWithGoogleCredential() {
+    if (typeof firebase === 'undefined' || !firebase || !firebase.auth) {
+      const err = new Error('Google giriş sistemi yüklenemedi.');
+      err.userMessage = 'Google giriş sistemi yüklenemedi.';
+      throw err;
+    }
+    const nativeAuth = getNativeFirebaseAuthPlugin();
+    if (!nativeAuth || typeof nativeAuth.signInWithGoogle !== 'function') {
+      const err = new Error('Native Google giriş eklentisi bulunamadı.');
+      err.userMessage = 'Native Google giriş eklentisi bulunamadı.';
+      throw err;
+    }
+    try {
+      const isAndroidPlatform = !!(window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'android');
+      const nativeResult = await nativeAuth.signInWithGoogle({
+        skipNativeAuth: true,
+        scopes: ['email', 'profile'],
+        ...(isAndroidPlatform ? { useCredentialManager: false } : {})
+      });
+      const credential = (nativeResult && nativeResult.credential) ? nativeResult.credential : null;
+      const idToken =
+        (credential && credential.idToken ? credential.idToken : null)
+        || (nativeResult && nativeResult.idToken ? nativeResult.idToken : null)
+        || null;
+      const accessToken =
+        (credential && credential.accessToken ? credential.accessToken : null)
+        || (nativeResult && nativeResult.accessToken ? nativeResult.accessToken : null)
+        || null;
+      if (!idToken && !accessToken) {
+        const err = new Error('Google kimlik doğrulama bilgisi alınamadı.');
+        err.userMessage = 'Google kimlik doğrulama bilgisi alınamadı.';
+        throw err;
+      }
+      const firebaseCredential = firebase.auth.GoogleAuthProvider.credential(idToken, accessToken);
+      await firebase.auth().signInWithCredential(firebaseCredential);
+      return {
+        ok: true,
+        user: firebase.auth().currentUser
+      };
+    } catch (e) {
+      const message = (e && e.userMessage) ? String(e.userMessage) : mapGoogleAuthErrorToMessage(e);
+      const err = new Error(message);
+      err.userMessage = message;
+      err.code = e && e.code ? String(e.code) : '';
+      err.cause = e;
+      throw err;
+    }
+  }
+
+  window.SA_MACHINE_AUTH = {
+    PLATFORM_MACHINE_TENANT_ID: PLATFORM_MACHINE_TENANT_ID,
+    signInInstitutionCredentials: signInInstitutionCredentials,
+    signInPublicCredentials: signInPublicCredentials,
+    createPublicAccount: createPublicAccount,
+    resolveInstitutionSession: resolveInstitutionSession,
+    resolvePublicSession: resolvePublicSession,
+    bootstrapPublicCandidate: bootstrapPublicCandidate,
+    resolveOrBootstrapPublicSession: resolveOrBootstrapPublicSession,
+    signInPublicWithGoogleCredential: signInPublicWithGoogleCredential,
+    extractMachineErrorCode: extractMachineErrorCode,
+    usernameOrEmailToEmail: usernameOrEmailToEmail,
+    MACHINE_SESSION_HINT_KEY: MACHINE_SESSION_HINT_KEY,
+    readMachineSessionHint: readMachineSessionHint,
+    writeMachineSessionHint: writeMachineSessionHint,
+    clearMachineSessionHint: clearMachineSessionHint,
+    isMachineSessionHintForUser: isMachineSessionHintForUser
+  };
+})();

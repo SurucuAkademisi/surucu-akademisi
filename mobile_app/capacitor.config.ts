@@ -1,3 +1,4 @@
+/// <reference types="@capacitor-firebase/authentication" />
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
@@ -7,6 +8,10 @@ const config: CapacitorConfig = {
   plugins: {
     AdMob: {
       initializeForTesting: true
+    },
+    FirebaseAuthentication: {
+      skipNativeAuth: true,
+      providers: ['google.com', 'microsoft.com']
     }
   }
 };
