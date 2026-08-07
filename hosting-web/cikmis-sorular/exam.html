@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Ehliyet sınavı — çevrimiçi sınav çözümü." />
+  <title>Sınav | Sürücü Akademisi</title>
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem('sa_web_session_v1');
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || typeof s !== 'object') return;
+        var uid = String(s.uid || '').trim();
+        var tenantId = String(s.tenantId || '').trim();
+        if (uid && tenantId) {
+          document.documentElement.classList.add('page-cikmis-sorular--header-pending');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem('sa_public_session_v1');
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || typeof s !== 'object') return;
+        var uid = String(s.uid || '').trim();
+        var role = String(s.role || '').trim();
+        if (!uid || role !== 'public_user') return;
+        document.documentElement.classList.add('page-public-header-pending');
+        setTimeout(function () {
+          document.documentElement.classList.remove('page-public-header-pending');
+        }, 8000);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="../assets/css/site.css?v=20260728-public-module-header-grid-1" />
+</head>
+<body class="page-cikmis-sorular page-landing page-exam-runner">
+  <header class="site-header site-header--landing">
+    <div class="container hub-header-container">
+      <div id="hub-student-header" class="hub-student-header" hidden aria-hidden="true">
+        <div class="hub-student-header-inner app-header-inner app-header-inner--premium">
+          <div class="app-header-slot app-header-slot--left">
+            <span class="btn btn-public-greeting app-header-greeting hub-header-greeting" aria-live="polite">
+              Merhaba, <span id="hub-student-greeting-name">Öğrenci</span>
+            </span>
+          </div>
+          <div class="app-header-brand-center">
+            <div class="brand brand--lockup brand--tenant app-tenant-brand hub-tenant-brand">
+              <div class="app-tenant-logo-wrap tenant-avatar-wrap" aria-hidden="false">
+                <img id="hub-tenant-logo" class="tenant-logo app-tenant-logo-img hub-tenant-logo-img" alt="" hidden />
+                <span id="hub-tenant-monogram" class="tenant-monogram app-tenant-monogram hub-tenant-monogram" hidden></span>
+              </div>
+              <div class="brand-text app-tenant-brand-text">
+                <span class="brand-name app-tenant-brand-name hub-tenant-brand-name" id="hub-tenant-name">—</span>
+              </div>
+            </div>
+          </div>
+          <div class="app-header-slot app-header-slot--right">
+            <button type="button" class="btn btn-public-register btn-public-logout app-header-logout hub-student-logout" id="hub-student-logout">Çıkış</button>
+          </div>
+        </div>
+      </div>
+      <div id="public-header-shell" class="header-inner header-inner--landing header-inner--public">
+      <div class="header-public-actions header-public-actions--left">
+        <div class="header-public-stack" data-public-header="guest">
+          <a class="btn btn-public-login" href="../uye-giris/">Üye Girişi</a>
+          <a class="btn btn-public-course" href="../panel/">Sürücü Kursları Öğrenci Girişi</a>
+        </div>
+        <div class="header-public-stack header-public-stack--user" data-public-header="user" hidden aria-hidden="true">
+          <span class="btn btn-public-greeting" id="public-header-greeting" aria-live="polite">Merhaba, <span id="public-header-name">Üye</span></span>
+        </div>
+      </div>
+      <div class="header-landing-brand">
+        <a class="brand brand--lockup" href="../" data-sa-portal-home aria-label="Sürücü Akademisi ana sayfa">
+          <img class="brand-logo-img" src="../assets/images/logo.png" width="110" height="110" alt="" />
+          <span class="brand-text">
+            <span class="brand-name">Sürücü Akademisi</span>
+            <span class="brand-tagline">Ehliyet Eğitim Portalı</span>
+          </span>
+        </a>
+      </div>
+      <div class="header-public-actions header-public-actions--right" data-public-header="guest">
+        <a class="btn btn-public-register" href="../kayit/">Kayıt Ol</a>
+      </div>
+      <div class="header-public-actions header-public-actions--right" data-public-header="user" hidden aria-hidden="true">
+        <button type="button" class="btn btn-public-register btn-public-logout" id="public-header-logout">Çıkış</button>
+      </div>
+      </div>
+    </div>
+  </header>
+
+  <aside class="public-ad-rail public-ad-rail--left" aria-label="Reklam alanları">
+    <div class="public-ad-rail__stack">
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+    </div>
+  </aside>
+
+  <aside class="public-ad-rail public-ad-rail--right" aria-label="Reklam alanları">
+    <div class="public-ad-rail__stack">
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="exam-hub-main exam-runner-main">
+    <div class="container exam-hub-wrap">
+      <nav class="exam-hub-breadcrumb" aria-label="Sayfa yolu">
+        <a href="../" data-sa-portal-home>Ana Sayfa</a>
+        <span class="exam-hub-breadcrumb__sep" aria-hidden="true">›</span>
+        <a href="./">Çıkmış Sorular</a>
+      </nav>
+
+      <div id="exam-runner-loading" class="exam-runner-loading" hidden role="status" aria-live="polite">
+        <p>Sınav yükleniyor…</p>
+      </div>
+
+      <div id="exam-runner-guest-cta" class="exam-hub-guest-cta exam-runner-guest-cta" hidden>
+        <p class="exam-hub-guest-cta__text">Sınavı çözmek için giriş yapmanız gerekir.</p>
+        <div class="exam-hub-guest-cta__actions">
+          <a class="btn btn-public-login" href="../uye-giris/">Üye Girişi</a>
+          <a class="btn btn-public-register" href="../kayit/">Kayıt Ol</a>
+          <a class="btn btn-public-course" href="../panel/">Kurs Öğrenci Girişi</a>
+        </div>
+      </div>
+
+      <p id="exam-runner-error" class="exam-runner-error" hidden role="alert"></p>
+
+      <section id="exam-runner-intro" class="exam-runner-panel exam-runner-intro" hidden>
+        <h1 id="exam-runner-intro-title" class="exam-runner-intro__title" aria-current="page">Sınav</h1>
+        <p id="exam-runner-intro-category" class="exam-runner-intro__category"></p>
+        <ul id="exam-runner-intro-meta" class="exam-runner-intro__meta"></ul>
+        <p class="exam-runner-intro__instruction">
+          Soruları sırayla yanıtlayın. Bitirmeden önce cevaplarınızı değiştirebilirsiniz. Sonuç ekranında doğru cevaplar ve açıklamalar gösterilir.
+        </p>
+        <div class="exam-runner-pre-ad" aria-hidden="true">
+          <p class="exam-runner-pre-ad__label">Sınav başlamadan önce kısa bilgilendirme alanı</p>
+        </div>
+        <button type="button" class="btn btn-exam-start" id="exam-runner-start-btn">Sınava Başla</button>
+      </section>
+
+      <section id="exam-runner-solving" class="exam-runner-panel exam-runner-solving" hidden>
+        <header class="exam-runner-solving__head">
+          <div class="exam-runner-solving__head-row">
+            <h2 id="exam-runner-solving-title" class="exam-runner-solving__title"></h2>
+            <span id="exam-runner-timer" class="exam-runner-timer" hidden aria-live="polite" aria-label="Kalan süre">45:00</span>
+          </div>
+          <p id="exam-runner-progress" class="exam-runner-progress" aria-live="polite"></p>
+        </header>
+        <article id="exam-runner-question" class="exam-runner-question-card"></article>
+        <nav class="exam-runner-nav" aria-label="Soru gezinme">
+          <button type="button" class="btn btn-exam-nav" id="exam-runner-prev-btn">Önceki</button>
+          <button type="button" class="btn btn-exam-nav btn-exam-finish" id="exam-runner-finish-btn">Bitir</button>
+          <button type="button" class="btn btn-exam-nav" id="exam-runner-next-btn">Sonraki</button>
+          <a id="exam-runner-return-list-btn" class="btn btn-exam-nav" href="./list.html?category=video_animation" hidden>Listeye Dön</a>
+        </nav>
+      </section>
+
+      <section id="exam-runner-result" class="exam-runner-panel exam-runner-result" hidden>
+        <h2 class="exam-runner-result__title">Sınav Sonucu</h2>
+        <div id="exam-runner-summary" class="exam-runner-summary"></div>
+        <div id="exam-runner-review" class="exam-runner-review"></div>
+        <div class="exam-runner-result__actions">
+          <a id="exam-runner-back-category" class="btn btn-exam-back" href="./list.html">Kategoriye Dön</a>
+          <a class="btn btn-exam-back btn-exam-back--secondary" href="./">Tüm Kategoriler</a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="exam-runner-finish-gate" class="exam-finish-gate" hidden aria-hidden="true">
+    <div class="exam-finish-gate__backdrop" id="exam-runner-finish-backdrop" tabindex="-1" aria-hidden="true"></div>
+    <div class="exam-finish-gate__dialog" role="dialog" aria-modal="true" aria-labelledby="exam-runner-finish-gate-title">
+      <h2 id="exam-runner-finish-gate-title" class="exam-finish-gate__title">Sınavı Bitir</h2>
+      <p id="exam-runner-finish-gate-message" class="exam-finish-gate__message"></p>
+      <div class="exam-finish-gate__actions">
+        <button type="button" class="btn exam-finish-gate__btn exam-finish-gate__btn--dismiss" id="exam-runner-finish-dismiss">Vazgeç</button>
+        <button type="button" class="btn exam-finish-gate__btn exam-finish-gate__btn--confirm" id="exam-runner-finish-confirm">Sınavı Bitir</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p class="footer-brand">Sürücü Akademisi</p>
+      <p class="footer-copy">© 2026 Sürücü Akademisi</p>
+    </div>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="../assets/js/web-firebase.js"></script>
+  <script src="../assets/js/web-session.js"></script>
+  <script src="../assets/js/web-tenant-brand.js"></script>
+  <script src="../assets/js/web-student-header.js"></script>
+  <script src="../assets/js/public-session.js"></script>
+  <script src="../assets/js/web-viewer-context.js?v=20260728-viewer-context-1"></script>
+  <script src="../assets/js/web-module-nav.js"></script>
+  <script src="../assets/js/public-auth.js"></script>
+  <script src="../assets/js/public-landing-auth.js?v=20260728-public-header-fouc-1"></script>
+  <script src="../assets/js/web-duel-presence.js?v=20260728-viewer-context-1"></script>
+  <script src="../assets/js/web-duel-invites.repository.js"></script>
+  <script src="../assets/js/web-duel-notifications.js"></script>
+  <script src="../assets/js/web-exam-catalog.js"></script>
+  <script src="../assets/js/web-exam.repository.js"></script>
+  <script src="../assets/js/web-exam-attempts.repository.js?v=20260629-progress-phase2-public-exam-mirror"></script>
+  <script src="../assets/js/web-exam-runner.js?v=20260728-viewer-context-1"></script>
+</body>
+</html>

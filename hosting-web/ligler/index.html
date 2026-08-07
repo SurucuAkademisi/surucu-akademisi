@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Genel düello ligi — sınav düellolarındaki performansınıza göre sıralamanızı takip edin." />
+  <link rel="canonical" href="https://surucuakademisi.com/ligler/" />
+  <title>Genel Düello Ligi | Sürücü Akademisi</title>
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem('sa_web_session_v1');
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || typeof s !== 'object') return;
+        var uid = String(s.uid || '').trim();
+        var tenantId = String(s.tenantId || '').trim();
+        if (uid && tenantId) {
+          document.documentElement.classList.add('page-cikmis-sorular--header-pending');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem('sa_public_session_v1');
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || typeof s !== 'object') return;
+        var uid = String(s.uid || '').trim();
+        var role = String(s.role || '').trim();
+        if (!uid || role !== 'public_user') return;
+        document.documentElement.classList.add('page-public-header-pending');
+        setTimeout(function () {
+          document.documentElement.classList.remove('page-public-header-pending');
+        }, 8000);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="../assets/css/site.css?v=20260728-public-module-header-grid-1" />
+</head>
+<body class="page-cikmis-sorular page-ligler page-landing">
+  <header class="site-header site-header--landing">
+    <div class="container hub-header-container">
+      <div id="hub-student-header" class="hub-student-header" hidden aria-hidden="true">
+        <div class="hub-student-header-inner app-header-inner app-header-inner--premium">
+          <div class="app-header-slot app-header-slot--left">
+            <span class="btn btn-public-greeting app-header-greeting hub-header-greeting" aria-live="polite">
+              Merhaba, <span id="hub-student-greeting-name">Öğrenci</span>
+            </span>
+          </div>
+          <div class="app-header-brand-center">
+            <div class="brand brand--lockup brand--tenant app-tenant-brand hub-tenant-brand">
+              <div class="app-tenant-logo-wrap tenant-avatar-wrap" aria-hidden="false">
+                <img id="hub-tenant-logo" class="tenant-logo app-tenant-logo-img hub-tenant-logo-img" alt="" hidden />
+                <span id="hub-tenant-monogram" class="tenant-monogram app-tenant-monogram hub-tenant-monogram" hidden></span>
+              </div>
+              <div class="brand-text app-tenant-brand-text">
+                <span class="brand-name app-tenant-brand-name hub-tenant-brand-name" id="hub-tenant-name">—</span>
+              </div>
+            </div>
+          </div>
+          <div class="app-header-slot app-header-slot--right">
+            <button type="button" class="btn btn-public-register btn-public-logout app-header-logout hub-student-logout" id="hub-student-logout">Çıkış</button>
+          </div>
+        </div>
+      </div>
+      <div id="public-header-shell" class="header-inner header-inner--landing header-inner--public">
+      <div class="header-public-actions header-public-actions--left">
+        <div class="header-public-stack" data-public-header="guest">
+          <a class="btn btn-public-login" href="../uye-giris/">Üye Girişi</a>
+          <a class="btn btn-public-course" href="../panel/">Sürücü Kursları Öğrenci Girişi</a>
+        </div>
+        <div class="header-public-stack header-public-stack--user" data-public-header="user" hidden aria-hidden="true">
+          <span class="btn btn-public-greeting" id="public-header-greeting" aria-live="polite">Merhaba, <span id="public-header-name">Üye</span></span>
+        </div>
+      </div>
+      <div class="header-landing-brand">
+        <a class="brand brand--lockup" href="../" data-sa-portal-home aria-label="Sürücü Akademisi ana sayfa">
+          <img class="brand-logo-img" src="../assets/images/logo.png" width="110" height="110" alt="" />
+          <span class="brand-text">
+            <span class="brand-name">Sürücü Akademisi</span>
+            <span class="brand-tagline">Ehliyet Eğitim Portalı</span>
+          </span>
+        </a>
+      </div>
+      <div class="header-public-actions header-public-actions--right" data-public-header="guest">
+        <a class="btn btn-public-register" href="../kayit/">Kayıt Ol</a>
+      </div>
+      <div class="header-public-actions header-public-actions--right" data-public-header="user" hidden aria-hidden="true">
+        <button type="button" class="btn btn-public-register btn-public-logout" id="public-header-logout">Çıkış</button>
+      </div>
+      </div>
+    </div>
+  </header>
+
+  <aside class="public-ad-rail public-ad-rail--left" aria-label="Reklam alanları">
+    <div class="public-ad-rail__stack">
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+    </div>
+  </aside>
+
+  <aside class="public-ad-rail public-ad-rail--right" aria-label="Reklam alanları">
+    <div class="public-ad-rail__stack">
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="exam-hub-main ligler-main">
+    <div class="container exam-hub-wrap ligler-shell">
+      <nav class="exam-hub-breadcrumb" aria-label="Sayfa yolu">
+        <a id="ligler-breadcrumb-home" href="../" data-sa-portal-home>Ana Sayfa</a>
+      </nav>
+
+      <section class="ligler-hero exam-hub-hero">
+        <h1 aria-current="page">Genel Düello Ligi</h1>
+        <p class="exam-hub-hero__intro ligler-hero__intro">
+          Sınav düellolarındaki performansınıza göre sıralamanızı takip edin. Bu tablo kurum içi değil, tüm platform genelindeki düello puanlarını gösterir.
+        </p>
+      </section>
+
+      <aside id="ligler-guest-cta" class="ligler-guest-cta exam-hub-guest-cta" hidden>
+        <p class="exam-hub-guest-cta__text">Lig tablosunu görmek için giriş yapın veya ücretsiz kayıt olun.</p>
+        <div class="exam-hub-guest-cta__actions">
+          <a class="btn btn-public-login" href="../uye-giris/">Üye Girişi</a>
+          <a class="btn btn-public-register" href="../kayit/">Kayıt Ol</a>
+        </div>
+      </aside>
+
+      <section class="public-ad-slot public-ad-slot--horizontal public-ad-slot--after-hero" aria-label="Reklam alanı">
+        <span class="public-ad-slot__label">Reklam</span>
+        <span class="public-ad-slot__placeholder">Sponsorlu alan</span>
+      </section>
+
+      <div id="ligler-content" class="ligler-layout" hidden>
+        <section class="league-my-card" aria-labelledby="ligler-my-heading">
+          <h2 id="ligler-my-heading" class="league-my-card__title">Benim lig özeti</h2>
+          <p class="league-my-card__scope">Genel düello ligi</p>
+          <p id="ligler-my-points" class="league-my-card__points">—</p>
+          <div class="league-my-card__rank-wrap">
+            <span class="league-my-card__rank-label">Sıra</span>
+            <span id="ligler-my-rank" class="league-my-card__rank">—</span>
+          </div>
+          <div class="league-my-card__grid">
+            <div class="league-my-metric">
+              <span class="league-my-metric__label">Galibiyet</span>
+              <span id="ligler-my-wins" class="league-my-metric__value">0</span>
+            </div>
+            <div class="league-my-metric">
+              <span class="league-my-metric__label">Mağlubiyet</span>
+              <span id="ligler-my-losses" class="league-my-metric__value">0</span>
+            </div>
+            <div class="league-my-metric">
+              <span class="league-my-metric__label">Beraberlik</span>
+              <span id="ligler-my-draws" class="league-my-metric__value">0</span>
+            </div>
+            <div class="league-my-metric">
+              <span class="league-my-metric__label">Maç</span>
+              <span id="ligler-my-matches" class="league-my-metric__value">0</span>
+            </div>
+          </div>
+          <p id="ligler-my-empty" class="league-my-card__empty" hidden>Henüz düello oynamadınız. Düello modülünden yarışmaya başlayın.</p>
+        </section>
+
+        <section class="league-board" aria-labelledby="ligler-board-heading">
+          <div class="league-board__header">
+            <h2 id="ligler-board-heading" class="league-board__title">Liderlik tablosu</h2>
+            <span class="league-board__badge">İlk 20</span>
+          </div>
+          <p id="ligler-board-loading" class="league-board__state">Yükleniyor…</p>
+          <p id="ligler-board-error" class="league-board__state league-board__state--error" hidden></p>
+          <p id="ligler-board-empty" class="league-board__state" hidden>Henüz lig verisi yok.</p>
+          <div id="ligler-board-list" class="league-board__list" hidden></div>
+        </section>
+      </div>
+
+      <section class="public-ad-slot public-ad-slot--horizontal public-ad-slot--after-content" aria-label="Reklam alanı">
+        <span class="public-ad-slot__label">Reklam</span>
+        <span class="public-ad-slot__placeholder">Sponsorlu alan</span>
+      </section>
+
+      <p class="exam-hub-back">
+        <a id="ligler-back-link" href="../" data-sa-portal-home>Ana sayfaya dön</a>
+      </p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p class="footer-brand">Sürücü Akademisi</p>
+      <p class="footer-copy">© 2026 Sürücü Akademisi</p>
+      <p class="footer-secondary">
+        <a href="mailto:info@surucuakademisi.com">İletişim: info@surucuakademisi.com</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="../assets/js/web-firebase.js"></script>
+  <script src="../assets/js/web-session.js"></script>
+  <script src="../assets/js/web-tenant-brand.js"></script>
+  <script src="../assets/js/web-student-header.js"></script>
+  <script src="../assets/js/public-session.js"></script>
+  <script src="../assets/js/web-viewer-context.js?v=20260728-viewer-context-1"></script>
+  <script src="../assets/js/web-module-nav.js"></script>
+  <script src="../assets/js/public-auth.js"></script>
+  <script src="../assets/js/public-landing-auth.js?v=20260728-public-header-fouc-1"></script>
+  <script src="../assets/js/web-duel-league.repository.js"></script>
+  <script src="../assets/js/web-ligler.js?v=20260728-viewer-context-1"></script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <meta name="description" content="Sürücü Akademisi kurumsal eğitim paneli — öğrenci ve yönetici girişi." />
+  <title>Kurumsal Eğitim Paneli — Sürücü Akademisi</title>
+  <link rel="stylesheet" href="../assets/css/site.css" />
+  <style>
+    .page-panel .panel-actions {
+      gap: 20px;
+    }
+
+    .page-panel .panel-entry-card {
+      position: relative;
+      overflow: hidden;
+      padding: 28px 22px 26px;
+      isolation: isolate;
+    }
+
+    .page-panel .panel-entry-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .page-panel .panel-entry-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page-panel .panel-entry-card-icon {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 14px;
+      border-radius: 14px;
+    }
+
+    .page-panel .panel-entry-card-icon svg {
+      width: 26px;
+      height: 26px;
+    }
+
+    .page-panel .panel-entry-card-title,
+    .page-panel .panel-entry-card-desc,
+    .page-panel .panel-entry-card .btn-panel-action {
+      position: relative;
+      z-index: 2;
+    }
+
+    .page-panel .panel-entry-card-title {
+      font-size: 1.22rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .page-panel .panel-entry-card-desc {
+      font-size: 0.92rem;
+      line-height: 1.55;
+      max-width: 28ch;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .page-panel .panel-entry-card--student {
+      border: 1px solid transparent;
+      background:
+        linear-gradient(158deg, rgba(6, 18, 36, 0.96) 0%, rgba(8, 28, 52, 0.9) 48%, rgba(6, 20, 40, 0.94) 100%) padding-box,
+        linear-gradient(140deg, rgba(34, 211, 238, 0.72), rgba(59, 130, 246, 0.5), rgba(34, 211, 238, 0.62)) border-box;
+      box-shadow:
+        0 0 42px rgba(34, 211, 238, 0.2),
+        0 0 72px rgba(59, 130, 246, 0.08),
+        0 10px 32px rgba(4, 10, 22, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.09);
+    }
+
+    .page-panel .panel-entry-card--student::before {
+      background: linear-gradient(90deg, rgba(34, 211, 238, 0.15), rgba(34, 211, 238, 0.95), rgba(96, 165, 250, 0.75));
+      box-shadow: 0 0 22px rgba(34, 211, 238, 0.45);
+    }
+
+    .page-panel .panel-entry-card--student::after {
+      background:
+        radial-gradient(ellipse 90% 70% at 100% 0%, rgba(34, 211, 238, 0.14), transparent 58%),
+        radial-gradient(ellipse 70% 55% at 0% 100%, rgba(59, 130, 246, 0.1), transparent 52%);
+    }
+
+    .page-panel .panel-entry-card-icon--student {
+      color: #67e8f9;
+      background: linear-gradient(145deg, rgba(34, 211, 238, 0.22), rgba(59, 130, 246, 0.12));
+      border: 1px solid rgba(34, 211, 238, 0.45);
+      box-shadow: 0 0 24px rgba(34, 211, 238, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    .page-panel .panel-entry-card--student .panel-entry-card-title {
+      color: #e8f8ff;
+      text-shadow: 0 0 28px rgba(34, 211, 238, 0.22);
+    }
+
+    .page-panel .panel-entry-card--student .panel-entry-card-desc {
+      color: rgba(186, 230, 253, 0.9);
+    }
+
+    .page-panel .panel-entry-card--student .btn-panel-action {
+      min-width: 180px;
+      box-shadow:
+        0 0 22px rgba(34, 211, 238, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .page-panel .panel-entry-card--admin {
+      border: 1px solid transparent;
+      background:
+        linear-gradient(158deg, rgba(4, 20, 18, 0.96) 0%, rgba(6, 32, 28, 0.9) 48%, rgba(5, 18, 16, 0.94) 100%) padding-box,
+        linear-gradient(140deg, rgba(52, 211, 153, 0.68), rgba(16, 185, 129, 0.48), rgba(74, 222, 128, 0.58)) border-box;
+      box-shadow:
+        0 0 42px rgba(52, 211, 153, 0.18),
+        0 0 72px rgba(16, 185, 129, 0.08),
+        0 10px 32px rgba(4, 12, 10, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.09);
+    }
+
+    .page-panel .panel-entry-card--admin::before {
+      background: linear-gradient(90deg, rgba(52, 211, 153, 0.15), rgba(52, 211, 153, 0.95), rgba(74, 222, 128, 0.7));
+      box-shadow: 0 0 22px rgba(52, 211, 153, 0.4);
+    }
+
+    .page-panel .panel-entry-card--admin::after {
+      background:
+        radial-gradient(ellipse 90% 70% at 100% 0%, rgba(52, 211, 153, 0.13), transparent 58%),
+        radial-gradient(ellipse 70% 55% at 0% 100%, rgba(16, 185, 129, 0.1), transparent 52%);
+    }
+
+    .page-panel .panel-entry-card-icon--admin {
+      color: #6ee7b7;
+      background: linear-gradient(145deg, rgba(52, 211, 153, 0.22), rgba(16, 185, 129, 0.12));
+      border: 1px solid rgba(52, 211, 153, 0.45);
+      box-shadow: 0 0 24px rgba(52, 211, 153, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    .page-panel .panel-entry-card--admin .panel-entry-card-title {
+      color: #ecfdf5;
+      text-shadow: 0 0 28px rgba(52, 211, 153, 0.2);
+    }
+
+    .page-panel .panel-entry-card--admin .panel-entry-card-desc {
+      color: rgba(167, 243, 208, 0.9);
+    }
+
+    .page-panel .panel-entry-card--admin .btn-panel-admin {
+      min-width: 180px;
+      font-weight: 700;
+      box-shadow:
+        0 0 24px rgba(52, 211, 153, 0.32),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    .page-panel .panel-entry-card--admin .btn-panel-admin:hover {
+      box-shadow:
+        0 0 30px rgba(52, 211, 153, 0.42),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    }
+
+    @media (max-width: 640px) {
+      .page-panel .panel-entry-card {
+        padding: 24px 18px 22px;
+      }
+    }
+  </style>
+</head>
+<body class="page-panel">
+  <header class="site-header site-header--panel">
+    <div class="container header-inner header-inner--panel">
+      <span class="header-inner--panel-spacer" aria-hidden="true"></span>
+      <a class="brand brand--lockup" href="index.html" aria-label="Sürücü Akademisi panel ana sayfa">
+        <img class="brand-logo-img" src="../assets/images/logo.png" width="90" height="90" alt="" />
+        <span class="brand-text">
+          <span class="brand-name">Sürücü Akademisi</span>
+          <span class="brand-tagline brand-tagline--panel">Kurumsal Eğitim Paneli</span>
+        </span>
+      </a>
+      <a class="btn btn-panel-home sa-home-nav-btn" href="../" aria-label="Sürücü Akademisi ana sayfa">
+        Ana Sayfa
+      </a>
+    </div>
+  </header>
+
+  <main class="panel-main">
+    <div class="container panel-entry">
+      <div class="panel-intro-card">
+        <p class="panel-intro">
+          Sürücü kursunuz Sürücü Akademisi sistemini kullanıyorsa, öğrenci veya yönetici girişinizi buradan yapabilirsiniz.
+        </p>
+      </div>
+
+      <div class="panel-actions">
+        <article class="panel-entry-card panel-entry-card--student">
+          <div class="panel-entry-card-icon panel-entry-card-icon--student" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M12 3L2 8.5V10.5C2 15.64 6.2 20.2 12 21.5C17.8 20.2 22 15.64 22 10.5V8.5L12 3Z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+              <path d="M9 12.5L11 14.5L15.5 10" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h2 class="panel-entry-card-title">Öğrenci Girişi</h2>
+          <p class="panel-entry-card-desc">
+            Kurumunuzun verdiği kullanıcı adı ve şifreyle öğrenci panelinize giriş yapın.
+          </p>
+          <a class="btn btn-primary btn-panel-action" href="../app/login.html">Öğrenci Girişi</a>
+        </article>
+
+        <article class="panel-entry-card panel-entry-card--admin">
+          <div class="panel-entry-card-icon panel-entry-card-icon--admin" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M12 2.75L4.5 6.25V11.25C4.5 15.55 7.72 19.48 12 20.75C16.28 19.48 19.5 15.55 19.5 11.25V6.25L12 2.75Z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+              <path d="M9.25 11.5L11.25 13.5L14.75 10" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h2 class="panel-entry-card-title">Admin Girişi</h2>
+          <p class="panel-entry-card-desc">
+            Kurum yöneticileri ve süper adminler yönetim paneline buradan erişebilir.
+          </p>
+          <a class="btn btn-panel-admin btn-panel-action" href="https://admin.surucuakademisi.com/admin">Admin Girişi</a>
+        </article>
+      </div>
+
+      <!-- Future panel promotional / advertising content area -->
+    </div>
+  </main>
+</body>
+</html>

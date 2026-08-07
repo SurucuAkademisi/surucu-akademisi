@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Kayıt Ol — Sürücü Akademisi</title>
+  <link rel="stylesheet" href="../assets/css/site.css" />
+</head>
+<body class="page-public-auth">
+  <main class="public-auth-shell">
+    <div class="public-auth-wrap">
+      <a class="brand brand--lockup public-auth-brand" href="../" aria-label="Sürücü Akademisi ana sayfa">
+        <img class="brand-logo-img" src="../assets/images/logo.png" width="72" height="72" alt="" />
+        <span class="brand-text">
+          <span class="brand-name">Sürücü Akademisi</span>
+          <span class="brand-tagline">Ehliyet Eğitim Portalı</span>
+        </span>
+      </a>
+
+      <article class="public-auth-card">
+        <h1>Kayıt Ol</h1>
+        <p class="public-auth-sub">Ücretsiz public portal hesabınızı oluşturun.</p>
+
+        <form class="public-auth-form" id="public-register-form" novalidate>
+          <div class="public-auth-field">
+            <label class="field-label" for="public-register-firstName">İsim</label>
+            <input class="field-input" type="text" id="public-register-firstName" name="firstName" autocomplete="given-name" placeholder="Adınız" required />
+          </div>
+          <div class="public-auth-field">
+            <label class="field-label" for="public-register-lastName">Soyisim</label>
+            <input class="field-input" type="text" id="public-register-lastName" name="lastName" autocomplete="family-name" placeholder="Soyadınız" required />
+          </div>
+          <div class="public-auth-field">
+            <label class="field-label" for="public-register-email">E-posta</label>
+            <input class="field-input" type="email" id="public-register-email" name="email" autocomplete="email" placeholder="ornek@email.com" required />
+          </div>
+          <div class="public-auth-field">
+            <label class="field-label" for="public-register-password">Şifre</label>
+            <input class="field-input" type="password" id="public-register-password" name="password" autocomplete="new-password" placeholder="En az 6 karakter" required minlength="6" />
+          </div>
+          <div class="public-auth-actions">
+            <button type="submit" class="btn btn-gold btn-block" id="public-register-submit">Kayıt Ol</button>
+          </div>
+          <p class="public-auth-msg" id="public-register-message" role="status" aria-live="polite"></p>
+        </form>
+
+        <p class="public-auth-links">
+          <a href="../uye-giris/">Zaten hesabınız var mı? Üye Girişi</a>
+        </p>
+        <p class="public-auth-links">
+          <a href="../">Ana sayfaya dön</a>
+        </p>
+
+        <p class="public-auth-note">Bu kayıt public portal içindir. Kurum öğrencileri kullanıcı bilgilerini kurumlarından alır.</p>
+      </article>
+    </div>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="../assets/js/web-firebase.js"></script>
+  <script src="../assets/js/public-session.js"></script>
+  <script src="../assets/js/public-auth.js"></script>
+</body>
+</html>

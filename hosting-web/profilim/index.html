@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Sürücü Akademisi hesap profiliniz — üyelik bilgileri ve ilerleme özeti." />
+  <link rel="canonical" href="https://surucuakademisi.com/profilim/" />
+  <title>Profilim | Sürücü Akademisi</title>
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem('sa_web_session_v1');
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || typeof s !== 'object') return;
+        var uid = String(s.uid || '').trim();
+        var tenantId = String(s.tenantId || '').trim();
+        if (uid && tenantId) {
+          document.documentElement.classList.add('page-cikmis-sorular--header-pending');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem('sa_public_session_v1');
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || typeof s !== 'object') return;
+        var uid = String(s.uid || '').trim();
+        var role = String(s.role || '').trim();
+        if (!uid || role !== 'public_user') return;
+        document.documentElement.classList.add('page-public-header-pending');
+        setTimeout(function () {
+          document.documentElement.classList.remove('page-public-header-pending');
+        }, 8000);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="../assets/css/site.css?v=20260728-public-module-header-grid-1" />
+  <style>
+    .profile-messages-unread-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.35rem;
+      height: 1.35rem;
+      padding: 0 0.35rem;
+      margin-left: 0.4rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      line-height: 1;
+      vertical-align: middle;
+      color: #042f2e;
+      background: #22d3ee;
+      box-shadow: 0 0 12px rgba(34, 211, 238, 0.45);
+    }
+    .profile-messages-unread-badge[hidden] { display: none !important; }
+  </style>
+</head>
+<body class="page-cikmis-sorular page-profilim page-landing">
+  <header class="site-header site-header--landing">
+    <div class="container hub-header-container">
+      <div id="hub-student-header" class="hub-student-header" hidden aria-hidden="true">
+        <div class="hub-student-header-inner app-header-inner app-header-inner--premium">
+          <div class="app-header-slot app-header-slot--left">
+            <span class="btn btn-public-greeting app-header-greeting hub-header-greeting" aria-live="polite">
+              Merhaba, <span id="hub-student-greeting-name">Öğrenci</span>
+            </span>
+          </div>
+          <div class="app-header-brand-center">
+            <div class="brand brand--lockup brand--tenant app-tenant-brand hub-tenant-brand">
+              <div class="app-tenant-logo-wrap tenant-avatar-wrap" aria-hidden="false">
+                <img id="hub-tenant-logo" class="tenant-logo app-tenant-logo-img hub-tenant-logo-img" alt="" hidden />
+                <span id="hub-tenant-monogram" class="tenant-monogram app-tenant-monogram hub-tenant-monogram" hidden></span>
+              </div>
+              <div class="brand-text app-tenant-brand-text">
+                <span class="brand-name app-tenant-brand-name hub-tenant-brand-name" id="hub-tenant-name">—</span>
+              </div>
+            </div>
+          </div>
+          <div class="app-header-slot app-header-slot--right">
+            <button type="button" class="btn btn-public-register btn-public-logout app-header-logout hub-student-logout" id="hub-student-logout">Çıkış</button>
+          </div>
+        </div>
+      </div>
+      <div id="public-header-shell" class="header-inner header-inner--landing header-inner--public">
+      <div class="header-public-actions header-public-actions--left">
+        <div class="header-public-stack" data-public-header="guest">
+          <a class="btn btn-public-login" href="../uye-giris/">Üye Girişi</a>
+          <a class="btn btn-public-course" href="../panel/">Sürücü Kursları Öğrenci Girişi</a>
+        </div>
+        <div class="header-public-stack header-public-stack--user" data-public-header="user" hidden aria-hidden="true">
+          <span class="btn btn-public-greeting" id="public-header-greeting" aria-live="polite">Merhaba, <span id="public-header-name">Üye</span></span>
+        </div>
+      </div>
+      <div class="header-landing-brand">
+        <a class="brand brand--lockup" href="../" data-sa-portal-home aria-label="Sürücü Akademisi ana sayfa">
+          <img class="brand-logo-img" src="../assets/images/logo.png" width="110" height="110" alt="" />
+          <span class="brand-text">
+            <span class="brand-name">Sürücü Akademisi</span>
+            <span class="brand-tagline">Ehliyet Eğitim Portalı</span>
+          </span>
+        </a>
+      </div>
+      <div class="header-public-actions header-public-actions--right" data-public-header="guest">
+        <a class="btn btn-public-register" href="../kayit/">Kayıt Ol</a>
+      </div>
+      <div class="header-public-actions header-public-actions--right" data-public-header="user" hidden aria-hidden="true">
+        <button type="button" class="btn btn-public-register btn-public-logout" id="public-header-logout">Çıkış</button>
+      </div>
+      </div>
+    </div>
+  </header>
+
+  <aside class="public-ad-rail public-ad-rail--left" aria-label="Reklam alanları">
+    <div class="public-ad-rail__stack">
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+    </div>
+  </aside>
+
+  <aside class="public-ad-rail public-ad-rail--right" aria-label="Reklam alanları">
+    <div class="public-ad-rail__stack">
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="exam-hub-main profile-main">
+    <div class="container exam-hub-wrap profile-shell">
+      <nav class="exam-hub-breadcrumb" aria-label="Sayfa yolu">
+        <a id="profile-breadcrumb-home" href="../" data-sa-portal-home>Ana Sayfa</a>
+      </nav>
+
+      <section class="profile-hero exam-hub-hero profile-hero--premium">
+        <div class="profile-hero__glow" aria-hidden="true"></div>
+        <h1 aria-current="page">Profilim <span id="profile-hero-messages-unread-badge" class="profile-messages-unread-badge" hidden aria-hidden="true"></span></h1>
+        <p class="exam-hub-hero__intro profile-hero__intro">
+          Hesap bilgilerinizi görüntüleyin. Sınav geçmişiniz ve başarı özetiniz aşağıda listelenir.
+        </p>
+      </section>
+
+      <aside id="profile-guest-cta" class="profile-guest-cta exam-hub-guest-cta" hidden>
+        <p class="exam-hub-guest-cta__text">Profilinizi görmek için giriş yapın veya ücretsiz kayıt olun.</p>
+        <div class="exam-hub-guest-cta__actions">
+          <a class="btn btn-public-login" href="../uye-giris/">Üye Girişi</a>
+          <a class="btn btn-public-register" href="../kayit/">Kayıt Ol</a>
+        </div>
+      </aside>
+
+      <div id="profile-content" class="profile-content profile-dashboard-shell" hidden>
+        <section class="profile-summary-grid" aria-label="Profil özeti">
+          <section class="profile-card profile-identity-card profile-card--accent-blue" aria-labelledby="profile-identity-heading">
+            <div class="profile-identity-header">
+              <div class="profile-identity-avatar" aria-hidden="true"></div>
+              <h2 id="profile-identity-heading" class="profile-card__title">Hesap bilgileri</h2>
+            </div>
+            <dl class="profile-dl">
+              <div class="profile-dl__row profile-dl__row--display">
+                <dt>Ad / görünen ad</dt>
+                <dd id="profile-display-name">—</dd>
+              </div>
+              <div class="profile-dl__row profile-dl__row--username" id="profile-username-row" hidden>
+                <dt>Kullanıcı adı</dt>
+                <dd id="profile-username">—</dd>
+              </div>
+              <div class="profile-dl__row profile-dl__row--email" id="profile-email-row" hidden>
+                <dt>E-posta</dt>
+                <dd id="profile-email">—</dd>
+              </div>
+              <div class="profile-dl__row profile-dl__row--role">
+                <dt>Hesap türü</dt>
+                <dd id="profile-role-label">—</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="profile-card profile-brand-card profile-card--accent-violet" aria-labelledby="profile-brand-heading">
+            <h2 id="profile-brand-heading" class="profile-card__title">Marka / kurum</h2>
+            <div id="profile-brand-public" class="profile-brand-public" hidden>
+              <div class="profile-brand-lockup">
+                <img class="profile-brand-logo" src="../assets/images/logo.png" width="72" height="72" alt="" />
+                <div>
+                  <p class="profile-brand-name">Sürücü Akademisi</p>
+                  <p class="profile-brand-tagline">Ehliyet Eğitim Portalı</p>
+                </div>
+              </div>
+            </div>
+            <div id="profile-brand-institution" class="profile-brand-institution" hidden>
+              <div class="profile-brand-lockup profile-brand-lockup--tenant">
+                <div class="app-tenant-logo-wrap tenant-avatar-wrap profile-tenant-logo-wrap">
+                  <img id="profile-tenant-logo" class="tenant-logo app-tenant-logo-img profile-tenant-logo" alt="" hidden />
+                  <span id="profile-tenant-monogram" class="tenant-monogram app-tenant-monogram profile-tenant-monogram" hidden></span>
+                </div>
+                <div>
+                  <p class="profile-brand-name" id="profile-tenant-name">—</p>
+                  <p class="profile-brand-tagline">Kurum öğrenci hesabı</p>
+                </div>
+              </div>
+            </div>
+            <div class="profile-brand-kpi-zone" aria-label="Başarı özeti" hidden></div>
+          </section>
+        </section>
+
+        <section class="profile-main-grid" aria-label="Profil paneli">
+          <article class="profile-stat-card profile-stat-card--live profile-stat-card--history" id="profile-exam-history-card">
+            <h3 class="profile-stat-card__title">Deneme Sınavları</h3>
+            <p class="profile-stat-card__loading" id="profile-exam-summary-loading">Yükleniyor…</p>
+            <p class="profile-stat-empty" id="profile-exam-summary-empty" hidden>Henüz deneme sınavı çözülmemiş.</p>
+            <ul class="profile-exam-summary" id="profile-exam-summary" hidden>
+              <li>
+                <span class="profile-exam-summary__key">Toplam Deneme Sınavı</span>
+                <span class="profile-exam-summary__val" id="profile-exam-total">0</span>
+              </li>
+              <li>
+                <span class="profile-exam-summary__key">Genel Başarı Oranı</span>
+                <span class="profile-exam-summary__val" id="profile-exam-average">—</span>
+              </li>
+              <li>
+                <span class="profile-exam-summary__key">En İyi Skor</span>
+                <span class="profile-exam-summary__val" id="profile-exam-best">—</span>
+              </li>
+              <li>
+                <span class="profile-exam-summary__key">Son Deneme</span>
+                <span class="profile-exam-summary__val" id="profile-exam-last">—</span>
+              </li>
+            </ul>
+          </article>
+
+          <article class="profile-stat-card profile-stat-card--placeholder profile-account-status-card" id="profile-account-status-card">
+            <h3 class="profile-stat-card__title" id="profile-account-status-title">Ödeme / Üyelik</h3>
+            <div id="profile-account-status-membership" class="profile-account-status-membership" hidden>
+              <div class="profile-placeholder-panel">
+                <p class="profile-placeholder-panel__text">Üyelik ve satın alma bilgileriniz burada gösterilecek.</p>
+              </div>
+            </div>
+            <div id="profile-account-status-payment" class="profile-account-status-payment" hidden>
+              <p class="profile-stat-card__loading" id="profile-payment-loading">Yükleniyor…</p>
+              <div id="profile-payment-summary" class="profile-payment-summary" hidden>
+                <div class="profile-payment-panel">
+                  <div class="profile-payment-grid">
+                    <div class="profile-payment-metric">
+                      <span class="profile-payment-metric__label">Toplam Tutar</span>
+                      <span class="profile-payment-metric__value" id="profile-payment-total">—</span>
+                    </div>
+                    <div class="profile-payment-metric">
+                      <span class="profile-payment-metric__label">Ödenen</span>
+                      <span class="profile-payment-metric__value" id="profile-payment-paid">—</span>
+                    </div>
+                    <div class="profile-payment-metric profile-payment-metric--remaining">
+                      <span class="profile-payment-metric__label">Kalan</span>
+                      <span class="profile-payment-metric__value profile-payment-metric__value--remaining" id="profile-payment-remaining">—</span>
+                    </div>
+                    <div class="profile-payment-metric">
+                      <span class="profile-payment-metric__label">Aylık Taksit</span>
+                      <span class="profile-payment-metric__value" id="profile-payment-installment">—</span>
+                    </div>
+                  </div>
+                  <div class="profile-payment-footer">
+                    <p class="profile-payment-status profile-payment-status--active" id="profile-payment-installment-active" hidden>Taksitli Ödeme Aktif</p>
+                    <p class="profile-payment-status profile-payment-status--inactive" id="profile-payment-installment-inactive" hidden>Taksitli ödeme yok</p>
+                    <p class="profile-payment-note" id="profile-payment-note" hidden></p>
+                  </div>
+                </div>
+              </div>
+              <p class="profile-stat-empty profile-payment-empty" id="profile-payment-empty" hidden>Henüz ödeme bilgisi eklenmemiş.</p>
+            </div>
+          </article>
+
+          <article class="profile-stat-card profile-stat-card--live profile-stat-card--lessons" id="profile-lessons-card">
+            <h3 class="profile-stat-card__title">Tamamladığım Dersler</h3>
+            <p class="profile-stat-card__loading" id="profile-lessons-loading">Yükleniyor…</p>
+            <p class="profile-lesson-count" id="profile-lesson-count" hidden></p>
+            <div class="profile-lesson-summary" id="profile-lesson-summary" hidden aria-label="Ders bazında tamamlanan ünite özeti"></div>
+            <p class="profile-lesson-empty profile-stat-empty" id="profile-lesson-empty" hidden>Henüz tamamlanmış ders yok.</p>
+          </article>
+
+          <article class="profile-stat-card profile-messages-card" id="profile-messages-card">
+            <h3 class="profile-stat-card__title">Mesajlarım <span id="profile-messages-unread-badge" class="profile-messages-unread-badge" hidden aria-hidden="true"></span></h3>
+            <div id="profile-messages-public-placeholder" class="profile-messages-public-placeholder" hidden>
+              <div class="profile-placeholder-panel profile-messages-placeholder-panel">
+                <p class="profile-placeholder-panel__text">Kurumsuz üyeler için sistem mesajları yakında burada gösterilecek.</p>
+              </div>
+            </div>
+            <div id="profile-messages-institution" class="profile-messages-institution" hidden>
+              <p class="profile-stat-card__loading" id="profile-messages-loading">Mesajlar yükleniyor...</p>
+              <ul class="profile-messages-list" id="profile-messages-list" hidden></ul>
+              <p class="profile-messages-empty" id="profile-messages-empty" hidden>Henüz mesajınız yok.</p>
+              <p class="profile-messages-error" id="profile-messages-error" hidden>Mesajlar yüklenemedi.</p>
+            </div>
+          </article>
+
+          <article class="profile-stat-card profile-stat-card--live profile-stat-card--duel" id="profile-duel-card">
+            <h3 class="profile-stat-card__title">Düello / Lig Bilgileri</h3>
+            <p class="profile-duel-scope">Genel düello lig özeti</p>
+            <p class="profile-duel-hint">Web düello modülü hazırlanıyor; mobilde oynanan düellolar burada özetlenir.</p>
+            <p class="profile-stat-card__loading" id="profile-duel-loading">Yükleniyor…</p>
+            <div class="profile-duel-body" id="profile-duel-body" hidden>
+              <p class="profile-duel-points" id="profile-duel-points">—</p>
+              <div class="profile-duel-grid">
+                <div class="profile-duel-metric">
+                  <span class="profile-duel-metric__label">Toplam düello</span>
+                  <span class="profile-duel-metric__value" id="profile-duel-matches">0</span>
+                </div>
+                <div class="profile-duel-metric">
+                  <span class="profile-duel-metric__label">Galibiyet</span>
+                  <span class="profile-duel-metric__value" id="profile-duel-wins">0</span>
+                </div>
+                <div class="profile-duel-metric">
+                  <span class="profile-duel-metric__label">Mağlubiyet</span>
+                  <span class="profile-duel-metric__value" id="profile-duel-losses">0</span>
+                </div>
+                <div class="profile-duel-metric">
+                  <span class="profile-duel-metric__label">Beraberlik</span>
+                  <span class="profile-duel-metric__value" id="profile-duel-draws">0</span>
+                </div>
+              </div>
+              <p class="profile-duel-meta" id="profile-duel-updated" hidden></p>
+            </div>
+            <div class="profile-duel-empty" id="profile-duel-empty" hidden>
+              <p>Henüz düello geçmişiniz yok.</p>
+              <p>Düello modülü web tarafında hazırlanıyor.</p>
+            </div>
+          </article>
+        </section>
+
+        <p class="exam-hub-back">
+          <a id="profile-back-link" href="../" data-sa-portal-home>Ana sayfaya dön</a>
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <div id="profile-message-modal" class="profile-message-modal" hidden aria-hidden="true">
+    <div class="profile-message-modal__backdrop" id="profile-message-modal-backdrop" aria-hidden="true"></div>
+    <div class="profile-message-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="profile-message-modal-title">
+      <div class="profile-message-modal__header">
+        <div class="profile-message-modal__header-text">
+          <span class="profile-message-modal__eyebrow">Mesaj Kutusu</span>
+          <h3 class="profile-message-modal__title" id="profile-message-modal-title">Mesaj Detayı</h3>
+        </div>
+        <button type="button" class="profile-message-modal__close" id="profile-message-modal-close" aria-label="Kapat">×</button>
+      </div>
+      <div id="profile-message-modal-single-panel" class="profile-message-modal__single-panel">
+        <p class="profile-message-modal__meta" id="profile-message-modal-meta"></p>
+        <h4 class="profile-message-modal__subject" id="profile-message-modal-subject"></h4>
+        <div class="profile-message-modal__body" id="profile-message-modal-body"></div>
+      </div>
+      <div id="profile-message-modal-thread-panel" class="profile-message-modal__thread-panel" hidden>
+        <div class="profile-message-modal__thread-toolbar">
+          <p class="profile-message-modal__meta" id="profile-message-modal-thread-meta"></p>
+          <div class="profile-message-modal__thread-actions" id="profile-message-modal-thread-actions" hidden>
+            <button type="button" class="btn btn-secondary profile-message-modal__hide-thread" id="profile-message-modal-hide-thread">Konuşmayı Sil</button>
+          </div>
+        </div>
+        <div class="profile-message-thread-timeline" id="profile-message-modal-thread-timeline"></div>
+      </div>
+      <button type="button" class="btn btn-secondary profile-message-modal__reply-toggle" id="profile-message-modal-reply-toggle" hidden>Yanıtla</button>
+      <div id="profile-message-modal-reply-wrap" class="profile-message-modal__reply" hidden>
+        <label class="profile-message-modal__reply-label" for="profile-message-modal-reply">Yanıtınız</label>
+        <textarea id="profile-message-modal-reply" class="profile-message-modal__reply-input" rows="4" placeholder="Yanıtınızı yazın…"></textarea>
+        <div class="profile-message-modal__actions profile-message-modal__reply-actions">
+          <button type="button" class="btn btn-secondary profile-message-modal__reply-cancel" id="profile-message-modal-reply-cancel">Vazgeç</button>
+          <button type="button" class="btn profile-message-modal__send" id="profile-message-modal-send">Yanıtı Gönder</button>
+        </div>
+      </div>
+      <p class="profile-message-modal__status" id="profile-message-modal-status" hidden></p>
+      <div class="profile-message-modal__actions profile-message-modal__footer">
+        <button type="button" class="btn btn-secondary profile-message-modal__close-footer" id="profile-message-modal-cancel">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="profile-mailbox-soft-hide-confirm" class="profile-mailbox-soft-hide-confirm" hidden aria-hidden="true" role="alertdialog" aria-modal="true" aria-labelledby="profile-mailbox-soft-hide-confirm-title" aria-describedby="profile-mailbox-soft-hide-confirm-description">
+    <div class="profile-mailbox-soft-hide-confirm__backdrop" id="profile-mailbox-soft-hide-confirm-backdrop" aria-hidden="true"></div>
+    <div class="profile-mailbox-soft-hide-confirm__card" role="document">
+      <div class="profile-mailbox-soft-hide-confirm__icon" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="profile-mailbox-soft-hide-confirm__eyebrow" id="profile-mailbox-soft-hide-confirm-eyebrow">KONUŞMAYI SİL</div>
+      <h3 class="profile-mailbox-soft-hide-confirm__title" id="profile-mailbox-soft-hide-confirm-title">Bu konuşma Mesajlarım’dan kaldırılsın mı?</h3>
+      <p class="profile-mailbox-soft-hide-confirm__description" id="profile-mailbox-soft-hide-confirm-description">Bu konuşma yalnızca sizin mesaj kutunuzdan kaldırılır. Karşı tarafın mesaj geçmişi etkilenmez. Yeni bir mesaj gelirse konuşma tekrar görünebilir.</p>
+      <p class="profile-mailbox-soft-hide-confirm__error" id="profile-mailbox-soft-hide-confirm-error" role="alert" hidden></p>
+      <div class="profile-mailbox-soft-hide-confirm__actions">
+        <button type="button" class="btn btn-secondary profile-mailbox-soft-hide-confirm__cancel" id="profile-mailbox-soft-hide-confirm-cancel">Vazgeç</button>
+        <button type="button" class="btn profile-mailbox-soft-hide-confirm__confirm" id="profile-mailbox-soft-hide-confirm-confirm">Konuşmayı Sil</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .page-profilim .profile-messages-item--thread .profile-messages-item__subject::before {
+      content: "⬤ ";
+      color: #0ea5e9;
+      font-size: 0.65rem;
+      vertical-align: middle;
+    }
+    .page-profilim .profile-messages-item__thread-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      margin-top: 6px;
+      font-size: 0.78rem;
+      color: #64748b;
+    }
+    .page-profilim .profile-messages-item__thread-count {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(14, 165, 233, 0.1);
+      border: 1px solid rgba(14, 165, 233, 0.28);
+      color: #0369a1;
+      font-weight: 700;
+    }
+  </style>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p class="footer-brand">Sürücü Akademisi</p>
+      <p class="footer-copy">© 2026 Sürücü Akademisi</p>
+      <p class="footer-secondary">
+        <a href="mailto:info@surucuakademisi.com">İletişim: info@surucuakademisi.com</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="../assets/js/web-firebase.js"></script>
+  <script src="../assets/js/web-session.js"></script>
+  <script src="../assets/js/web-tenant-brand.js"></script>
+  <script src="../assets/js/web-student-header.js"></script>
+  <script src="../assets/js/public-session.js"></script>
+  <script src="../assets/js/web-viewer-context.js?v=20260728-viewer-context-1"></script>
+  <script src="../assets/js/web-module-nav.js"></script>
+  <script src="../assets/js/public-auth.js"></script>
+  <script src="../assets/js/public-landing-auth.js?v=20260728-public-header-fouc-1"></script>
+  <script src="../assets/js/web-duel-presence.js?v=20260728-viewer-context-1"></script>
+  <script src="../assets/js/web-duel-invites.repository.js"></script>
+  <script src="../assets/js/web-duel-notifications.js"></script>
+  <script src="../assets/js/web-profile-attempts.repository.js?v=20260630-web-exam-stats-fix"></script>
+  <script src="../assets/js/web-lessons-catalog.js"></script>
+  <script src="../assets/js/web-profile-lessons.repository.js"></script>
+  <script src="../assets/js/web-profile-duel.repository.js"></script>
+  <script src="../assets/js/web-profile-payment.repository.js"></script>
+  <script src="../assets/js/web-profile-messages.repository.js?v=20260722-soft-hide-d2d4"></script>
+  <script src="../assets/js/web-profile.js?v=20260728-viewer-context-1"></script>
+</body>
+</html>

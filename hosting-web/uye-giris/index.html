@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Üye Girişi — Sürücü Akademisi</title>
+  <link rel="stylesheet" href="../assets/css/site.css" />
+</head>
+<body class="page-public-auth page-public-login">
+  <main class="public-auth-shell public-login-shell">
+    <div class="public-auth-wrap public-login-wrap">
+      <a class="brand brand--lockup public-auth-brand public-login-brand" href="../" aria-label="Sürücü Akademisi ana sayfa">
+        <img class="brand-logo-img public-login-logo" src="../assets/images/logo.png" width="168" height="168" alt="" />
+        <span class="brand-text">
+          <span class="brand-name">Sürücü Akademisi</span>
+          <span class="brand-tagline">Ehliyet Eğitim Portalı</span>
+        </span>
+      </a>
+
+      <article class="public-auth-card public-login-card">
+        <div class="public-login-card__hero">
+          <h1>Üye Girişi</h1>
+          <p class="public-auth-sub">Sürücü Akademisi public portal hesabınızla giriş yapın.</p>
+        </div>
+
+        <form class="public-auth-form public-login-form" id="public-login-form" novalidate>
+          <div class="public-auth-field public-login-field">
+            <label class="field-label" for="public-login-email">E-posta</label>
+            <input class="field-input public-login-input" type="email" id="public-login-email" name="email" autocomplete="email" placeholder="ornek@email.com" required />
+          </div>
+          <div class="public-auth-field public-login-field">
+            <label class="field-label" for="public-login-password">Şifre</label>
+            <input class="field-input public-login-input" type="password" id="public-login-password" name="password" autocomplete="current-password" placeholder="Şifreniz" required minlength="6" />
+          </div>
+          <div class="public-auth-actions public-login-actions">
+            <button type="submit" class="btn btn-primary btn-block public-login-submit" id="public-login-submit">Giriş Yap</button>
+          </div>
+          <p class="public-auth-msg public-login-msg" id="public-login-message" role="status" aria-live="polite"></p>
+        </form>
+
+        <nav class="public-login-links" aria-label="Diğer bağlantılar">
+          <p class="public-auth-links">
+            <a class="public-login-link" href="../kayit/">Hesabınız yok mu? Kayıt Ol</a>
+          </p>
+          <p class="public-auth-links">
+            <a class="public-login-link public-login-link--muted" href="../">Ana sayfaya dön</a>
+          </p>
+        </nav>
+
+        <p class="public-auth-note public-auth-note--panel public-login-panel-note">
+          <a class="public-login-link public-login-link--panel" href="../panel/">Kurum öğrencisiyseniz Sürücü Kursları Öğrenci Girişi bölümünü kullanın.</a>
+        </p>
+      </article>
+    </div>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="../assets/js/web-firebase.js"></script>
+  <script src="../assets/js/public-session.js"></script>
+  <script src="../assets/js/public-auth.js"></script>
+</body>
+</html>

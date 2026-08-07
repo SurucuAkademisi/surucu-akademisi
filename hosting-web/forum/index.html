@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Ehliyet sınavları öğrenci forumu — soru paylaşımı ve sınav deneyimleri." />
+  <link rel="canonical" href="https://surucuakademisi.com/forum/" />
+  <title>Ehliyet Sınavları Öğrenci Forumu | Sürücü Akademisi</title>
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem('sa_web_session_v1');
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || typeof s !== 'object') return;
+        var uid = String(s.uid || '').trim();
+        var tenantId = String(s.tenantId || '').trim();
+        if (uid && tenantId) {
+          document.documentElement.classList.add('page-cikmis-sorular--header-pending');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem('sa_public_session_v1');
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || typeof s !== 'object') return;
+        var uid = String(s.uid || '').trim();
+        var role = String(s.role || '').trim();
+        if (!uid || role !== 'public_user') return;
+        document.documentElement.classList.add('page-public-header-pending');
+        setTimeout(function () {
+          document.documentElement.classList.remove('page-public-header-pending');
+        }, 8000);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="../assets/css/site.css?v=20260728-public-module-header-grid-1" />
+</head>
+<body class="page-cikmis-sorular page-forum page-landing">
+  <header class="site-header site-header--landing">
+    <div class="container hub-header-container">
+      <div id="hub-student-header" class="hub-student-header" hidden aria-hidden="true">
+        <div class="hub-student-header-inner app-header-inner app-header-inner--premium">
+          <div class="app-header-slot app-header-slot--left">
+            <span class="btn btn-public-greeting app-header-greeting hub-header-greeting" aria-live="polite">
+              Merhaba, <span id="hub-student-greeting-name">Öğrenci</span>
+            </span>
+          </div>
+          <div class="app-header-brand-center">
+            <div class="brand brand--lockup brand--tenant app-tenant-brand hub-tenant-brand">
+              <div class="app-tenant-logo-wrap tenant-avatar-wrap" aria-hidden="false">
+                <img id="hub-tenant-logo" class="tenant-logo app-tenant-logo-img hub-tenant-logo-img" alt="" hidden />
+                <span id="hub-tenant-monogram" class="tenant-monogram app-tenant-monogram hub-tenant-monogram" hidden></span>
+              </div>
+              <div class="brand-text app-tenant-brand-text">
+                <span class="brand-name app-tenant-brand-name hub-tenant-brand-name" id="hub-tenant-name">—</span>
+              </div>
+            </div>
+          </div>
+          <div class="app-header-slot app-header-slot--right">
+            <button type="button" class="btn btn-public-register btn-public-logout app-header-logout hub-student-logout" id="hub-student-logout">Çıkış</button>
+          </div>
+        </div>
+      </div>
+      <div id="public-header-shell" class="header-inner header-inner--landing header-inner--public">
+      <div class="header-public-actions header-public-actions--left">
+        <div class="header-public-stack" data-public-header="guest">
+          <a class="btn btn-public-login" href="../uye-giris/">Üye Girişi</a>
+          <a class="btn btn-public-course" href="../panel/">Sürücü Kursları Öğrenci Girişi</a>
+        </div>
+        <div class="header-public-stack header-public-stack--user" data-public-header="user" hidden aria-hidden="true">
+          <span class="btn btn-public-greeting" id="public-header-greeting" aria-live="polite">Merhaba, <span id="public-header-name">Üye</span></span>
+        </div>
+      </div>
+      <div class="header-landing-brand">
+        <a class="brand brand--lockup" href="../" data-sa-portal-home aria-label="Sürücü Akademisi ana sayfa">
+          <img class="brand-logo-img" src="../assets/images/logo.png" width="110" height="110" alt="" />
+          <span class="brand-text">
+            <span class="brand-name">Sürücü Akademisi</span>
+            <span class="brand-tagline">Ehliyet Eğitim Portalı</span>
+          </span>
+        </a>
+      </div>
+      <div class="header-public-actions header-public-actions--right" data-public-header="guest">
+        <a class="btn btn-public-register" href="../kayit/">Kayıt Ol</a>
+      </div>
+      <div class="header-public-actions header-public-actions--right" data-public-header="user" hidden aria-hidden="true">
+        <button type="button" class="btn btn-public-register btn-public-logout" id="public-header-logout">Çıkış</button>
+      </div>
+      </div>
+    </div>
+  </header>
+
+  <aside class="public-ad-rail public-ad-rail--left" aria-label="Reklam alanları">
+    <div class="public-ad-rail__stack">
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+    </div>
+  </aside>
+
+  <aside class="public-ad-rail public-ad-rail--right" aria-label="Reklam alanları">
+    <div class="public-ad-rail__stack">
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="exam-hub-main forum-main">
+    <div class="container exam-hub-wrap">
+      <nav class="exam-hub-breadcrumb" aria-label="Sayfa yolu">
+        <a href="../" data-sa-portal-home>Ana Sayfa</a>
+      </nav>
+
+      <section class="exam-hub-hero forum-hero">
+        <h1 aria-current="page">Ehliyet Sınavları Öğrenci Forumu</h1>
+        <p class="exam-hub-hero__intro">
+          Sürücü adaylarıyla soru paylaşın, deneyimlerden faydalanın ve sınav sürecinde birlikte ilerleyin.
+        </p>
+      </section>
+
+      <aside id="forum-guest-cta" class="lesson-guest-cta exam-hub-guest-cta forum-guest" hidden>
+        <p class="exam-hub-guest-cta__text">Forum tartışmalarını görmek için giriş yapın veya ücretsiz kayıt olun.</p>
+        <div class="exam-hub-guest-cta__actions">
+          <a class="btn btn-public-login" href="../uye-giris/">Üye Girişi</a>
+          <a class="btn btn-public-register" href="../kayit/">Kayıt Ol</a>
+        </div>
+      </aside>
+
+      <div id="forum-main" class="forum-shell" hidden>
+        <div class="forum-action-row">
+          <div id="forum-tabs" class="forum-tabs" role="tablist" aria-label="Forum kapsamı" hidden>
+            <button type="button" class="forum-tab" data-forum-mode="institution" role="tab" aria-selected="false" hidden>Kurum İçi Forum</button>
+            <button type="button" class="forum-tab forum-tab--active" data-forum-mode="global" role="tab" aria-selected="true">Türkiye Geneli Forum</button>
+          </div>
+          <button type="button" class="forum-new-post-btn" id="forum-new-post-btn" hidden>Yeni Konu Aç</button>
+        </div>
+
+        <div id="forum-list-loading" class="forum-empty lesson-empty-state" hidden role="status" aria-live="polite">
+          <p>Tartışmalar yükleniyor…</p>
+        </div>
+
+        <p id="forum-list-error" class="forum-empty lesson-empty-state lesson-empty-state--error" hidden role="alert"></p>
+
+        <p id="forum-list-empty" class="forum-empty lesson-empty-state" hidden>Henüz bu bölümde tartışma yok. İlk paylaşımı siz başlatabilirsiniz.</p>
+
+        <div id="forum-post-list" class="forum-post-list" hidden aria-label="Forum gönderileri"></div>
+      </div>
+
+      <p class="exam-hub-back">
+        <a href="../" data-sa-portal-home>Ana sayfaya dön</a>
+      </p>
+    </div>
+  </main>
+
+  <div id="web-forum-rules-modal" class="web-forum-rules-modal" hidden aria-hidden="true" role="dialog" aria-labelledby="web-forum-rules-title" aria-modal="true">
+    <div class="web-forum-rules-modal__backdrop" data-web-forum-rules-dismiss></div>
+    <div class="web-forum-rules-dialog">
+      <div class="web-forum-rules-dialog__head">
+        <h2 id="web-forum-rules-title" class="web-forum-rules-title">Forum Kuralları ve Sorumluluk Beyanı</h2>
+        <button type="button" class="web-forum-rules-dialog__close" id="web-forum-rules-close" aria-label="Kapat">×</button>
+      </div>
+      <ol class="web-forum-rules-list">
+        <li>Lütfen forumda saygı ve etik kurallara uygun şekilde yazışın.</li>
+        <li>Kişisel verilerin, özel bilgilerin, telefon numarası, adres, T.C. kimlik bilgisi gibi hassas bilgilerin paylaşılması yasaktır.</li>
+        <li>Hakaret, tehdit, ayrımcılık, spam ve yanıltıcı içerikler yasaktır.</li>
+        <li>Forum paylaşımları platform adminleri ve ilgili sürücü kursu yönetimi tarafından kontrol edilebilir.</li>
+        <li>Kullanıcılar yaptıkları yorum ve paylaşımlardan kendileri sorumludur.</li>
+      </ol>
+      <div class="web-forum-rules-actions">
+        <label class="web-forum-rules-check" for="web-forum-rules-never">
+          <input type="checkbox" id="web-forum-rules-never" />
+          Bir daha gösterme
+        </label>
+        <button type="button" class="btn btn-public-login" id="web-forum-rules-dismiss">Anladım</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="forum-compose-modal" class="forum-compose-modal" hidden aria-hidden="true" role="dialog" aria-labelledby="forum-compose-title-label" aria-modal="true">
+    <div class="forum-compose-modal__backdrop" data-forum-compose-dismiss></div>
+    <div class="forum-compose-dialog">
+      <div class="forum-compose-dialog__head">
+        <h2 id="forum-compose-title-label" class="forum-compose-dialog__title">Yeni Konu Aç</h2>
+        <button type="button" class="forum-compose-dialog__close" id="forum-compose-close" aria-label="Kapat">×</button>
+      </div>
+      <p class="forum-compose-dialog__scope">Kapsam: <span id="forum-compose-scope">Türkiye Geneli</span></p>
+      <form class="forum-form" id="forum-compose-form" onsubmit="return false;">
+        <label class="forum-form__label" for="forum-compose-title">Başlık</label>
+        <input class="forum-form__input" type="text" id="forum-compose-title" name="title" maxlength="200" autocomplete="off" required />
+        <label class="forum-form__label" for="forum-compose-content">İçerik</label>
+        <textarea class="forum-form__textarea" id="forum-compose-content" name="content" rows="6" maxlength="8000" required></textarea>
+        <p id="forum-compose-error" class="forum-form__error" hidden role="alert"></p>
+        <div class="forum-form__actions">
+          <button type="button" class="btn btn-public-register forum-form__cancel" id="forum-compose-cancel">Kapat</button>
+          <button type="button" class="btn btn-public-login forum-form__submit" id="forum-compose-submit">Yayınla</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p class="footer-brand">Sürücü Akademisi</p>
+      <p class="footer-copy">© 2026 Sürücü Akademisi</p>
+    </div>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="../assets/js/web-firebase.js"></script>
+  <script src="../assets/js/web-session.js"></script>
+  <script src="../assets/js/web-tenant-brand.js"></script>
+  <script src="../assets/js/web-student-header.js"></script>
+  <script src="../assets/js/public-session.js"></script>
+  <script src="../assets/js/web-viewer-context.js?v=20260728-viewer-context-1"></script>
+  <script src="../assets/js/web-module-nav.js"></script>
+  <script src="../assets/js/public-auth.js"></script>
+  <script src="../assets/js/public-landing-auth.js?v=20260728-public-header-fouc-1"></script>
+  <script src="../assets/js/web-forum.repository.js"></script>
+  <script src="../assets/js/web-forum.js?v=20260728-viewer-context-1"></script>
+</body>
+</html>

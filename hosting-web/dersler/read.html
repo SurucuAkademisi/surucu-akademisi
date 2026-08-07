@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Ehliyet sınavı konu anlatımı — ünite okuyucu." />
+  <title>Ders Okuyucu | Sürücü Akademisi</title>
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem('sa_web_session_v1');
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || typeof s !== 'object') return;
+        var uid = String(s.uid || '').trim();
+        var tenantId = String(s.tenantId || '').trim();
+        if (uid && tenantId) {
+          document.documentElement.classList.add('page-cikmis-sorular--header-pending');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem('sa_public_session_v1');
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || typeof s !== 'object') return;
+        var uid = String(s.uid || '').trim();
+        var role = String(s.role || '').trim();
+        if (!uid || role !== 'public_user') return;
+        document.documentElement.classList.add('page-public-header-pending');
+        setTimeout(function () {
+          document.documentElement.classList.remove('page-public-header-pending');
+        }, 8000);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="../assets/css/site.css?v=20260728-public-module-header-grid-1" />
+</head>
+<body class="page-cikmis-sorular page-dersler page-dersler-read page-landing">
+  <header class="site-header site-header--landing">
+    <div class="container hub-header-container">
+      <div id="hub-student-header" class="hub-student-header" hidden aria-hidden="true">
+        <div class="hub-student-header-inner app-header-inner app-header-inner--premium">
+          <div class="app-header-slot app-header-slot--left">
+            <span class="btn btn-public-greeting app-header-greeting hub-header-greeting" aria-live="polite">
+              Merhaba, <span id="hub-student-greeting-name">Öğrenci</span>
+            </span>
+          </div>
+          <div class="app-header-brand-center">
+            <div class="brand brand--lockup brand--tenant app-tenant-brand hub-tenant-brand">
+              <div class="app-tenant-logo-wrap tenant-avatar-wrap" aria-hidden="false">
+                <img id="hub-tenant-logo" class="tenant-logo app-tenant-logo-img hub-tenant-logo-img" alt="" hidden />
+                <span id="hub-tenant-monogram" class="tenant-monogram app-tenant-monogram hub-tenant-monogram" hidden></span>
+              </div>
+              <div class="brand-text app-tenant-brand-text">
+                <span class="brand-name app-tenant-brand-name hub-tenant-brand-name" id="hub-tenant-name">—</span>
+              </div>
+            </div>
+          </div>
+          <div class="app-header-slot app-header-slot--right">
+            <button type="button" class="btn btn-public-register btn-public-logout app-header-logout hub-student-logout" id="hub-student-logout">Çıkış</button>
+          </div>
+        </div>
+      </div>
+      <div id="public-header-shell" class="header-inner header-inner--landing header-inner--public">
+      <div class="header-public-actions header-public-actions--left">
+        <div class="header-public-stack" data-public-header="guest">
+          <a class="btn btn-public-login" href="../uye-giris/">Üye Girişi</a>
+          <a class="btn btn-public-course" href="../panel/">Sürücü Kursları Öğrenci Girişi</a>
+        </div>
+        <div class="header-public-stack header-public-stack--user" data-public-header="user" hidden aria-hidden="true">
+          <span class="btn btn-public-greeting" id="public-header-greeting" aria-live="polite">Merhaba, <span id="public-header-name">Üye</span></span>
+        </div>
+      </div>
+      <div class="header-landing-brand">
+        <a class="brand brand--lockup" href="../" data-sa-portal-home aria-label="Sürücü Akademisi ana sayfa">
+          <img class="brand-logo-img" src="../assets/images/logo.png" width="110" height="110" alt="" />
+          <span class="brand-text">
+            <span class="brand-name">Sürücü Akademisi</span>
+            <span class="brand-tagline">Ehliyet Eğitim Portalı</span>
+          </span>
+        </a>
+      </div>
+      <div class="header-public-actions header-public-actions--right" data-public-header="guest">
+        <a class="btn btn-public-register" href="../kayit/">Kayıt Ol</a>
+      </div>
+      <div class="header-public-actions header-public-actions--right" data-public-header="user" hidden aria-hidden="true">
+        <button type="button" class="btn btn-public-register btn-public-logout" id="public-header-logout">Çıkış</button>
+      </div>
+      </div>
+    </div>
+  </header>
+
+  <aside class="public-ad-rail public-ad-rail--left" aria-label="Reklam alanları">
+    <div class="public-ad-rail__stack">
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+    </div>
+  </aside>
+
+  <aside class="public-ad-rail public-ad-rail--right" aria-label="Reklam alanları">
+    <div class="public-ad-rail__stack">
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="exam-hub-main lesson-reader-main">
+    <div class="container exam-hub-wrap lesson-reader">
+      <nav class="exam-hub-breadcrumb" aria-label="Sayfa yolu">
+        <a href="../" data-sa-portal-home>Ana Sayfa</a>
+        <span class="exam-hub-breadcrumb__sep" aria-hidden="true">›</span>
+        <a href="./">Konu Anlatımlı Kitaplar</a>
+        <span class="exam-hub-breadcrumb__sep" aria-hidden="true">›</span>
+        <a id="lesson-reader-breadcrumb-category-link" href="./units.html">Ders</a>
+      </nav>
+
+      <section class="exam-hub-hero lesson-hub-hero">
+        <h1 id="lesson-reader-title" aria-current="page">Ders Okuyucu</h1>
+        <p class="exam-hub-hero__intro">
+          Konu anlatım metinleri ve görselleri aşağıda sırayla gösterilir.
+        </p>
+      </section>
+
+      <aside id="lesson-reader-guest-cta" class="lesson-guest-cta exam-hub-guest-cta" hidden>
+        <p class="exam-hub-guest-cta__text">Ders içeriğini okumak için giriş yapın veya ücretsiz kayıt olun.</p>
+        <div class="exam-hub-guest-cta__actions">
+          <a class="btn btn-public-login" href="../uye-giris/">Üye Girişi</a>
+          <a class="btn btn-public-register" href="../kayit/">Kayıt Ol</a>
+        </div>
+      </aside>
+
+      <div id="lesson-reader-invalid" class="lesson-empty-state" hidden>
+        <p>Geçersiz ünite veya kategori.</p>
+        <p><a href="./">Ders kitaplarına dön</a></p>
+      </div>
+
+      <div id="lesson-reader-loading" class="lesson-empty-state" hidden role="status" aria-live="polite">
+        <p>İçerik yükleniyor…</p>
+      </div>
+
+      <p id="lesson-reader-error" class="lesson-empty-state lesson-empty-state--error" hidden role="alert"></p>
+
+      <div id="lesson-reader-youtube" hidden></div>
+
+      <div id="lesson-reader-blocks" class="lesson-reader-blocks" hidden aria-live="polite"></div>
+
+      <aside id="lesson-reader-progress" class="lesson-progress-panel" hidden aria-label="Ders tamamlama">
+        <p id="lesson-progress-status" class="lesson-progress-panel__status"></p>
+        <button type="button" id="lesson-progress-action" class="lesson-progress-panel__btn" hidden>
+          Tamamlandı olarak işaretle
+        </button>
+        <p id="lesson-progress-message" class="lesson-progress-panel__message" hidden role="status" aria-live="polite"></p>
+      </aside>
+
+      <p class="exam-hub-back">
+        <a id="lesson-reader-back-units" href="./units.html">Ünite listesine dön</a>
+      </p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p class="footer-brand">Sürücü Akademisi</p>
+      <p class="footer-copy">© 2026 Sürücü Akademisi</p>
+    </div>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="../assets/js/web-firebase.js"></script>
+  <script src="../assets/js/web-session.js"></script>
+  <script src="../assets/js/web-tenant-brand.js"></script>
+  <script src="../assets/js/web-student-header.js"></script>
+  <script src="../assets/js/public-session.js"></script>
+  <script src="../assets/js/web-viewer-context.js?v=20260728-viewer-context-1"></script>
+  <script src="../assets/js/web-module-nav.js"></script>
+  <script src="../assets/js/public-auth.js"></script>
+  <script src="../assets/js/public-landing-auth.js?v=20260728-public-header-fouc-1"></script>
+  <script src="../assets/js/web-duel-presence.js?v=20260728-viewer-context-1"></script>
+  <script src="../assets/js/web-duel-invites.repository.js"></script>
+  <script src="../assets/js/web-duel-notifications.js"></script>
+  <script src="../assets/js/web-lessons-catalog.js"></script>
+  <script src="../assets/js/web-lessons.repository.js"></script>
+  <script src="../assets/js/web-lesson-progress.repository.js"></script>
+  <script src="../assets/js/web-lessons-reader.js?v=20260728-viewer-context-1"></script>
+  <script>
+    (function () {
+      try {
+        var cid = new URLSearchParams(window.location.search).get('categoryId')
+          || sessionStorage.getItem('sa_web_lesson_category_id') || '';
+        var link = document.getElementById('lesson-reader-breadcrumb-category-link');
+        var back = document.getElementById('lesson-reader-back-units');
+        if (!cid) return;
+        var href = 'units.html?categoryId=' + encodeURIComponent(String(cid).trim());
+        if (link) link.setAttribute('href', href);
+        if (back) back.setAttribute('href', href);
+      } catch (e) {}
+    })();
+  </script>
+</body>
+</html>

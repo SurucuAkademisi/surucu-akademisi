@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Ehliyet sınavı deneme soruları, konu anlatımlı dersler, pratik bilgiler rehberi ve öğretmen video dersleriyle sürücü adayları için dijital eğitim platformu." />
+  <title>Sürücü Akademisi | Ehliyet Sınavı Deneme, Dersler ve Video Eğitim</title>
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem('sa_public_session_v1');
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || typeof s !== 'object') return;
+        var uid = String(s.uid || '').trim();
+        var role = String(s.role || '').trim();
+        if (!uid || role !== 'public_user') return;
+        document.documentElement.classList.add('page-public-header-pending');
+        setTimeout(function () {
+          document.documentElement.classList.remove('page-public-header-pending');
+        }, 8000);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/css/site.css?v=20260728-landing-navband-boundary-fix-1" />
+</head>
+<body class="page-landing">
+  <header class="site-header site-header--landing">
+    <div class="container header-inner header-inner--landing header-inner--public">
+      <div class="header-landing-brand">
+        <a class="brand brand--lockup" href="index.html" aria-label="Sürücü Akademisi ana sayfa">
+          <img class="brand-logo-img" src="assets/images/logo.png" width="110" height="110" alt="" />
+          <span class="brand-text">
+            <span class="brand-name"><span class="brand-name__surucu">Sürücü</span> <span class="brand-name__akademisi">Akademisi</span></span>
+            <span class="brand-tagline">Ehliyet Eğitim Portalı</span>
+          </span>
+        </a>
+      </div>
+
+      <div class="header-landing-navband">
+        <nav class="header-landing-infonav" aria-label="Ana menü">
+          <a class="header-landing-infonav__link" href="index.html" aria-current="page">Ana Sayfa</a>
+          <a class="header-landing-infonav__link" href="hakkimizda/">Hakkımızda</a>
+          <a class="header-landing-infonav__link" href="hizmetlerimiz/">Hizmetlerimiz</a>
+          <span class="header-landing-infonav__item header-landing-infonav__item--soon">İletişim</span>
+        </nav>
+
+        <div class="header-public-actions header-public-actions--account" data-public-header="guest">
+          <a class="btn btn-public-course" href="panel/" aria-label="Sürücü Kursu Öğrenci / Yönetici Girişi">
+            <span class="btn-public-course__text">
+              Sürücü Kursu
+              <span class="btn-public-course__accent btn-public-course__accent--student">Öğrenci</span>
+              <span class="btn-public-course__sep" aria-hidden="true">/</span>
+              <span class="btn-public-course__accent btn-public-course__accent--org">Yönetici</span>
+              Girişi
+            </span>
+          </a>
+          <a class="btn btn-public-login" href="uye-giris/">Üye Girişi</a>
+          <a class="btn btn-public-register" href="kayit/">Kayıt Ol</a>
+        </div>
+
+        <div class="header-public-actions header-public-actions--account header-public-actions--user" data-public-header="user" hidden aria-hidden="true">
+          <span class="btn btn-public-greeting" id="public-header-greeting" aria-live="polite">Merhaba, <span id="public-header-name">Üye</span></span>
+          <button type="button" class="btn btn-public-register btn-public-logout" id="public-header-logout">Çıkış</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <button
+    type="button"
+    id="public-mobile-menu-button"
+    class="public-mobile-menu-button"
+    aria-label="Menüyü aç"
+    aria-expanded="false"
+    aria-controls="public-mobile-menu-panel"
+  >
+    <span class="public-mobile-menu-button__face" aria-hidden="true">
+      <svg
+        class="public-mobile-menu-button__icon"
+        viewBox="0 0 24 24"
+        width="22"
+        height="22"
+        focusable="false"
+      >
+        <path class="public-mobile-menu-button__line public-mobile-menu-button__line--top" d="M4 6h16"></path>
+        <path class="public-mobile-menu-button__line public-mobile-menu-button__line--middle" d="M4 12h16"></path>
+        <path class="public-mobile-menu-button__line public-mobile-menu-button__line--bottom" d="M4 18h16"></path>
+      </svg>
+    </span>
+  </button>
+
+  <div
+    id="public-mobile-menu-panel"
+    class="public-mobile-menu-panel"
+    aria-label="Sayfa menüsü"
+    hidden
+  >
+    <a class="public-mobile-menu-panel__item" href="hizmetlerimiz/">Hizmetlerimiz</a>
+    <a class="public-mobile-menu-panel__item" href="hakkimizda/">Hakkımızda</a>
+    <span class="public-mobile-menu-panel__item">İletişim</span>
+  </div>
+
+  <aside class="public-ad-rail public-ad-rail--left" aria-label="Reklam alanları">
+    <div class="public-ad-rail__stack">
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+    </div>
+  </aside>
+
+  <aside class="public-ad-rail public-ad-rail--right" aria-label="Reklam alanları">
+    <div class="public-ad-rail__stack">
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <section class="hero hero--premium hero--compact">
+      <div class="container hero-inner hero-inner--product">
+        <div class="hero-copy">
+          <h1>Ehliyet Sınavına Hazırlığın Dijital Merkezi</h1>
+          <p class="hero-slogan">Yapay zeka destekli yeni nesil ehliyet eğitim deneyimi.</p>
+          <p class="hero-tagline">Çıkmış sorular, konu anlatımlı dersler, pratik rehberler ve öğretmen video dersleriyle sınava daha akıllı hazırlan.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="container">
+      <section class="public-ad-slot public-ad-slot--horizontal public-ad-slot--after-hero" aria-label="Reklam alanı">
+        <span class="public-ad-slot__label">Reklam</span>
+        <span class="public-ad-slot__placeholder">Sponsorlu alan</span>
+      </section>
+    </div>
+
+    <section class="section section-compact section-modules" id="moduller">
+      <div class="container">
+        <h2 class="section-heading">Ehliyet Sınavı Hazırlık Modülleri</h2>
+        <p class="section-modules__public-intro">
+          Ehliyet Sınavları çıkmış sorular, konu anlatımlı dersler, pratik rehberler ve öğretmen anlatımlı video derslerle sınava daha akıllı hazırlan.
+        </p>
+        <div class="content-module-grid" id="public-module-grid">
+          <article class="content-module-card content-module-card--cyan content-module-card--gated" id="modul-exams" data-module-key="exams" data-requires-login="true" data-module-href="cikmis-sorular/">
+            <div class="module-card-visual">
+              <h3 class="module-card-visual-title">
+                <span class="module-card-emoji" aria-hidden="true">📝</span>
+                <span class="module-card-title">Ehliyet Sınavları Çıkmış Sorular</span>
+              </h3>
+            </div>
+            <div class="module-card-body">
+              <p>Güncel sınav formatına uygun yapay zeka destekli deneme testleriyle hazırlanın.</p>
+              <span class="content-module-status">AKTİF</span>
+            </div>
+          </article>
+          <article class="content-module-card content-module-card--green content-module-card--gated" id="modul-lessons" data-module-key="lessons" data-requires-login="true" data-module-href="dersler/">
+            <div class="module-card-visual">
+              <h3 class="module-card-visual-title">
+                <span class="module-card-emoji" aria-hidden="true">📚</span>
+                <span class="module-card-title">Ehliyet Sınavı Konu Anlatımlı Kitaplar</span>
+              </h3>
+            </div>
+            <div class="module-card-body">
+              <p>Trafik ve Çevre Bilgisi, İlk Yardım Bilgisi, Motor ve Araç Tekniği ile Trafik Adabı derslerini düzenli şekilde çalışın.</p>
+              <span class="content-module-status">AKTİF</span>
+            </div>
+          </article>
+          <article class="content-module-card content-module-card--gold content-module-card--gated" id="modul-videos" data-module-key="videos" data-requires-login="true" data-module-href="video-dersler/">
+            <div class="module-card-visual">
+              <h3 class="module-card-visual-title">
+                <span class="module-card-emoji" aria-hidden="true">🎥</span>
+                <span class="module-card-title">Ehliyet Sınavı Canlı Video Dersler (Öğretmen)</span>
+              </h3>
+            </div>
+            <div class="module-card-body">
+              <p>Öğretmen anlatımlı premium video derslerle eksik konuları tamamlayın.</p>
+              <span class="content-module-status content-module-status--accent">Premium</span>
+            </div>
+          </article>
+          <article class="content-module-card content-module-card--orange content-module-card--gated" id="modul-practical" data-module-key="practical" data-requires-login="true" data-module-href="pratik-rehber/">
+            <div class="module-card-visual">
+              <h3 class="module-card-visual-title">
+                <span class="module-card-emoji" aria-hidden="true">🚦</span>
+                <span class="module-card-title">Ehliyet Sınavı Pratik Bilgiler Rehberi</span>
+              </h3>
+            </div>
+            <div class="module-card-body">
+              <p>Levhalar, göstergeler ve sınavda işinize yarayacak kısa rehberleri inceleyin.</p>
+              <span class="content-module-status">AKTİF</span>
+            </div>
+          </article>
+          <article class="content-module-card content-module-card--rose content-module-card--gated" id="modul-duel" data-module-key="duel" data-requires-login="true" data-module-href="duello/">
+            <div class="module-card-visual">
+              <h3 class="module-card-visual-title">
+                <span class="module-card-emoji" aria-hidden="true">⚔️</span>
+                <span class="module-card-title">Ehliyet Sınav Yarışları (Sınav Düellosu)</span>
+              </h3>
+            </div>
+            <div class="module-card-body">
+              <p>Bilginizi eğlenceli şekilde canlı kullanıcılarla deneme sınavı yarışmaları yaparak ve rekabetçi karşılaşmalarla pekiştirin.</p>
+              <span class="content-module-status">Lobi Aktif</span>
+            </div>
+          </article>
+          <article class="content-module-card content-module-card--purple content-module-card--gated" id="modul-forum" data-module-key="forum" data-requires-login="true" data-module-href="forum/">
+            <div class="module-card-visual">
+              <h3 class="module-card-visual-title">
+                <span class="module-card-emoji" aria-hidden="true">💬</span>
+                <span class="module-card-title">Ehliyet Sınavları Öğrenci Forumu</span>
+              </h3>
+            </div>
+            <div class="module-card-body">
+              <p>Sürücü adaylarıyla soru paylaşımı, bilgi alışverişi ve sınav deneyimleri alanı.</p>
+              <span class="content-module-status">AKTİF</span>
+            </div>
+          </article>
+          <article class="content-module-card content-module-card--indigo content-module-card--gated" id="modul-leagues" data-module-key="leagues" data-requires-login="true" data-module-href="ligler/">
+            <div class="module-card-visual">
+              <h3 class="module-card-visual-title">
+                <span class="module-card-emoji" aria-hidden="true">🏆</span>
+                <span class="module-card-title">Ligler</span>
+              </h3>
+            </div>
+            <div class="module-card-body">
+              <p>Sınav performansınıza göre lig tablolarında yer alın ve sıralamada yükselin.</p>
+              <span class="content-module-status">Aktif</span>
+            </div>
+          </article>
+          <article class="content-module-card content-module-card--sky content-module-card--gated" id="modul-profile" data-module-key="profile" data-requires-login="true" data-module-href="profilim/">
+            <div class="module-card-visual">
+              <h3 class="module-card-visual-title">
+                <span class="module-card-emoji" aria-hidden="true">👤</span>
+                <span class="module-card-title">Profilim</span>
+              </h3>
+            </div>
+            <div class="module-card-body">
+              <p>İlerlemenizi, sınav sonuçlarınızı ve hesap bilgilerinizi tek ekranda görüntüleyin.</p>
+              <span class="content-module-status">Aktif</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <div class="container">
+      <section class="public-ad-slot public-ad-slot--horizontal public-ad-slot--after-content" aria-label="Reklam alanı">
+        <span class="public-ad-slot__label">Reklam</span>
+        <span class="public-ad-slot__placeholder">Sponsorlu alan</span>
+      </section>
+    </div>
+  </main>
+
+  <div id="public-soon-gate" class="public-gate public-gate--soon" hidden aria-hidden="true">
+    <div class="public-gate__backdrop" data-public-gate-dismiss tabindex="-1" aria-hidden="true"></div>
+    <div class="public-gate__dialog" role="dialog" aria-modal="true" aria-labelledby="public-soon-gate-title">
+      <button type="button" class="public-gate__close" aria-label="Kapat" data-public-gate-dismiss>&times;</button>
+      <h2 id="public-soon-gate-title" class="public-gate__title">Yakında aktif</h2>
+      <p class="public-gate__body">Bu modül yakında aktif edilecek.</p>
+      <button type="button" class="public-gate__later" data-public-gate-dismiss data-public-gate-focus>Tamam</button>
+    </div>
+  </div>
+
+  <div id="public-login-gate" class="public-gate" hidden aria-hidden="true">
+    <div class="public-gate__backdrop" data-public-gate-dismiss tabindex="-1" aria-hidden="true"></div>
+    <div class="public-gate__dialog" role="dialog" aria-modal="true" aria-labelledby="public-gate-title">
+      <button type="button" class="public-gate__close" aria-label="Kapat" data-public-gate-dismiss>&times;</button>
+      <h2 id="public-gate-title" class="public-gate__title">Üye girişi gerekli</h2>
+      <p class="public-gate__body">
+        Bu modülü kullanmak için Sürücü Akademisi public portal hesabınızla giriş yapın veya ücretsiz kayıt olun.
+      </p>
+      <div class="public-gate__actions">
+        <a class="btn btn-public-login" href="uye-giris/">Üye Girişi</a>
+        <a class="btn btn-public-register" href="kayit/">Kayıt Ol</a>
+      </div>
+      <button type="button" class="public-gate__later" data-public-gate-dismiss>Daha sonra</button>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p class="footer-brand">Sürücü Akademisi</p>
+      <p class="footer-copy">© 2026 Sürücü Akademisi</p>
+      <p class="footer-secondary">
+        <a href="mailto:info@surucuakademisi.com">İletişim: info@surucuakademisi.com</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="assets/js/web-firebase.js"></script>
+  <script src="assets/js/public-session.js"></script>
+  <script src="assets/js/public-auth.js"></script>
+  <script src="assets/js/site.js"></script>
+  <script src="assets/js/public-landing-auth.js?v=20260728-public-header-fouc-1"></script>
+  <script src="assets/js/public-landing-mobile-menu.js?v=20260728-mobile-menu-final-2"></script>
+  <script src="assets/js/web-duel-presence.js"></script>
+  <script src="assets/js/web-duel-invites.repository.js"></script>
+  <script src="assets/js/web-duel-notifications.js"></script>
+</body>
+</html>

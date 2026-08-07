@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Öğrenci Paneli — Sürücü Akademisi</title>
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem('sa_web_session_v1');
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || typeof s !== 'object') return;
+        var uid = String(s.uid || '').trim();
+        var tenantId = String(s.tenantId || '').trim();
+        if (uid && tenantId) {
+          document.documentElement.classList.add('page-app--header-pending');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="../assets/css/site.css" />
+</head>
+<body class="page-app">
+  <header class="app-header app-header--premium">
+    <div class="container app-header-inner app-header-inner--premium">
+      <div class="app-header-slot app-header-slot--left">
+        <span class="btn btn-public-greeting app-header-greeting" id="home-header-greeting" aria-live="polite">
+          Merhaba, <span id="home-greeting-name">Öğrenci</span>
+        </span>
+        <span id="home-user-name" class="visually-hidden" aria-hidden="true">—</span>
+      </div>
+      <div class="app-header-brand-center">
+        <div class="brand brand--lockup brand--tenant app-tenant-brand">
+          <div class="app-tenant-logo-wrap tenant-avatar-wrap" aria-hidden="false">
+            <img id="home-tenant-logo" class="tenant-logo app-tenant-logo-img" alt="" hidden />
+            <span id="home-tenant-monogram" class="tenant-monogram app-tenant-monogram" hidden></span>
+          </div>
+          <div class="brand-text app-tenant-brand-text">
+            <span class="brand-name app-tenant-brand-name" id="home-tenant-name">—</span>
+          </div>
+        </div>
+      </div>
+      <div class="app-header-slot app-header-slot--right">
+        <button type="button" class="btn btn-public-register btn-public-logout app-header-logout" id="home-logout">Çıkış</button>
+      </div>
+    </div>
+  </header>
+
+  <aside class="public-ad-rail public-ad-rail--left" aria-label="Reklam alanları">
+    <div class="public-ad-rail__stack">
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+    </div>
+  </aside>
+
+  <aside class="public-ad-rail public-ad-rail--right" aria-label="Reklam alanları">
+    <div class="public-ad-rail__stack">
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <div class="container app-container">
+      <section class="app-section app-section--modules" aria-labelledby="home-modules-heading">
+        <h2 class="section-heading app-modules-heading" id="home-modules-heading">Ehliyet Sınavı Hazırlık Modülleri</h2>
+        <div class="content-module-grid" id="home-module-grid"></div>
+      </section>
+
+      <nav class="auth-backlinks app-backlinks">
+        <a href="../index.html">Kamu ana sayfası</a>
+      </nav>
+    </div>
+  </main>
+
+  <div id="app-soon-gate" class="public-gate public-gate--soon app-soon-gate" hidden aria-hidden="true">
+    <div class="public-gate__backdrop" data-app-soon-dismiss tabindex="-1" aria-hidden="true"></div>
+    <div class="public-gate__dialog" role="dialog" aria-modal="true" aria-labelledby="app-soon-gate-title">
+      <button type="button" class="public-gate__close" aria-label="Kapat" data-app-soon-dismiss>&times;</button>
+      <h2 id="app-soon-gate-title" class="public-gate__title">Yakında aktif</h2>
+      <p class="public-gate__body">Bu modül yakında aktif edilecek.</p>
+      <button type="button" class="public-gate__later" data-app-soon-dismiss data-app-soon-focus>Tamam</button>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="../assets/js/web-firebase.js"></script>
+  <script src="../assets/js/web-session.js"></script>
+  <script src="../assets/js/web-duel-presence.js"></script>
+  <script src="../assets/js/web-duel-invites.repository.js"></script>
+  <script src="../assets/js/web-duel-notifications.js"></script>
+  <script src="../assets/js/web-tenant-brand.js"></script>
+  <script src="../assets/js/web-module-catalog.js"></script>
+  <script src="../assets/js/web-home.js"></script>
+</body>
+</html>

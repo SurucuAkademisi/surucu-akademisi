@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Öğretmen video ders listesi." />
+  <title>Video Ders Listesi | Sürücü Akademisi</title>
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem('sa_web_session_v1');
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || typeof s !== 'object') return;
+        var uid = String(s.uid || '').trim();
+        var tenantId = String(s.tenantId || '').trim();
+        if (uid && tenantId) {
+          document.documentElement.classList.add('page-cikmis-sorular--header-pending');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem('sa_public_session_v1');
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || typeof s !== 'object') return;
+        var uid = String(s.uid || '').trim();
+        var role = String(s.role || '').trim();
+        if (!uid || role !== 'public_user') return;
+        document.documentElement.classList.add('page-public-header-pending');
+        setTimeout(function () {
+          document.documentElement.classList.remove('page-public-header-pending');
+        }, 8000);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="../assets/css/site.css?v=20260728-public-module-header-grid-1" />
+</head>
+<body class="page-cikmis-sorular page-video-dersler page-video-dersler-liste page-landing">
+  <header class="site-header site-header--landing">
+    <div class="container hub-header-container">
+      <div id="hub-student-header" class="hub-student-header" hidden aria-hidden="true">
+        <div class="hub-student-header-inner app-header-inner app-header-inner--premium">
+          <div class="app-header-slot app-header-slot--left">
+            <span class="btn btn-public-greeting app-header-greeting hub-header-greeting" aria-live="polite">
+              Merhaba, <span id="hub-student-greeting-name">Öğrenci</span>
+            </span>
+          </div>
+          <div class="app-header-brand-center">
+            <div class="brand brand--lockup brand--tenant app-tenant-brand hub-tenant-brand">
+              <div class="app-tenant-logo-wrap tenant-avatar-wrap" aria-hidden="false">
+                <img id="hub-tenant-logo" class="tenant-logo app-tenant-logo-img hub-tenant-logo-img" alt="" hidden />
+                <span id="hub-tenant-monogram" class="tenant-monogram app-tenant-monogram hub-tenant-monogram" hidden></span>
+              </div>
+              <div class="brand-text app-tenant-brand-text">
+                <span class="brand-name app-tenant-brand-name hub-tenant-brand-name" id="hub-tenant-name">—</span>
+              </div>
+            </div>
+          </div>
+          <div class="app-header-slot app-header-slot--right">
+            <button type="button" class="btn btn-public-register btn-public-logout app-header-logout hub-student-logout" id="hub-student-logout">Çıkış</button>
+          </div>
+        </div>
+      </div>
+      <div id="public-header-shell" class="header-inner header-inner--landing header-inner--public">
+      <div class="header-public-actions header-public-actions--left">
+        <div class="header-public-stack" data-public-header="guest">
+          <a class="btn btn-public-login" href="../uye-giris/">Üye Girişi</a>
+          <a class="btn btn-public-course" href="../panel/">Sürücü Kursları Öğrenci Girişi</a>
+        </div>
+        <div class="header-public-stack header-public-stack--user" data-public-header="user" hidden aria-hidden="true">
+          <span class="btn btn-public-greeting" id="public-header-greeting" aria-live="polite">Merhaba, <span id="public-header-name">Üye</span></span>
+        </div>
+      </div>
+      <div class="header-landing-brand">
+        <a class="brand brand--lockup" href="../" data-sa-portal-home aria-label="Sürücü Akademisi ana sayfa">
+          <img class="brand-logo-img" src="../assets/images/logo.png" width="110" height="110" alt="" />
+          <span class="brand-text">
+            <span class="brand-name">Sürücü Akademisi</span>
+            <span class="brand-tagline">Ehliyet Eğitim Portalı</span>
+          </span>
+        </a>
+      </div>
+      <div class="header-public-actions header-public-actions--right" data-public-header="guest">
+        <a class="btn btn-public-register" href="../kayit/">Kayıt Ol</a>
+      </div>
+      <div class="header-public-actions header-public-actions--right" data-public-header="user" hidden aria-hidden="true">
+        <button type="button" class="btn btn-public-register btn-public-logout" id="public-header-logout">Çıkış</button>
+      </div>
+      </div>
+    </div>
+  </header>
+
+  <aside class="public-ad-rail public-ad-rail--left" aria-label="Reklam alanları">
+    <div class="public-ad-rail__stack">
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+    </div>
+  </aside>
+
+  <aside class="public-ad-rail public-ad-rail--right" aria-label="Reklam alanları">
+    <div class="public-ad-rail__stack">
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+      <div class="public-ad-rail__slot public-ad-rail__slot--mini">
+        <span class="public-ad-rail__label">Reklam</span>
+        <span class="public-ad-rail__placeholder">Sponsorlu alan</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="exam-hub-main teacher-video-list-main">
+    <div class="container exam-hub-wrap">
+      <nav class="exam-hub-breadcrumb" aria-label="Sayfa yolu">
+        <a href="../" data-sa-portal-home>Ana Sayfa</a>
+        <span class="exam-hub-breadcrumb__sep" aria-hidden="true">›</span>
+        <a href="./">Canlı Video Dersler (Öğretmen)</a>
+      </nav>
+
+      <section class="exam-hub-hero teacher-video-list-hero">
+        <h1 id="teacher-video-list-category-title" aria-current="page">Video Ders Listesi</h1>
+        <p class="exam-hub-hero__intro">
+          Bu kategorideki yayınlanmış öğretmen video dersleri aşağıda listelenir.
+        </p>
+        <p id="teacher-video-access-note" class="teacher-video-access-note" hidden role="status"></p>
+      </section>
+
+      <aside id="teacher-video-list-guest-cta" class="lesson-guest-cta exam-hub-guest-cta" hidden>
+        <p class="exam-hub-guest-cta__text">Video listesini görmek için giriş yapın veya ücretsiz kayıt olun.</p>
+        <div class="exam-hub-guest-cta__actions">
+          <a class="btn btn-public-login" href="../uye-giris/">Üye Girişi</a>
+          <a class="btn btn-public-register" href="../kayit/">Kayıt Ol</a>
+        </div>
+      </aside>
+
+      <div id="teacher-video-list-invalid" class="lesson-empty-state" hidden>
+        <p>Geçersiz veya desteklenmeyen video kategorisi.</p>
+        <p><a href="./">Video derslere dön</a></p>
+      </div>
+
+      <div id="teacher-video-list-loading" class="lesson-empty-state" hidden role="status" aria-live="polite">
+        <p>Videolar yükleniyor…</p>
+      </div>
+
+      <p id="teacher-video-list-error" class="lesson-empty-state lesson-empty-state--error" hidden role="alert"></p>
+
+      <aside id="teacher-video-lock" class="teacher-video-lock" hidden>
+        <h2 class="teacher-video-lock__title">Premium erişim gerekli</h2>
+        <p class="teacher-video-lock__text">
+          Bu video dersler premium erişime kapalıdır. Premium erişim için kurumunuz veya Sürücü Akademisi yönetimiyle iletişime geçebilirsiniz.
+        </p>
+      </aside>
+
+      <p id="teacher-video-list-empty" class="lesson-empty-state" hidden>Bu kategoride henüz yayında video yok.</p>
+
+      <div id="teacher-video-list" class="teacher-video-list" hidden aria-label="Video listesi"></div>
+
+      <p class="exam-hub-back">
+        <a href="./">Video derslere dön</a>
+      </p>
+    </div>
+  </main>
+
+  <div id="teacher-video-upsell-modal" class="teacher-video-upsell-modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="teacher-video-upsell-title">
+    <div class="teacher-video-upsell-modal__backdrop" tabindex="-1"></div>
+    <div class="teacher-video-upsell-modal__dialog">
+      <header class="teacher-video-upsell-modal__head">
+        <h2 id="teacher-video-upsell-title" class="teacher-video-upsell-modal__title">SINAVA PREMIUM HAZIRLAN</h2>
+        <button type="button" id="teacher-video-upsell-close" class="teacher-video-upsell-modal__close" aria-label="Kapat">×</button>
+      </header>
+      <div class="teacher-video-upsell-modal__body">
+        <p id="teacher-video-upsell-video-title" class="teacher-video-upsell-modal__video-title" hidden></p>
+        <p>Bu video ders Premium içeriğe dahildir.</p>
+        <p>Premium erişimle öğretmen anlatımlı dersleri izleyebilir, ünite ünite hazırlanmış sınav tüyolarından faydalanabilir ve ehliyet sınavına daha planlı çalışabilirsin.</p>
+        <p>Sadece soru çözmek yetmez. Konuyu anlayan, sınav mantığını kavrayan ve kritik detayları bilen aday daha avantajlıdır.</p>
+        <ul class="teacher-video-upsell-modal__benefits">
+          <li>Öğretmen anlatımlı video dersler</li>
+          <li>Sınavda çıkabilecek önemli noktalar</li>
+          <li>Ünite ünite hazırlanmış çalışma desteği</li>
+          <li>180 gün boyunca erişim</li>
+          <li>Tek seferlik ödeme, abonelik yok</li>
+        </ul>
+        <p class="teacher-video-upsell-modal__price">Premium Video Ders Paketi — 249 TL / 180 gün</p>
+        <p id="teacher-video-upsell-notice" class="teacher-video-upsell-modal__notice" hidden role="status"></p>
+      </div>
+      <footer class="teacher-video-upsell-modal__foot">
+        <button type="button" id="teacher-video-upsell-dismiss" class="teacher-video-upsell-modal__btn teacher-video-upsell-modal__btn--secondary">Daha Sonra</button>
+        <button type="button" id="teacher-video-upsell-cta" class="teacher-video-upsell-modal__btn teacher-video-upsell-modal__btn--primary">Satın Alma Talebi Oluştur</button>
+      </footer>
+    </div>
+  </div>
+
+  <div id="teacher-video-player-modal" class="teacher-video-player-modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="teacher-video-player-title">
+    <div class="teacher-video-player-modal__backdrop" tabindex="-1"></div>
+    <div class="teacher-video-player-modal__dialog">
+      <header class="teacher-video-player-modal__head">
+        <h2 id="teacher-video-player-title" class="teacher-video-player-modal__title">Video</h2>
+        <button type="button" id="teacher-video-player-close" class="teacher-video-player-modal__close" aria-label="Kapat">×</button>
+      </header>
+      <div id="teacher-video-player-frame-wrap" class="teacher-video-player-frame">
+        <iframe id="teacher-video-player-iframe" class="teacher-video-player-frame__iframe" title="YouTube video oynatıcı" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+      </div>
+      <p id="teacher-video-player-error" class="teacher-video-player-modal__error" hidden role="alert"></p>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p class="footer-brand">Sürücü Akademisi</p>
+      <p class="footer-copy">© 2026 Sürücü Akademisi</p>
+    </div>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="../assets/js/web-firebase.js"></script>
+  <script src="../assets/js/web-session.js"></script>
+  <script src="../assets/js/web-tenant-brand.js"></script>
+  <script src="../assets/js/web-student-header.js"></script>
+  <script src="../assets/js/public-session.js"></script>
+  <script src="../assets/js/web-viewer-context.js?v=20260728-viewer-context-1"></script>
+  <script src="../assets/js/web-module-nav.js"></script>
+  <script src="../assets/js/public-auth.js"></script>
+  <script src="../assets/js/public-landing-auth.js?v=20260728-public-header-fouc-1"></script>
+  <script src="../assets/js/web-teacher-video.repository.js"></script>
+  <script src="../assets/js/web-teacher-video.js?v=20260728-mobile-video-card-parity-1"></script>
+</body>
+</html>
