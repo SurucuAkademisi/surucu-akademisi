@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Sürücü Akademisi</string>
+    <string name="title_activity_main">Sürücü Akademisi</string>
+    <string name="package_name">io.surucuakademisi.app</string>
+    <string name="custom_url_scheme">io.surucuakademisi.app</string>
+    <string name="tenant_push_channel_name">Kurum Bildirimleri</string>
+    <string name="tenant_push_channel_description">Sürücü kursunuzdan gelen bildirimler</string>
+</resources>

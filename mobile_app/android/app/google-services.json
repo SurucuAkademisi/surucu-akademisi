@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "268662659371",
+    "project_id": "surucuakademisi-f5e1f",
+    "storage_bucket": "surucuakademisi-f5e1f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:268662659371:android:ab1cb9dae4c77eb1e74d6e",
+        "android_client_info": {
+          "package_name": "io.surucuakademisi.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "268662659371-f2plf7f7sk7ij3vc5n1c8vm3sdnvh9nq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.surucuakademisi.app",
+            "certificate_hash": "6f56194c73cdc838f7ab94dacdcf59b4ad03fa4c"
+          }
+        },
+        {
+          "client_id": "268662659371-7lsscum5imb3mpab11l68vo7u7gup9rv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJJaxBxsczTWbT9vS--e85bKAO8e_auPc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "268662659371-7lsscum5imb3mpab11l68vo7u7gup9rv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
