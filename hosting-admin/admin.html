@@ -1998,6 +1998,29 @@
     .sa-progress-exam-details[hidden] {
       display: none !important;
     }
+    .sa-progress-machine-exam-cat {
+      margin: 0 0 12px;
+    }
+    .sa-progress-machine-exam-cat:last-child {
+      margin-bottom: 0;
+    }
+    .sa-progress-machine-exam-cat__title {
+      margin: 0 0 8px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.85);
+    }
+    .sa-progress-metrics--machine {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+    .sa-progress-metrics--machine .sa-progress-metric-card {
+      flex: 0 1 120px;
+      min-width: 110px;
+      max-width: 150px;
+    }
 
     #admin-page-content {
       box-sizing: border-box;
@@ -2906,6 +2929,69 @@
       cursor: pointer;
       transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
       min-width: 0;
+    }
+    /* Institution Admin filtered bulk selection (scoped) */
+    .tp-student-bulk-toolbar {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 12px;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      border-radius: 14px;
+      border: 1px solid rgba(192, 132, 252, 0.28);
+      background: linear-gradient(145deg, rgba(20, 16, 40, 0.55), rgba(12, 18, 36, 0.42));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+    .tp-student-bulk-toolbar.is-visible {
+      display: flex;
+    }
+    .tp-student-bulk-toolbar .tp-student-bulk-select-all {
+      margin: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-weight: 650;
+      color: #e2e8f0;
+      user-select: none;
+    }
+    .tp-student-bulk-toolbar #tp-student-bulk-selected-count {
+      font-size: 0.88rem;
+    }
+    .tp-student-bulk-toolbar #btn-tp-student-bulk-delete {
+      border: 1px solid rgba(248, 113, 113, 0.52);
+      background: linear-gradient(145deg, rgba(190, 24, 93, 0.55), rgba(220, 38, 38, 0.42));
+      color: #fff1f2;
+      font-weight: 800;
+      box-shadow: 0 0 18px rgba(248, 113, 113, 0.14);
+    }
+    .tp-student-bulk-toolbar #btn-tp-student-bulk-delete:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .tp-student-bulk-toolbar #tp-student-bulk-progress {
+      font-size: 0.86rem;
+      color: #a5b4fc;
+    }
+    .tp-student-row-select {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      align-self: center;
+      padding: 2px 2px 2px 0;
+      margin: 0;
+      cursor: default;
+      line-height: 0;
+    }
+    .tp-student-row-select input.tp-row-bulk-select {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: #38bdf8;
     }
     .tp-student-row:hover {
       background: rgba(255, 255, 255, 0.06);
@@ -6434,6 +6520,146 @@
       }
       #tp-student-hard-delete-confirm-modal #btn-tp-student-hard-delete-cancel,
       #tp-student-hard-delete-confirm-modal #btn-tp-student-hard-delete-ok {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+    /* —— Institution Admin filtered bulk hard-delete confirm (#tp-student-bulk-delete-confirm-modal) —— */
+    #tp-student-bulk-delete-confirm-modal.tp-modal-overlay {
+      z-index: 10057;
+      background: rgba(2, 6, 20, 0.82);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    #tp-student-bulk-delete-confirm-modal .tp-student-bulk-delete-confirm-card {
+      width: min(520px, calc(100vw - 24px));
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      border-radius: 20px;
+      border: 1px solid rgba(192, 132, 252, 0.38);
+      background: linear-gradient(158deg, rgba(8, 12, 28, 0.97), rgba(14, 10, 32, 0.95) 52%, rgba(10, 8, 24, 0.98));
+      box-shadow:
+        0 0 0 1px rgba(34, 211, 238, 0.08) inset,
+        0 22px 56px rgba(0, 0, 0, 0.58),
+        0 0 48px rgba(192, 132, 252, 0.14),
+        0 0 72px rgba(248, 113, 113, 0.08);
+      padding: 22px 22px 18px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+    #tp-student-bulk-delete-confirm-modal .tp-student-bulk-delete-confirm-icon {
+      width: 58px;
+      height: 58px;
+      margin: 0 auto 14px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      color: #fecaca;
+      border: 1px solid rgba(248, 113, 113, 0.45);
+      background: radial-gradient(circle at 28% 28%, rgba(248, 113, 113, 0.28), rgba(192, 132, 252, 0.16));
+      box-shadow: 0 0 26px rgba(248, 113, 113, 0.22), 0 0 18px rgba(192, 132, 252, 0.12);
+    }
+    #tp-student-bulk-delete-confirm-modal #tp-student-bulk-delete-confirm-heading {
+      font-size: 1.18rem;
+      font-weight: 800;
+      color: #faf5ff;
+      margin: 0 0 10px;
+      letter-spacing: 0.02em;
+    }
+    #tp-student-bulk-delete-confirm-modal #tp-student-bulk-delete-confirm-count,
+    #tp-student-bulk-delete-confirm-modal #tp-student-bulk-delete-confirm-period,
+    #tp-student-bulk-delete-confirm-modal #tp-student-bulk-delete-confirm-message {
+      font-size: 0.92rem;
+      line-height: 1.55;
+      color: #cbd5e1;
+      margin: 0 0 10px;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    #tp-student-bulk-delete-confirm-modal #tp-student-bulk-delete-confirm-period:empty,
+    #tp-student-bulk-delete-confirm-modal #tp-student-bulk-delete-confirm-period[hidden] {
+      display: none;
+    }
+    #tp-student-bulk-delete-confirm-modal #tp-student-bulk-delete-confirm-warning {
+      font-size: 0.9rem;
+      font-weight: 700;
+      line-height: 1.5;
+      color: #fecaca;
+      margin: 0 0 14px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(248, 113, 113, 0.35);
+      background: linear-gradient(145deg, rgba(127, 29, 29, 0.28), rgba(88, 28, 135, 0.16));
+      text-align: left;
+    }
+    #tp-student-bulk-delete-confirm-modal .tp-student-bulk-delete-confirm-type-wrap {
+      text-align: left;
+      margin: 0 0 16px;
+    }
+    #tp-student-bulk-delete-confirm-modal .tp-student-bulk-delete-confirm-type-wrap label {
+      display: block;
+      font-size: 0.86rem;
+      font-weight: 650;
+      color: #e9d5ff;
+      margin: 0 0 8px;
+    }
+    #tp-student-bulk-delete-confirm-modal #tp-student-bulk-delete-confirm-input {
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 12px;
+      border: 1px solid rgba(192, 132, 252, 0.38);
+      background: rgba(8, 12, 28, 0.85);
+      color: #f8fafc;
+      padding: 10px 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+    #tp-student-bulk-delete-confirm-modal #tp-student-bulk-delete-confirm-input:focus {
+      outline: 2px solid rgba(248, 113, 113, 0.55);
+      outline-offset: 1px;
+      border-color: rgba(248, 113, 113, 0.55);
+    }
+    #tp-student-bulk-delete-confirm-modal .tp-student-bulk-delete-confirm-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    #tp-student-bulk-delete-confirm-modal #btn-tp-student-bulk-delete-cancel {
+      border: 1px solid rgba(192, 132, 252, 0.38);
+      background: linear-gradient(145deg, rgba(20, 16, 40, 0.9), rgba(12, 14, 32, 0.82));
+      color: #e9d5ff;
+      font-weight: 700;
+      padding: 10px 18px;
+      border-radius: 12px;
+    }
+    #tp-student-bulk-delete-confirm-modal #btn-tp-student-bulk-delete-ok {
+      border: 1px solid rgba(248, 113, 113, 0.52);
+      background: linear-gradient(145deg, rgba(190, 24, 93, 0.55), rgba(220, 38, 38, 0.42));
+      color: #fff1f2;
+      font-weight: 800;
+      padding: 10px 18px;
+      border-radius: 12px;
+      box-shadow: 0 0 22px rgba(248, 113, 113, 0.18);
+    }
+    #tp-student-bulk-delete-confirm-modal #btn-tp-student-bulk-delete-ok:disabled,
+    #tp-student-bulk-delete-confirm-modal #btn-tp-student-bulk-delete-cancel:disabled {
+      opacity: 0.72;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    @media (max-width: 480px) {
+      #tp-student-bulk-delete-confirm-modal .tp-student-bulk-delete-confirm-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      #tp-student-bulk-delete-confirm-modal #btn-tp-student-bulk-delete-cancel,
+      #tp-student-bulk-delete-confirm-modal #btn-tp-student-bulk-delete-ok {
         width: 100%;
         justify-content: center;
       }
@@ -10260,6 +10486,11 @@
         overflow: hidden;
       }
 
+      #tp-section-students .tp-student-row-select {
+        flex: 0 0 auto;
+        align-self: center;
+      }
+
       #tp-section-students .tp-student-row-main {
         flex: 1 1 auto;
         min-width: 0;
@@ -10643,7 +10874,8 @@
       #tp-crm-message-modal.tp-modal-overlay,
       #tp-student-access-confirm-modal.tp-modal-overlay,
       #tp-student-access-result-modal.tp-modal-overlay,
-      #tp-student-hard-delete-confirm-modal.tp-modal-overlay {
+      #tp-student-hard-delete-confirm-modal.tp-modal-overlay,
+      #tp-student-bulk-delete-confirm-modal.tp-modal-overlay {
         z-index: 12200;
       }
     }
@@ -12254,6 +12486,15 @@
                 <select id="tp-student-period-filter" style="min-width:140px;"><option value="">Tümü</option></select>
                 <label style="margin:0; display:inline-flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="tp-show-passive" checked /><span class="muted" id="tp-crm-show-passive-label">Pasif öğrencileri göster</span></label>
               </div>
+              <div id="tp-student-bulk-toolbar" class="tp-student-bulk-toolbar" aria-label="Toplu öğrenci seçimi">
+                <label class="tp-student-bulk-select-all" for="tp-student-bulk-select-all">
+                  <input type="checkbox" id="tp-student-bulk-select-all" />
+                  <span>Tümünü Seç</span>
+                </label>
+                <span id="tp-student-bulk-selected-count" class="muted">0 öğrenci seçildi</span>
+                <button type="button" class="btn btn-small" id="btn-tp-student-bulk-delete" disabled><i class="fa-solid fa-trash-can"></i> Seçilenleri Sil</button>
+                <span id="tp-student-bulk-progress" class="muted" style="display:none;" aria-live="polite"></span>
+              </div>
               <div class="tp-student-list-panel">
                 <div id="tenant-panel-students-list" class="tp-student-list"></div>
               </div>
@@ -12492,11 +12733,33 @@
         <div class="tp-student-hard-delete-confirm-card">
           <div class="tp-student-hard-delete-confirm-icon" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></div>
           <h3 id="tp-student-hard-delete-confirm-heading">Öğrenciyi Kalıcı Olarak Sil</h3>
-          <p id="tp-student-hard-delete-confirm-message">Bu öğrencinin Firebase Auth hesabı, kullanıcı kaydı, kurum üyeliği ve ilişkili ödeme kayıtları kalıcı olarak silinecektir.</p>
-          <p id="tp-student-hard-delete-confirm-warning">Bu işlem geri alınamaz.</p>
+          <p id="tp-student-hard-delete-confirm-message">Bu öğrencinin Firebase Auth hesabı, kullanıcı kaydı, kurum üyeliği, ödeme kayıtları, sınav denemeleri, ders ilerleme kayıtları, kişisel mesaj kutusu kopyaları, erişim yetkileri ve cihaz bildirim tokenleri kalıcı olarak silinecektir.</p>
+          <p id="tp-student-hard-delete-confirm-warning">Bu işlem geri alınamaz. Kullanıcının kişisel mesaj kutusu kopyaları temizlenir; kurumun mesaj geçmişi ve mali denetim kayıtları korunur.</p>
           <div class="tp-student-hard-delete-confirm-actions">
             <button type="button" class="btn btn-secondary" id="btn-tp-student-hard-delete-cancel">Vazgeç</button>
             <button type="button" class="btn" id="btn-tp-student-hard-delete-ok"><i class="fa-solid fa-trash-can"></i> Kalıcı Olarak Sil</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="tp-student-bulk-delete-confirm-modal" class="tp-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="tp-student-bulk-delete-confirm-heading" aria-describedby="tp-student-bulk-delete-confirm-count tp-student-bulk-delete-confirm-message tp-student-bulk-delete-confirm-warning">
+        <div class="tp-student-bulk-delete-confirm-card">
+          <div class="tp-student-bulk-delete-confirm-icon" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <h3 id="tp-student-bulk-delete-confirm-heading">Seçilen Öğrencileri Kalıcı Olarak Sil</h3>
+          <p id="tp-student-bulk-delete-confirm-count">0 öğrenci silinecek.</p>
+          <p id="tp-student-bulk-delete-confirm-period" hidden></p>
+          <p id="tp-student-bulk-delete-confirm-message">Seçilen öğrencilerin kullanıcı hesabı, kurum öğrenci üyeliği, kullanıcı ana kaydı, ödeme kayıtları, sınav denemeleri, ders ilerleme kayıtları, kişisel mesaj kutusu kopyaları, erişim yetkileri ve cihaz bildirim tokenleri kalıcı olarak silinecektir.</p>
+          <div id="tp-student-bulk-delete-confirm-warning">
+            Bu işlem geri alınamaz.<br />
+            Kullanıcının kişisel mesaj kutusu kopyaları temizlenir; kurumun mesaj geçmişi ve mali denetim kayıtları korunur.
+          </div>
+          <div class="tp-student-bulk-delete-confirm-type-wrap">
+            <label for="tp-student-bulk-delete-confirm-input">Onaylamak için SİL yazın.</label>
+            <input type="text" id="tp-student-bulk-delete-confirm-input" autocomplete="off" spellcheck="false" placeholder="SİL" />
+          </div>
+          <div class="tp-student-bulk-delete-confirm-actions">
+            <button type="button" class="btn btn-secondary" id="btn-tp-student-bulk-delete-cancel">Vazgeç</button>
+            <button type="button" class="btn" id="btn-tp-student-bulk-delete-ok" disabled><i class="fa-solid fa-trash-can"></i> Seçilenleri Sil</button>
           </div>
         </div>
       </div>
@@ -13564,6 +13827,12 @@
     var currentTenantStudentListTenantId = null;
     // Institution Admin öğrenci listesi: overlapping loadTenantPanelData yanıtlarının stale overwrite etmesini engeller.
     var __tpInstitutionStudentListRequestId = 0;
+    // Institution Admin filtered bulk selection / hard-delete (V1) — membershipId keyed.
+    var tpBulkSelectedMembershipIds = new Set();
+    var tpLastFilteredStudents = [];
+    var tpBulkDeleteInFlight = false;
+    var tpBulkSelectionContextKey = '';
+    var TP_BULK_DELETE_CONCURRENCY = 3;
 
     function clearTenantStudentListCache() {
       currentTenantStudentList = [];
@@ -13572,6 +13841,7 @@
       tpSelectedStudentUid = null;
       // In-flight Institution Admin list isteklerini geçersiz kıl (program/tenant switch).
       __tpInstitutionStudentListRequestId += 1;
+      clearTpBulkSelectionState({ keepContext: false });
     }
 
     function isInstitutionAdminStudentListRequestCurrent(requestId, capturedTenantId, capturedProgramType) {
@@ -13594,7 +13864,7 @@
     }
 
     function shouldUpdateInstitutionOverviewStudentCounters() {
-      if (currentAdminRole !== 'institution_admin') return true;
+      // Driving overview cards must not be overwritten by machine-candidate list loads (IA + SA).
       return !isInstitutionMachineStudentProgram();
     }
 
@@ -13618,10 +13888,10 @@
           deactivateFail: 'Aday pasif yapılamadı.',
           reactivateConfirm: 'Bu adayı tekrar aktif yapmak istediğinize emin misiniz?',
           extendTitle: 'Adayın Erişimini Uzat',
-          deleteConfirm: 'Bu adayı kalıcı olarak silmek istiyor musunuz? Firebase Auth, kullanıcı kaydı, kurum üyeliği ve ödeme kayıtları silinecek. Bu işlem geri alınamaz.',
+          deleteConfirm: 'Bu adayı kalıcı olarak silmek istiyor musunuz? Auth hesabı, kullanıcı kaydı, kurum üyeliği, ödeme, sınav/ilerleme ve kişisel kutu kopyaları silinecek. Bu işlem geri alınamaz.',
           deleteModalTitle: 'İş Makineleri Adayını Kalıcı Olarak Sil',
-          deleteModalBody: 'Bu adayın Firebase Auth hesabı, kullanıcı kaydı, kurum üyeliği ve ilişkili ödeme kayıtları kalıcı olarak silinecektir.',
-          deleteModalWarning: 'Bu işlem geri alınamaz.',
+          deleteModalBody: 'Bu adayın Firebase Auth hesabı, kullanıcı kaydı, kurum üyeliği, ödeme kayıtları, sınav denemeleri, ders ilerleme kayıtları, kişisel mesaj kutusu kopyaları, erişim yetkileri ve cihaz bildirim tokenleri kalıcı olarak silinecektir.',
+          deleteModalWarning: 'Bu işlem geri alınamaz. Kullanıcının kişisel mesaj kutusu kopyaları temizlenir; kurumun mesaj geçmişi ve mali denetim kayıtları korunur.',
           deleteModalConfirmText: 'Kalıcı Olarak Sil',
           deleteModalCancelText: 'Vazgeç',
           deleteMulti: 'Bu adayın birden fazla kurum üyeliği var. Kalıcı silme için Super Admin özel temizlik akışı gerekir.',
@@ -13648,10 +13918,10 @@
         deactivateFail: 'Öğrenci pasif yapılamadı.',
         reactivateConfirm: 'Bu öğrenciyi tekrar aktif yapmak istediğinize emin misiniz?',
         extendTitle: '90 Gün Aktif Et',
-        deleteConfirm: 'Bu öğrenciyi kalıcı olarak silmek istiyor musunuz? Firebase Auth, kullanıcı kaydı, kurum üyeliği ve ödeme kayıtları silinecek. Bu işlem geri alınamaz.',
+        deleteConfirm: 'Bu öğrenciyi kalıcı olarak silmek istiyor musunuz? Auth hesabı, kullanıcı kaydı, kurum üyeliği, ödeme, sınav/ilerleme ve kişisel kutu kopyaları silinecek. Bu işlem geri alınamaz.',
         deleteModalTitle: 'Öğrenciyi Kalıcı Olarak Sil',
-        deleteModalBody: 'Bu öğrencinin Firebase Auth hesabı, kullanıcı kaydı, kurum üyeliği ve ilişkili ödeme kayıtları kalıcı olarak silinecektir.',
-        deleteModalWarning: 'Bu işlem geri alınamaz.',
+        deleteModalBody: 'Bu öğrencinin Firebase Auth hesabı, kullanıcı kaydı, kurum üyeliği, ödeme kayıtları, sınav denemeleri, ders ilerleme kayıtları, kişisel mesaj kutusu kopyaları, erişim yetkileri ve cihaz bildirim tokenleri kalıcı olarak silinecektir.',
+        deleteModalWarning: 'Bu işlem geri alınamaz. Kullanıcının kişisel mesaj kutusu kopyaları temizlenir; kurumun mesaj geçmişi ve mali denetim kayıtları korunur.',
         deleteModalConfirmText: 'Kalıcı Olarak Sil',
         deleteModalCancelText: 'Vazgeç',
         deleteMulti: 'Bu öğrencinin birden fazla kurum üyeliği var. Kalıcı silme için Super Admin özel temizlik akışı gerekir.',
@@ -13687,12 +13957,23 @@
       }
       var mobileTitle = document.getElementById('tp-student-detail-mobile-title');
       if (mobileTitle && !tpSelectedStudentUid) mobileTitle.textContent = copy.mobileTitle;
+      syncTpBulkToolbarVisibility();
     }
 
     function updateInstitutionMachineCandidatesNavVisibility() {
       var machineNav = document.getElementById('tp-nav-machine-candidates');
       if (!machineNav) return;
-      machineNav.style.display = (currentAdminRole === 'institution_admin') ? '' : 'none';
+      var role = String(currentAdminRole || '').trim();
+      var hasTenantPanel = String(currentTenantPanelId || '').trim() !== '';
+      var visible = hasTenantPanel && (role === 'institution_admin' || role === 'super_admin');
+      machineNav.style.display = visible ? '' : 'none';
+    }
+
+    function canEnterTenantMachineCandidatesSection() {
+      var role = String(currentAdminRole || '').trim();
+      var hasTenantPanel = String(currentTenantPanelId || '').trim() !== '';
+      if (!hasTenantPanel) return false;
+      return role === 'institution_admin' || role === 'super_admin';
     }
 
     function resetInstitutionStudentCrmDetailForProgramSwitch() {
@@ -13915,6 +14196,7 @@
       currentTenantPanelName = '';
       currentSuperTenantId = null;
       currentSuperTenantName = '';
+      try { updateInstitutionMachineCandidatesNavVisibility(); } catch (_) {}
       __institutionChatSelectedRoom = '';
       __institutionChatSelectedRoomName = '';
       __institutionChatViewMode = 'list';
@@ -14949,6 +15231,7 @@
         currentSuperTenantId = null;
         currentSuperTenantName = null;
         clearTenantStudentListCache();
+        try { updateInstitutionMachineCandidatesNavVisibility(); } catch (_) {}
       }
       elSetup.style.display = 'none';
       elLogin.style.display = which === 'login' ? 'block' : 'none';
@@ -14980,6 +15263,10 @@
 
     function showTenantPanel(tenantId, tenantName, opts) {
       opts = opts || {};
+      if (tpBulkDeleteInFlight) {
+        try { window.alert('Toplu silme işlemi devam ediyor. Lütfen bekleyin.'); } catch (_) {}
+        return;
+      }
       if (!tenantId || !elTenantPanel) return;
       closeAllInstitutionChatEmojiPanels();
       stopAdminInstitutionChatMessagesListener();
@@ -14991,9 +15278,9 @@
       currentInstitutionStudentProgram = 'driving_license';
       resetInstitutionStudentCrmDetailForProgramSwitch();
       applyInstitutionStudentCrmCopy();
-      updateInstitutionMachineCandidatesNavVisibility();
       currentTenantPanelId = tenantId;
       currentTenantPanelName = tenantName || tenantId;
+      updateInstitutionMachineCandidatesNavVisibility();
       try {
         if (window.localStorage) {
           window.localStorage.setItem('sa_tp_last_tenant', tenantId);
@@ -15035,6 +15322,7 @@
         pushAdminNavState({ view: 'tenant', tenantId: tenantId, tenantName: currentTenantPanelName, tenantSection: targetSection });
       }
       updateBulkMessageButtonVisibility();
+      syncTpBulkToolbarVisibility();
     }
 
     function showSuperTenantManage(tenantId, tenantName, superSection) {
@@ -15246,8 +15534,12 @@
     }
 
     function switchTenantPanelSection(sectionId) {
+      if (tpBulkDeleteInFlight) {
+        try { window.alert('Toplu silme işlemi devam ediyor. Lütfen bekleyin.'); } catch (_) {}
+        return;
+      }
       var prevSection = getActiveTenantSection();
-      if (sectionId === 'machine-candidates' && currentAdminRole !== 'institution_admin') {
+      if (sectionId === 'machine-candidates' && !canEnterTenantMachineCandidatesSection()) {
         sectionId = 'students';
       }
       if (prevSection === 'institution-chat' && sectionId !== 'institution-chat') {
@@ -15317,6 +15609,7 @@
           tenantSection: sectionId
         });
       }
+      try { syncTpBulkToolbarVisibility(); } catch (_) {}
     }
 
     function updateInstitutionChatPlaceholder(provinceName, placeholderId) {
@@ -17038,6 +17331,10 @@
     }
 
     function backFromTenantPanel() {
+      if (tpBulkDeleteInFlight) {
+        try { window.alert('Toplu silme işlemi devam ediyor. Lütfen bekleyin.'); } catch (_) {}
+        return;
+      }
       closeAllInstitutionChatEmojiPanels();
       if (currentAdminRole === 'institution_admin') return;
       stopMailboxBadgeListener();
@@ -17049,6 +17346,7 @@
       clearTenantStudentListCache();
       currentTenantPanelId = null;
       currentTenantPanelName = null;
+      try { updateInstitutionMachineCandidatesNavVisibility(); } catch (_) {}
       if (elTenantPanel) elTenantPanel.style.display = 'none';
       elPanel.style.display = 'block';
       updateBulkMessageButtonVisibility();
@@ -17298,12 +17596,19 @@
           active = data.activeStudents || 0;
           normalizedList = data.students || [];
         } else {
+          var saRequestedProgramType = normalizeInstitutionStudentProgram(currentInstitutionStudentProgram);
+          // Mirror IA: do not overwrite driving overview totals while viewing machine candidates.
+          updateOverviewStudentCounters = (saRequestedProgramType === 'driving_license');
+
           const membershipsSnap = await firebase.firestore()
             .collection('tenantMemberships')
             .where('tenantId', '==', tenantId)
             .where('role', '==', 'student')
             .get();
-          const memberships = membershipsSnap.docs.map((d) => ({ id: d.id, uid: (d.data() || {}).uid, status: (d.data() || {}).status, ...d.data() }));
+          var memberships = membershipsSnap.docs.map((d) => ({ id: d.id, uid: (d.data() || {}).uid, status: (d.data() || {}).status, ...d.data() }));
+          memberships = memberships.filter(function (m) {
+            return normalizeInstitutionStudentProgram(m && m.programType) === saRequestedProgramType;
+          });
           total = memberships.length;
           active = memberships.filter((m) => (m.status || '').toLowerCase() === 'active').length;
 
@@ -17334,6 +17639,7 @@
                 institutionAccessDurationDays: m.institutionAccessDurationDays
               };
               var accessMeta = computeInstitutionAccessDisplay(accessSrc);
+              var rowProgramType = normalizeInstitutionStudentProgram(m.programType);
               normalizedList.push({
                 uid: uid,
                 membershipId: m.id,
@@ -17344,6 +17650,7 @@
                 status: m.status,
                 statusLabel,
                 createdAt,
+                programType: rowProgramType,
                 institutionAccessExpiresAt: institutionAccessTimestampToMillis(m.institutionAccessExpiresAt),
                 institutionAccessStartsAt: institutionAccessTimestampToMillis(m.institutionAccessStartsAt),
                 institutionAccessDurationDays: m.institutionAccessDurationDays,
@@ -17368,7 +17675,8 @@
         if (document.getElementById('tp-student-search')) document.getElementById('tp-student-search').value = '';
         if (document.getElementById('tp-student-period-filter')) document.getElementById('tp-student-period-filter').value = '';
         if (document.getElementById('tp-show-passive')) document.getElementById('tp-show-passive').checked = true;
-        renderTenantStudentRows(normalizedList);
+        applyTenantStudentFilter();
+        syncTpBulkToolbarVisibility();
         try {
           const annSnap = await firebase.firestore().collection('tenants').doc(tenantId).collection('announcements').get();
           if (elAnnouncementsCount) elAnnouncementsCount.textContent = annSnap.size;
@@ -17385,7 +17693,11 @@
         }
         currentTenantStudentList = [];
         currentTenantStudentListTenantId = null;
+        tpLastFilteredStudents = [];
+        clearTpBulkSelectionState({ keepContext: false });
         if (studentListEl) studentListEl.innerHTML = '<div class="tp-student-list-empty error">Yüklenemedi: ' + (e && e.message ? e.message : 'Hata').replace(/</g, '&lt;') + '</div>';
+        syncTpBulkToolbarUi();
+        syncTpBulkToolbarVisibility();
         if (updateOverviewStudentCounters) {
           if (elTotal) elTotal.textContent = '—';
           if (elActive) elActive.textContent = '—';
@@ -17541,6 +17853,7 @@
         listEl.innerHTML = '<div class="tp-student-list-empty muted">' + msg.replace(/</g, '&lt;') + '</div>';
         return;
       }
+      var showBulkSelect = isTpStudentBulkActionAllowed();
       list.forEach(function (row) {
         const card = document.createElement('div');
         card.className = 'tp-student-row' + (row.uid === tpSelectedStudentUid ? ' is-selected' : '');
@@ -17551,6 +17864,8 @@
         const uidAttr = String(row.uid || '').replace(/"/g, '&quot;');
         const usernameAttr = String(row.username || '').replace(/"/g, '&quot;');
         const fullnameAttr = String(row.fullName || '').replace(/"/g, '&quot;');
+        const membershipId = String(row.membershipId || '').trim();
+        const membershipAttr = membershipId.replace(/"/g, '&quot;');
         const isActive = (row.status || '').toLowerCase() === 'active';
         const rawFullName = (row.fullName != null ? String(row.fullName).trim() : '');
         const displayName = (rawFullName && rawFullName !== '—') ? rawFullName : String(row.username || '—').trim();
@@ -17574,7 +17889,17 @@
         var accessChipHtml = accessChipText
           ? '<span class="tp-access-chip">' + String(accessChipText).replace(/</g, '&lt;') + '</span>'
           : '';
-        card.innerHTML = `
+        var selectHtml = '';
+        if (showBulkSelect && membershipId) {
+          var isChecked = tpBulkSelectedMembershipIds.has(membershipId);
+          selectHtml = '<label class="tp-student-row-select" title="Seç">'
+            + '<input type="checkbox" class="tp-row-bulk-select" data-membership-id="' + membershipAttr + '"'
+            + (isChecked ? ' checked' : '')
+            + (tpBulkDeleteInFlight ? ' disabled' : '')
+            + ' />'
+            + '</label>';
+        }
+        card.innerHTML = selectHtml + `
           <div class="tp-student-row-main">
             <div class="tp-student-row-top">
               <div class="tp-student-name">${String(displayName).replace(/</g, '&lt;')}</div>
@@ -17590,12 +17915,537 @@
       });
     }
 
+    function isTpStudentBulkActionAllowed() {
+      var tenantId = String(currentTenantPanelId || '').trim();
+      if (!tenantId) return false;
+      var role = String(currentAdminRole || '').trim();
+      if (role !== 'institution_admin' && role !== 'super_admin') return false;
+      var section = '';
+      try {
+        section = typeof getActiveTenantSection === 'function' ? String(getActiveTenantSection() || '') : '';
+      } catch (_) {
+        section = '';
+      }
+      if (section === 'students' || section === 'machine-candidates') return true;
+      try {
+        var sectionEl = document.getElementById('tp-section-students');
+        if (sectionEl && sectionEl.classList.contains('active')) return true;
+      } catch (_) {}
+      return false;
+    }
+
+    function isTpBulkToolbarRoleAllowed() {
+      return isTpStudentBulkActionAllowed();
+    }
+
+    function getTpBulkFilterContextKey() {
+      var periodVal = (document.getElementById('tp-student-period-filter') && document.getElementById('tp-student-period-filter').value) !== undefined
+        ? String(document.getElementById('tp-student-period-filter').value)
+        : '';
+      var searchVal = (document.getElementById('tp-student-search') && document.getElementById('tp-student-search').value)
+        ? String(document.getElementById('tp-student-search').value).trim().toLowerCase()
+        : '';
+      var showPassiveEl = document.getElementById('tp-show-passive');
+      var showPassive = showPassiveEl ? !!showPassiveEl.checked : true;
+      return [
+        String(currentTenantPanelId || '').trim(),
+        normalizeInstitutionStudentProgram(currentInstitutionStudentProgram),
+        periodVal,
+        searchVal,
+        showPassive ? '1' : '0'
+      ].join('|');
+    }
+
+    function clearTpBulkSelectionState(opts) {
+      opts = opts || {};
+      tpBulkSelectedMembershipIds = new Set();
+      if (!opts.keepContext) {
+        tpBulkSelectionContextKey = '';
+        if (!opts.preserveFiltered) tpLastFilteredStudents = [];
+      }
+      if (!opts.skipUi) {
+        try { syncTpBulkToolbarUi(); } catch (_) {}
+      }
+    }
+
+    function syncTpBulkToolbarVisibility() {
+      var toolbar = document.getElementById('tp-student-bulk-toolbar');
+      if (!toolbar) return;
+      var visible = isTpBulkToolbarRoleAllowed();
+      toolbar.classList.toggle('is-visible', visible);
+      toolbar.style.display = visible ? '' : 'none';
+      if (!visible) {
+        tpBulkSelectedMembershipIds = new Set();
+      }
+    }
+
+    function setTpBulkFiltersDisabled(disabled) {
+      var searchEl = document.getElementById('tp-student-search');
+      var periodEl = document.getElementById('tp-student-period-filter');
+      var passiveEl = document.getElementById('tp-show-passive');
+      var masterEl = document.getElementById('tp-student-bulk-select-all');
+      var refreshBtn = document.getElementById('btn-tenant-panel-refresh-students');
+      if (searchEl) searchEl.disabled = !!disabled;
+      if (periodEl) periodEl.disabled = !!disabled;
+      if (passiveEl) passiveEl.disabled = !!disabled;
+      if (masterEl) masterEl.disabled = !!disabled || !(tpLastFilteredStudents && tpLastFilteredStudents.length);
+      if (refreshBtn) refreshBtn.disabled = !!disabled;
+      document.querySelectorAll('#tenant-panel-students-list .tp-row-bulk-select').forEach(function (cb) {
+        cb.disabled = !!disabled;
+      });
+    }
+
+    function syncTpBulkToolbarUi() {
+      syncTpBulkToolbarVisibility();
+      var countEl = document.getElementById('tp-student-bulk-selected-count');
+      var deleteBtn = document.getElementById('btn-tp-student-bulk-delete');
+      var masterEl = document.getElementById('tp-student-bulk-select-all');
+      var filtered = Array.isArray(tpLastFilteredStudents) ? tpLastFilteredStudents : [];
+      var filteredIds = [];
+      filtered.forEach(function (row) {
+        var id = String((row && row.membershipId) || '').trim();
+        if (id) filteredIds.push(id);
+      });
+      var selectedCount = 0;
+      filteredIds.forEach(function (id) {
+        if (tpBulkSelectedMembershipIds.has(id)) selectedCount += 1;
+      });
+      // Drop any stale ids outside current filtered universe.
+      if (tpBulkSelectedMembershipIds.size !== selectedCount) {
+        var next = new Set();
+        filteredIds.forEach(function (id) {
+          if (tpBulkSelectedMembershipIds.has(id)) next.add(id);
+        });
+        tpBulkSelectedMembershipIds = next;
+        selectedCount = next.size;
+      }
+      var noun = isInstitutionMachineStudentProgram() ? 'aday' : 'öğrenci';
+      if (countEl) countEl.textContent = selectedCount + ' ' + noun + ' seçildi';
+      if (deleteBtn) {
+        deleteBtn.disabled = tpBulkDeleteInFlight || selectedCount === 0 || !isTpBulkToolbarRoleAllowed();
+      }
+      if (masterEl) {
+        var allSelected = filteredIds.length > 0 && selectedCount === filteredIds.length;
+        var someSelected = selectedCount > 0 && selectedCount < filteredIds.length;
+        masterEl.indeterminate = someSelected;
+        masterEl.checked = allSelected;
+        masterEl.disabled = tpBulkDeleteInFlight || filteredIds.length === 0 || !isTpBulkToolbarRoleAllowed();
+      }
+    }
+
+    function setTpBulkProgressText(text) {
+      var el = document.getElementById('tp-student-bulk-progress');
+      if (!el) return;
+      var t = String(text || '').trim();
+      if (!t) {
+        el.style.display = 'none';
+        el.textContent = '';
+        return;
+      }
+      el.style.display = '';
+      el.textContent = t;
+    }
+
+    function ensureTpBulkSelectionContext() {
+      var key = getTpBulkFilterContextKey();
+      if (key !== tpBulkSelectionContextKey) {
+        tpBulkSelectionContextKey = key;
+        tpBulkSelectedMembershipIds = new Set();
+      }
+    }
+
+    function getTpBulkStudentDisplayLabel(row) {
+      if (!row) return '—';
+      var rawFullName = (row.fullName != null ? String(row.fullName).trim() : '');
+      if (rawFullName && rawFullName !== '—') return rawFullName;
+      var username = String(row.username || '').trim();
+      if (username) return username;
+      var email = String(row.email || '').trim();
+      if (email && email !== '-') return email;
+      return String(row.membershipId || row.uid || '—');
+    }
+
+    function buildTpBulkDeleteSnapshot() {
+      ensureTpBulkSelectionContext();
+      var filteredIds = new Set();
+      (tpLastFilteredStudents || []).forEach(function (row) {
+        var id = String((row && row.membershipId) || '').trim();
+        if (id) filteredIds.add(id);
+      });
+      var snapshot = [];
+      var byId = {};
+      (tpLastFilteredStudents || []).forEach(function (row) {
+        var id = String((row && row.membershipId) || '').trim();
+        if (id) byId[id] = row;
+      });
+      tpBulkSelectedMembershipIds.forEach(function (id) {
+        if (filteredIds.has(id)) {
+          snapshot.push({
+            membershipId: id,
+            label: getTpBulkStudentDisplayLabel(byId[id])
+          });
+        }
+      });
+      return {
+        tenantId: String(currentTenantPanelId || '').trim(),
+        programType: normalizeInstitutionStudentProgram(currentInstitutionStudentProgram),
+        contextKey: tpBulkSelectionContextKey,
+        items: snapshot
+      };
+    }
+
+    var __tpStudentBulkDeletePendingResolve = null;
+    var __tpStudentBulkDeletePreviousFocus = null;
+    var __tpStudentBulkDeleteBusy = false;
+    var tpStudentBulkDeleteKeyHandler = null;
+
+    function syncTpBulkDeleteConfirmOkEnabled() {
+      var input = document.getElementById('tp-student-bulk-delete-confirm-input');
+      var okBtn = document.getElementById('btn-tp-student-bulk-delete-ok');
+      if (!okBtn) return;
+      var typed = input ? String(input.value || '').trim() : '';
+      // Accept SİL / sil / Sil after trim; normalize Turkish dotted/dotless I to ASCII for compare.
+      var normalized = typed.replace(/\u0130/g, 'I').replace(/\u0131/g, 'i').toUpperCase();
+      var matches = normalized === 'SIL';
+      okBtn.disabled = __tpStudentBulkDeleteBusy || !matches;
+    }
+
+    function resolveTpStudentBulkDeleteConfirm(result) {
+      var fn = __tpStudentBulkDeletePendingResolve;
+      if (typeof fn !== 'function') return;
+      __tpStudentBulkDeletePendingResolve = null;
+      var modal = document.getElementById('tp-student-bulk-delete-confirm-modal');
+      if (modal) modal.classList.remove('active');
+      if (tpStudentBulkDeleteKeyHandler) {
+        document.removeEventListener('keydown', tpStudentBulkDeleteKeyHandler, true);
+        tpStudentBulkDeleteKeyHandler = null;
+      }
+      var prev = __tpStudentBulkDeletePreviousFocus;
+      __tpStudentBulkDeletePreviousFocus = null;
+      __tpStudentBulkDeleteBusy = false;
+      var okBtn = document.getElementById('btn-tp-student-bulk-delete-ok');
+      var cancelBtn = document.getElementById('btn-tp-student-bulk-delete-cancel');
+      if (okBtn) okBtn.disabled = false;
+      if (cancelBtn) cancelBtn.disabled = false;
+      try {
+        if (prev && typeof prev.focus === 'function') prev.focus();
+      } catch (_) {}
+      fn(!!result);
+    }
+
+    function showTpStudentBulkDeleteConfirm(opts) {
+      opts = opts || {};
+      return new Promise(function (resolve) {
+        if (typeof __tpStudentBulkDeletePendingResolve === 'function') {
+          var prevResolve = __tpStudentBulkDeletePendingResolve;
+          __tpStudentBulkDeletePendingResolve = null;
+          try { prevResolve(false); } catch (_) {}
+        }
+        __tpStudentBulkDeleteBusy = false;
+        try {
+          __tpStudentBulkDeletePreviousFocus = document.activeElement || null;
+        } catch (_) {
+          __tpStudentBulkDeletePreviousFocus = null;
+        }
+        var countEl = document.getElementById('tp-student-bulk-delete-confirm-count');
+        var periodEl = document.getElementById('tp-student-bulk-delete-confirm-period');
+        var messageEl = document.getElementById('tp-student-bulk-delete-confirm-message');
+        var inputEl = document.getElementById('tp-student-bulk-delete-confirm-input');
+        var okBtn = document.getElementById('btn-tp-student-bulk-delete-ok');
+        var cancelBtn = document.getElementById('btn-tp-student-bulk-delete-cancel');
+        var n = Math.max(0, Number(opts.count) || 0);
+        var noun = opts.noun || 'öğrenci';
+        if (countEl) countEl.textContent = n + ' ' + noun + ' silinecek.';
+        if (periodEl) {
+          var periodLabel = String(opts.periodLabel || '').trim();
+          if (periodLabel) {
+            periodEl.hidden = false;
+            periodEl.textContent = periodLabel + ' döneminden ' + n + ' ' + noun + ' seçildi.';
+          } else {
+            periodEl.hidden = true;
+            periodEl.textContent = '';
+          }
+        }
+        if (messageEl) {
+          messageEl.textContent = 'Seçilen ' + noun + 'lerin kullanıcı hesabı, kurum öğrenci üyeliği, kullanıcı ana kaydı, ödeme kayıtları, sınav denemeleri, ders ilerleme kayıtları, kişisel mesaj kutusu kopyaları, erişim yetkileri ve cihaz bildirim tokenleri kalıcı olarak silinecektir.';
+        }
+        var warningEl = document.getElementById('tp-student-bulk-delete-confirm-warning');
+        if (warningEl) {
+          warningEl.innerHTML = 'Bu işlem geri alınamaz.<br />Kullanıcının kişisel mesaj kutusu kopyaları temizlenir; kurumun mesaj geçmişi ve mali denetim kayıtları korunur.';
+        }
+        if (inputEl) {
+          inputEl.value = '';
+          inputEl.disabled = false;
+        }
+        if (cancelBtn) cancelBtn.disabled = false;
+        if (okBtn) {
+          okBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i> Seçilenleri Sil';
+          okBtn.disabled = true;
+        }
+        __tpStudentBulkDeletePendingResolve = resolve;
+        var modal = document.getElementById('tp-student-bulk-delete-confirm-modal');
+        if (modal) modal.classList.add('active');
+        if (tpStudentBulkDeleteKeyHandler) {
+          document.removeEventListener('keydown', tpStudentBulkDeleteKeyHandler, true);
+          tpStudentBulkDeleteKeyHandler = null;
+        }
+        tpStudentBulkDeleteKeyHandler = function (e) {
+          if (!e || e.key !== 'Escape') return;
+          var m = document.getElementById('tp-student-bulk-delete-confirm-modal');
+          if (!m || !m.classList.contains('active') || __tpStudentBulkDeleteBusy) return;
+          e.preventDefault();
+          resolveTpStudentBulkDeleteConfirm(false);
+        };
+        document.addEventListener('keydown', tpStudentBulkDeleteKeyHandler, true);
+        syncTpBulkDeleteConfirmOkEnabled();
+        try {
+          if (inputEl) inputEl.focus();
+        } catch (_) {}
+      });
+    }
+
+    function snapshotTpStudentListFilters() {
+      return {
+        search: document.getElementById('tp-student-search')
+          ? String(document.getElementById('tp-student-search').value || '')
+          : '',
+        period: document.getElementById('tp-student-period-filter')
+          ? String(document.getElementById('tp-student-period-filter').value || '')
+          : '',
+        showPassive: document.getElementById('tp-show-passive')
+          ? !!document.getElementById('tp-show-passive').checked
+          : true
+      };
+    }
+
+    function restoreTpStudentListFilters(snap) {
+      snap = snap || {};
+      var searchEl = document.getElementById('tp-student-search');
+      var periodEl = document.getElementById('tp-student-period-filter');
+      var passiveEl = document.getElementById('tp-show-passive');
+      if (searchEl) searchEl.value = snap.search != null ? String(snap.search) : '';
+      if (passiveEl) passiveEl.checked = snap.showPassive !== false;
+      if (periodEl) {
+        var wanted = snap.period != null ? String(snap.period) : '';
+        var found = false;
+        if (wanted) {
+          for (var i = 0; i < periodEl.options.length; i++) {
+            if (String(periodEl.options[i].value) === wanted) {
+              found = true;
+              break;
+            }
+          }
+        }
+        periodEl.value = found ? wanted : '';
+      }
+    }
+
+    function formatTpBulkDeleteError(err) {
+      var code = (err && (err.code || (err.details && err.details.code))) ? String(err.code || err.details.code) : '';
+      var msg = (err && err.message) ? String(err.message) : '';
+      if (code.indexOf('failed-precondition') !== -1
+        || msg.indexOf('birden fazla kurum üyeliği') !== -1
+        || msg.indexOf('Super Admin özel temizlik') !== -1) {
+        return 'Öğrencinin başka kurum üyeliği bulunduğu için silinemedi.';
+      }
+      if (code.indexOf('not-found') !== -1) {
+        return 'Kayıt bulunamadı (zaten silinmiş olabilir).';
+      }
+      if (code.indexOf('permission-denied') !== -1) {
+        return 'Bu işlem için yetkiniz yok.';
+      }
+      if (code.indexOf('unauthenticated') !== -1) {
+        return 'Oturum gerekli. Lütfen yeniden giriş yapın.';
+      }
+      // Keep short — never dump stack traces.
+      var short = msg.replace(/^Firebase:\s*/i, '').replace(/\s*\([^)]*\)\s*$/, '').trim();
+      if (short && short.length < 160) return short;
+      return 'Silme işlemi başarısız oldu.';
+    }
+
+    async function runTpBulkDeletesWithConcurrency(items, tenantId, onProgress) {
+      var limit = TP_BULK_DELETE_CONCURRENCY;
+      var index = 0;
+      var successIds = [];
+      var failures = [];
+      var completed = 0;
+      var total = items.length;
+
+      async function worker() {
+        while (index < items.length) {
+          var myIndex = index;
+          index += 1;
+          var item = items[myIndex];
+          var membershipId = item && item.membershipId ? String(item.membershipId) : '';
+          if (!membershipId) {
+            completed += 1;
+            if (typeof onProgress === 'function') onProgress(completed, total);
+            continue;
+          }
+          try {
+            var callable = firebase.functions().httpsCallable('deleteTenantStudentForInstitutionAdmin');
+            await callable({ tenantId: tenantId, membershipId: membershipId });
+            successIds.push(membershipId);
+          } catch (e) {
+            failures.push({
+              membershipId: membershipId,
+              label: item && item.label ? item.label : membershipId,
+              message: formatTpBulkDeleteError(e)
+            });
+          }
+          completed += 1;
+          if (typeof onProgress === 'function') onProgress(completed, total);
+        }
+      }
+
+      var workers = [];
+      var nWorkers = Math.min(limit, Math.max(1, items.length));
+      for (var w = 0; w < nWorkers; w++) workers.push(worker());
+      await Promise.all(workers);
+      return { successIds: successIds, failures: failures };
+    }
+
+    async function executeTpBulkStudentHardDelete() {
+      if (tpBulkDeleteInFlight) return;
+      if (!isTpBulkToolbarRoleAllowed()) return;
+      var tenantId = String(currentTenantPanelId || '').trim();
+      if (!tenantId) return;
+
+      var snapshot = buildTpBulkDeleteSnapshot();
+      if (!snapshot.items.length) {
+        syncTpBulkToolbarUi();
+        return;
+      }
+      if (snapshot.tenantId !== tenantId) {
+        clearTpBulkSelectionState({ keepContext: false });
+        return;
+      }
+
+      var periodVal = document.getElementById('tp-student-period-filter')
+        ? String(document.getElementById('tp-student-period-filter').value || '')
+        : '';
+      var periodLabel = periodVal ? formatPeriodGroupDisplay(periodVal) : '';
+      if (periodLabel === '—') periodLabel = '';
+      var noun = isInstitutionMachineStudentProgram() ? 'aday' : 'öğrenci';
+
+      var confirmed = await showTpStudentBulkDeleteConfirm({
+        count: snapshot.items.length,
+        periodLabel: periodLabel,
+        noun: noun
+      });
+      if (!confirmed) return;
+      if (tpBulkDeleteInFlight) return;
+
+      // Re-validate context/selection at confirm time (no hidden IDs).
+      var liveSnap = buildTpBulkDeleteSnapshot();
+      if (!liveSnap.items.length) {
+        syncTpBulkToolbarUi();
+        return;
+      }
+      if (liveSnap.contextKey !== snapshot.contextKey
+        || liveSnap.tenantId !== snapshot.tenantId
+        || liveSnap.programType !== snapshot.programType) {
+        try { window.alert('Filtre veya program değiştiği için toplu silme iptal edildi.'); } catch (_) {}
+        clearTpBulkSelectionState({ keepContext: false, preserveFiltered: true });
+        syncTpBulkToolbarUi();
+        return;
+      }
+      // Intersection already applied in buildTpBulkDeleteSnapshot.
+      var deleteItems = liveSnap.items;
+      var filterSnap = snapshotTpStudentListFilters();
+
+      tpBulkDeleteInFlight = true;
+      setTpBulkFiltersDisabled(true);
+      syncTpBulkToolbarUi();
+      setTpBulkProgressText('0 / ' + deleteItems.length + ' ' + noun + ' işleniyor...');
+
+      var result;
+      try {
+        result = await runTpBulkDeletesWithConcurrency(deleteItems, tenantId, function (done, total) {
+          setTpBulkProgressText(done + ' / ' + total + ' ' + noun + ' işleniyor...');
+        });
+      } catch (e) {
+        result = { successIds: [], failures: [{ membershipId: '', label: '—', message: formatTpBulkDeleteError(e) }] };
+      }
+
+      var successCount = (result.successIds || []).length;
+      var failCount = (result.failures || []).length;
+      var summary = successCount + ' ' + noun + ' silindi';
+      if (failCount > 0) {
+        summary += ', ' + failCount + ' ' + noun + ' silinemedi.';
+        var failPreview = (result.failures || []).slice(0, 5).map(function (f) {
+          return '• ' + String(f.label || f.membershipId) + ': ' + String(f.message || '');
+        }).join('\n');
+        if ((result.failures || []).length > 5) {
+          failPreview += '\n• …';
+        }
+        try { window.alert(summary + (failPreview ? ('\n\n' + failPreview) : '')); } catch (_) {}
+      }
+
+      var listMsg = document.getElementById('tp-student-list-msg');
+      if (listMsg) {
+        listMsg.textContent = summary;
+        listMsg.className = failCount ? 'error' : 'muted';
+      }
+      setTpBulkProgressText('');
+
+      try {
+        if (String(currentTenantPanelId || '') === tenantId) {
+          await loadTenantPanelData(tenantId);
+          restoreTpStudentListFilters(filterSnap);
+          applyTenantStudentFilter();
+        }
+      } catch (_) {}
+
+      clearTpBulkSelectionState({ keepContext: false, preserveFiltered: true });
+      tpBulkDeleteInFlight = false;
+      setTpBulkFiltersDisabled(false);
+      syncTpBulkToolbarUi();
+      setTpBulkProgressText('');
+    }
+
+    function onTpBulkMasterCheckboxChange() {
+      if (tpBulkDeleteInFlight || !isTpBulkToolbarRoleAllowed()) return;
+      ensureTpBulkSelectionContext();
+      var masterEl = document.getElementById('tp-student-bulk-select-all');
+      var checked = !!(masterEl && masterEl.checked);
+      tpBulkSelectedMembershipIds = new Set();
+      if (checked) {
+        (tpLastFilteredStudents || []).forEach(function (row) {
+          var id = String((row && row.membershipId) || '').trim();
+          if (id) tpBulkSelectedMembershipIds.add(id);
+        });
+      }
+      // Re-render to sync row checkboxes with master state.
+      renderTenantStudentRows(tpLastFilteredStudents || []);
+      syncTpBulkToolbarUi();
+    }
+
+    function onTpBulkRowCheckboxChange(checkbox) {
+      if (!checkbox || tpBulkDeleteInFlight || !isTpBulkToolbarRoleAllowed()) return;
+      ensureTpBulkSelectionContext();
+      var membershipId = String(checkbox.getAttribute('data-membership-id') || '').trim();
+      if (!membershipId) return;
+      var allowed = false;
+      (tpLastFilteredStudents || []).forEach(function (row) {
+        if (String((row && row.membershipId) || '').trim() === membershipId) allowed = true;
+      });
+      if (!allowed) {
+        checkbox.checked = false;
+        return;
+      }
+      if (checkbox.checked) tpBulkSelectedMembershipIds.add(membershipId);
+      else tpBulkSelectedMembershipIds.delete(membershipId);
+      syncTpBulkToolbarUi();
+    }
+
     // Pasif görünürlük, arama ve dönem aynı client-side filtre pipeline'ında; tenant izolasyonu currentTenantStudentList ile korunur.
     function applyTenantStudentFilter() {
       const searchVal = (document.getElementById('tp-student-search') && document.getElementById('tp-student-search').value) ? String(document.getElementById('tp-student-search').value).trim().toLowerCase() : '';
       const periodVal = (document.getElementById('tp-student-period-filter') && document.getElementById('tp-student-period-filter').value) !== undefined ? document.getElementById('tp-student-period-filter').value : '';
       const showPassiveEl = document.getElementById('tp-show-passive');
       const showPassive = showPassiveEl ? showPassiveEl.checked : true;
+      ensureTpBulkSelectionContext();
       let filtered = currentTenantStudentList || [];
       if (!showPassive) {
         filtered = filtered.filter(function (r) { return (r.status || '').toLowerCase() !== 'suspended'; });
@@ -17611,7 +18461,10 @@
           return u.indexOf(searchVal) !== -1 || f.indexOf(searchVal) !== -1 || e.indexOf(searchVal) !== -1;
         });
       }
+      tpLastFilteredStudents = filtered.slice();
+      tpBulkSelectionContextKey = getTpBulkFilterContextKey();
       renderTenantStudentRows(filtered);
+      syncTpBulkToolbarUi();
     }
 
     function setTpDetailMembershipStatus(statusRaw) {
@@ -18006,7 +18859,12 @@
           if (membershipInput) membershipInput.value = (memSnap && memSnap.exists && memSnap.id) ? memSnap.id : (uid ? (uid + '_' + currentTenantPanelId) : '');
           if (!skipProgressLoad && typeof loadTpStudentProgressSummary === 'function') {
             try {
-              await loadTpStudentProgressSummary(uid, { requestId: requestId, uid: uid, perfStart: perfStart });
+              await loadTpStudentProgressSummary(uid, {
+                requestId: requestId,
+                uid: uid,
+                perfStart: perfStart,
+                programType: normalizeInstitutionStudentProgram(currentInstitutionStudentProgram)
+              });
             } catch (progressErr) {
               if (isTpStudentDetailRequestCurrent(requestId, uid)) {
                 var progressEl = document.getElementById('tp-student-progress-summary');
@@ -27824,13 +28682,67 @@
     }
 
     function getLessonStatsByCategoryFromSummary(summary, field) {
+      var bucket = summary && summary[field];
+      if (bucket && Array.isArray(bucket.byCategory) && bucket.byCategory.length) {
+        return bucket.byCategory;
+      }
       var api = window.SA_ADMIN_STUDENT_PROGRESS;
-      var items = (summary && summary[field] && summary[field].items) || [];
+      var items = (bucket && bucket.items) || [];
       var programType = summary && summary.programType;
       if (api && typeof api.computeLessonStatsByCategory === 'function') {
         return api.computeLessonStatsByCategory(items, programType);
       }
       return [];
+    }
+
+    function formatLessonProgressCountLabel(completed, total) {
+      var done = Number(completed);
+      if (!isFinite(done) || done < 0) done = 0;
+      var tot = Number(total);
+      if (isFinite(tot) && tot >= 0) {
+        return 'Tamamlanan Ünite Sayısı: ' + String(done) + '/' + String(tot);
+      }
+      if (done > 0) return 'Tamamlanan Ünite Sayısı: ' + String(done) + '/—';
+      return 'Tamamlanan Ünite Sayısı: -';
+    }
+
+    function renderMachineExamCategoryBlock(title, stats) {
+      var s = stats || {};
+      var avgScore = s.averageScore != null ? '%' + s.averageScore : '—';
+      var bestScore = s.bestScore != null ? '%' + s.bestScore : '—';
+      var lastAttempt = formatProgressDateShort(s.lastAttemptAt);
+      return (
+        '<div class="sa-progress-machine-exam-cat">' +
+        '<div class="sa-progress-machine-exam-cat__title">' + progressEscapeHtml(title || 'Kategori') + '</div>' +
+        '<ul class="sa-progress-kv-list">' +
+        '<li><span class="key">Toplam Deneme Sınavı</span><span class="val">' + progressEscapeHtml(String(s.totalAttempts || 0)) + '</span></li>' +
+        '<li><span class="key">Genel Başarı Oranı</span><span class="val">' + progressEscapeHtml(avgScore) + '</span></li>' +
+        '<li><span class="key">En İyi Skor</span><span class="val">' + progressEscapeHtml(bestScore) + '</span></li>' +
+        '<li><span class="key">Son Deneme</span><span class="val">' + progressEscapeHtml(lastAttempt) + '</span></li>' +
+        '</ul>' +
+        '</div>'
+      );
+    }
+
+    function renderMachineExamProgressSummary(summary) {
+      var api = window.SA_ADMIN_STUDENT_PROGRESS;
+      var byCat = summary && summary.attempts && summary.attempts.byMachineCategory;
+      if (!byCat && api && typeof api.computeMachineExamCategoryStats === 'function') {
+        byCat = api.computeMachineExamCategoryStats((summary && summary.attempts && summary.attempts.items) || []);
+      }
+      byCat = byCat || {};
+      var work = byCat.work_machines || {};
+      var aid = byCat.first_aid || {};
+      var emptyStats = {
+        totalAttempts: 0,
+        averageScore: null,
+        bestScore: null,
+        lastAttemptAt: null
+      };
+      return (
+        renderMachineExamCategoryBlock(work.title || 'İş Makineleri', work.stats || emptyStats) +
+        renderMachineExamCategoryBlock(aid.title || 'İlk Yardım', aid.stats || emptyStats)
+      );
     }
 
     function renderExamSummaryCompact(summary) {
@@ -27870,7 +28782,8 @@
           return {
             categoryId: c.categoryId,
             title: c.title,
-            completedCount: 0
+            completedCount: 0,
+            totalCount: null
           };
         });
       }
@@ -27880,17 +28793,16 @@
       return (
         '<div class="sa-progress-lesson-rows">' +
         rows.map(function (row) {
-          var hasCount = row.completedCount > 0;
+          var completed = row.completedCount || 0;
+          var total = row.totalCount;
+          var hasCount = completed > 0;
           var countClass = hasCount
             ? 'sa-progress-lesson-row__count sa-progress-lesson-row__count--filled'
             : 'sa-progress-lesson-row__count sa-progress-lesson-row__count--empty';
-          var countText = hasCount
-            ? 'Tamamlanan Ünite Sayısı: ' + String(row.completedCount)
-            : 'Tamamlanan Ünite Sayısı: -';
           return (
             '<div class="sa-progress-lesson-row">' +
             '<div class="sa-progress-lesson-row__title">' + progressEscapeHtml(row.title || row.categoryId || 'Ders') + '</div>' +
-            '<div class="' + countClass + '">' + progressEscapeHtml(countText) + '</div>' +
+            '<div class="' + countClass + '">' + progressEscapeHtml(formatLessonProgressCountLabel(completed, total)) + '</div>' +
             '</div>'
           );
         }).join('') +
@@ -27984,6 +28896,7 @@
       var mobileStats = (summary && summary.mobileLessons && summary.mobileLessons.stats) || {};
       var duel = (summary && summary.duel) || {};
       var warnings = (summary && summary.warnings) || [];
+      var isMachineSummary = summary && summary.programType === 'machine_operator';
 
       var avgScore = attemptsStats.averageScore != null ? '%' + attemptsStats.averageScore : '—';
       var bestScore = attemptsStats.bestScore != null ? '%' + attemptsStats.bestScore : '—';
@@ -28025,11 +28938,6 @@
           '</div>';
       }
 
-      var attemptDetailHint = '';
-      if (attemptsStats.totalAttempts) {
-        attemptDetailHint = 'D:' + (attemptsStats.totalCorrect || 0) + ' Y:' + (attemptsStats.totalWrong || 0) + ' B:' + (attemptsStats.totalBlank || 0);
-      }
-
       var titleBlock = '';
       if (!ctx.hidePanelTitle) {
         titleBlock =
@@ -28037,27 +28945,48 @@
           '<p class="sa-progress-summary__subtitle">Öğrenci karnesi — deneme sınavları, ders ilerlemesi ve düello özeti</p>';
       }
 
+      var attemptDetailHint = '';
+      if (attemptsStats.totalAttempts) {
+        attemptDetailHint = 'D:' + (attemptsStats.totalCorrect || 0) + ' Y:' + (attemptsStats.totalWrong || 0) + ' B:' + (attemptsStats.totalBlank || 0);
+      }
+
+      var examSectionBody = isMachineSummary
+        ? renderMachineExamProgressSummary(summary)
+        : (renderExamSummaryCompact(summary) + renderAttemptDetailsCollapsible(summary));
+
+      var overviewMetricsClass = isMachineSummary
+        ? 'sa-progress-metrics sa-progress-metrics--machine'
+        : 'sa-progress-metrics';
+
+      var overviewCardsHtml =
+        '<div class="' + overviewMetricsClass + '">' +
+        renderProgressMetricCard('Toplam Deneme', attemptsStats.totalAttempts || 0, null) +
+        renderProgressMetricCard('Genel Başarı', avgScore, attemptDetailHint || null) +
+        renderProgressMetricCard('En İyi Skor', bestScore, attemptsStats.lastAttemptAt ? ('Son: ' + formatProgressDateShort(attemptsStats.lastAttemptAt)) : null) +
+        renderProgressMetricCard('Tamamlanan Ünite', totalCompletedUnits, lessonStats.lastCompletedAt ? ('Son: ' + formatProgressDateShort(lessonStats.lastCompletedAt)) : null) +
+        (isMachineSummary
+          ? ''
+          : renderProgressMetricCard('Düello Puanı', duelPoints, duel.matchesPlayed ? (duel.wins + 'G / ' + duel.losses + 'M') : null)) +
+        '</div>';
+
+      var duelSectionHtml = isMachineSummary
+        ? ''
+        : ('<div class="sa-progress-section"><h5><i class="fa-solid fa-trophy"></i> Düello / Lig</h5>' +
+          renderDuelProgressCard(summary) + '</div>');
+
       return (
         titleBlock +
         tenantSelectorHtml +
         tenantNote +
         mobileSyncNote +
         warningsHtml +
-        '<div class="sa-progress-metrics">' +
-        renderProgressMetricCard('Toplam Deneme', attemptsStats.totalAttempts || 0, null) +
-        renderProgressMetricCard('Genel Başarı', avgScore, attemptDetailHint || null) +
-        renderProgressMetricCard('En İyi Skor', bestScore, attemptsStats.lastAttemptAt ? ('Son: ' + formatProgressDateShort(attemptsStats.lastAttemptAt)) : null) +
-        renderProgressMetricCard('Tamamlanan Ünite', totalCompletedUnits, lessonStats.lastCompletedAt ? ('Son: ' + formatProgressDateShort(lessonStats.lastCompletedAt)) : null) +
-        renderProgressMetricCard('Düello Puanı', duelPoints, duel.matchesPlayed ? (duel.wins + 'G / ' + duel.losses + 'M') : null) +
-        '</div>' +
+        overviewCardsHtml +
         '<div class="sa-progress-section"><h5><i class="fa-solid fa-file-circle-check"></i> Deneme Sınavları</h5>' +
-        renderExamSummaryCompact(summary) +
-        renderAttemptDetailsCollapsible(summary) +
+        examSectionBody +
         '</div>' +
         '<div class="sa-progress-section"><h5><i class="fa-solid fa-book-open"></i> Ders İlerlemesi</h5>' +
         renderLessonCategorySummary(summary, 'lessons') + '</div>' +
-        '<div class="sa-progress-section"><h5><i class="fa-solid fa-trophy"></i> Düello / Lig</h5>' +
-        renderDuelProgressCard(summary) + '</div>' +
+        duelSectionHtml +
         (ctx.showMobileLesson
           ? '<div class="sa-progress-section"><h5><i class="fa-solid fa-mobile-screen"></i> Mobil Ders İlerlemesi</h5>' +
             '<p class="muted" style="margin:0 0 8px; font-size:0.78rem;">Tamamlanan: ' + progressEscapeHtml(String(mobileStats.completedCount || 0)) +
@@ -34842,6 +35771,7 @@
 
     const btnTenantPanelRefresh = document.getElementById('btn-tenant-panel-refresh-students');
     if (btnTenantPanelRefresh) btnTenantPanelRefresh.addEventListener('click', () => {
+      if (tpBulkDeleteInFlight) return;
       if (currentTenantPanelId) loadTenantPanelData(currentTenantPanelId);
     });
 
@@ -34852,8 +35782,62 @@
     const tpShowPassive = document.getElementById('tp-show-passive');
     if (tpShowPassive) tpShowPassive.addEventListener('change', () => applyTenantStudentFilter());
 
+    const tpBulkSelectAll = document.getElementById('tp-student-bulk-select-all');
+    if (tpBulkSelectAll) tpBulkSelectAll.addEventListener('change', onTpBulkMasterCheckboxChange);
+    const btnTpStudentBulkDelete = document.getElementById('btn-tp-student-bulk-delete');
+    if (btnTpStudentBulkDelete) btnTpStudentBulkDelete.addEventListener('click', function () {
+      executeTpBulkStudentHardDelete();
+    });
+    const tpBulkDeleteConfirmInput = document.getElementById('tp-student-bulk-delete-confirm-input');
+    if (tpBulkDeleteConfirmInput) {
+      tpBulkDeleteConfirmInput.addEventListener('input', syncTpBulkDeleteConfirmOkEnabled);
+      tpBulkDeleteConfirmInput.addEventListener('keydown', function (e) {
+        if (!e || e.key !== 'Enter') return;
+        e.preventDefault();
+        var okBtn = document.getElementById('btn-tp-student-bulk-delete-ok');
+        if (okBtn && !okBtn.disabled) resolveTpStudentBulkDeleteConfirm(true);
+      });
+    }
+    const btnTpStudentBulkDeleteCancel = document.getElementById('btn-tp-student-bulk-delete-cancel');
+    if (btnTpStudentBulkDeleteCancel) {
+      btnTpStudentBulkDeleteCancel.addEventListener('click', function () {
+        if (__tpStudentBulkDeleteBusy) return;
+        resolveTpStudentBulkDeleteConfirm(false);
+      });
+    }
+    const btnTpStudentBulkDeleteOk = document.getElementById('btn-tp-student-bulk-delete-ok');
+    if (btnTpStudentBulkDeleteOk) {
+      btnTpStudentBulkDeleteOk.addEventListener('click', function () {
+        if (__tpStudentBulkDeleteBusy) return;
+        syncTpBulkDeleteConfirmOkEnabled();
+        var okBtn = document.getElementById('btn-tp-student-bulk-delete-ok');
+        if (okBtn && okBtn.disabled) return;
+        __tpStudentBulkDeleteBusy = true;
+        if (okBtn) okBtn.disabled = true;
+        var cancelBtn = document.getElementById('btn-tp-student-bulk-delete-cancel');
+        if (cancelBtn) cancelBtn.disabled = true;
+        resolveTpStudentBulkDeleteConfirm(true);
+      });
+    }
+    syncTpBulkToolbarVisibility();
+
     const tpStudentsList = document.getElementById('tenant-panel-students-list');
-    if (tpStudentsList) tpStudentsList.addEventListener('click', function (e) {
+    if (tpStudentsList) {
+      tpStudentsList.addEventListener('change', function (e) {
+        var cb = e.target && e.target.closest && e.target.closest('input.tp-row-bulk-select');
+        if (cb) onTpBulkRowCheckboxChange(cb);
+      });
+      tpStudentsList.addEventListener('click', function (e) {
+      var selectWrap = e.target && e.target.closest && e.target.closest('.tp-student-row-select');
+      if (selectWrap) {
+        e.stopPropagation();
+        return;
+      }
+      var bulkCb = e.target && e.target.closest && e.target.closest('input.tp-row-bulk-select');
+      if (bulkCb) {
+        e.stopPropagation();
+        return;
+      }
       var delBtn = e.target && e.target.closest && e.target.closest('.tp-row-delete-btn');
       if (delBtn && currentTenantPanelId) {
         var row = delBtn.closest('.tp-student-row');
@@ -34883,6 +35867,7 @@
         if (uid) openTpStudentDetail(uid);
       }
     });
+    }
 
     const tpMailboxList = document.getElementById('tp-mailbox-list');
     if (tpMailboxList) tpMailboxList.addEventListener('click', function (e) {
@@ -35310,6 +36295,16 @@
         });
       }
     })();
+    (function setupTpStudentBulkDeleteConfirmModal() {
+      var modal = document.getElementById('tp-student-bulk-delete-confirm-modal');
+      if (modal) {
+        modal.addEventListener('click', function (e) {
+          if (e && e.target === modal && !__tpStudentBulkDeleteBusy) {
+            resolveTpStudentBulkDeleteConfirm(false);
+          }
+        });
+      }
+    })();
     setupSaDeleteConfirmModal();
     setupSaTenantDeleteConfirmModal();
 
@@ -35332,7 +36327,8 @@
         'tp-crm-message-modal',
         'tp-student-access-confirm-modal',
         'tp-student-access-result-modal',
-        'tp-student-hard-delete-confirm-modal'
+        'tp-student-hard-delete-confirm-modal',
+        'tp-student-bulk-delete-confirm-modal'
       ];
       for (var i = 0; i < ids.length; i++) {
         var el = document.getElementById(ids[i]);

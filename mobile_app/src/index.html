@@ -5735,7 +5735,8 @@ All other login/auth files are deprecated and must not be imported.
             z-index: 2000;
         }
         #program-select-screen {
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
             padding-left: 12px;
             padding-right: 12px;
         }
@@ -5752,14 +5753,13 @@ All other login/auth files are deprecated and must not be imported.
         #program-select-screen .program-select-content {
             width: 100%;
             min-height: 100%;
-            height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            padding-top: clamp(10px, 3.5vh, 28px);
+            padding-top: clamp(6px, 2.5vh, 20px);
             padding-bottom: 0;
-            gap: clamp(6px, 1.2vh, 10px);
+            gap: clamp(3px, 0.7vh, 6px);
             position: relative;
             box-sizing: border-box;
         }
@@ -5831,7 +5831,7 @@ All other login/auth files are deprecated and must not be imported.
             display: flex;
             flex-direction: column;
             gap: clamp(8px, 1.4vh, 12px);
-            margin-top: clamp(30px, 4vh, 38px);
+            margin-top: clamp(12px, 2.2vh, 20px);
             margin-left: auto;
             margin-right: auto;
             flex: 0 0 auto;
@@ -5842,38 +5842,28 @@ All other login/auth files are deprecated and must not be imported.
             -webkit-appearance: none;
             position: relative;
             isolation: isolate;
-            overflow: hidden;
+            overflow: visible;
             display: flex;
             flex-direction: column;
             align-items: stretch;
             justify-content: stretch;
             width: 100%;
-            min-height: clamp(148px, 21.25vh, 190px);
+            min-height: 0;
             text-align: center;
-            border-radius: 20px;
-            padding: 14px 16px 12px;
+            border-radius: 12px;
+            padding: 4px;
             cursor: pointer;
-            border: 1px solid rgba(148, 163, 184, 0.28);
-            background:
-                linear-gradient(155deg, rgba(18, 28, 48, 0.96), rgba(8, 15, 30, 0.92)),
-                linear-gradient(125deg, rgba(56, 189, 248, 0.12), rgba(251, 191, 36, 0.08));
-            box-shadow:
-                0 14px 32px rgba(0, 0, 0, 0.38),
-                inset 0 1px 0 rgba(255, 255, 255, 0.07);
-            transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            transition: transform 0.16s ease;
             color: inherit;
             font: inherit;
             box-sizing: border-box;
             gap: 0;
         }
         #program-select-screen .program-select-card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            pointer-events: none;
-            background: radial-gradient(95% 75% at 100% 0%, rgba(255, 255, 255, 0.14), transparent 55%);
-            z-index: 0;
+            content: none;
         }
         #program-select-screen .program-select-card > * {
             position: relative;
@@ -5882,98 +5872,84 @@ All other login/auth files are deprecated and must not be imported.
         #program-select-screen .program-select-card:active {
             transform: scale(0.985);
         }
-        #program-select-screen .program-select-card-driving {
-            border-color: rgba(34, 211, 238, 0.55);
-            box-shadow:
-                0 14px 32px rgba(0, 0, 0, 0.4),
-                0 0 34px rgba(34, 211, 238, 0.22),
-                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        #program-select-screen .program-select-card-driving,
+        #program-select-screen .program-select-card-machine {
+            border: none;
+            background: transparent;
+            box-shadow: none;
         }
         #program-select-screen .program-select-card-driving:hover,
-        #program-select-screen .program-select-card-driving:focus-visible {
-            border-color: rgba(56, 189, 248, 0.78);
-            box-shadow:
-                0 16px 36px rgba(0, 0, 0, 0.44),
-                0 0 40px rgba(34, 211, 238, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            outline: none;
-        }
-        #program-select-screen .program-select-card-machine {
-            border-color: rgba(234, 179, 8, 0.58);
-            background:
-                linear-gradient(155deg, rgba(18, 28, 48, 0.96), rgba(8, 15, 30, 0.92)),
-                linear-gradient(125deg, rgba(251, 191, 36, 0.16), rgba(234, 179, 8, 0.08));
-            box-shadow:
-                0 14px 32px rgba(0, 0, 0, 0.4),
-                0 0 34px rgba(234, 179, 8, 0.24),
-                inset 0 1px 0 rgba(255, 255, 255, 0.08);
-        }
+        #program-select-screen .program-select-card-driving:focus-visible,
         #program-select-screen .program-select-card-machine:hover,
         #program-select-screen .program-select-card-machine:focus-visible {
-            border-color: rgba(250, 204, 21, 0.78);
-            box-shadow:
-                0 16px 36px rgba(0, 0, 0, 0.44),
-                0 0 40px rgba(234, 179, 8, 0.32),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: none;
+            background: transparent;
+            box-shadow: none;
             outline: none;
         }
         #program-select-screen .program-select-card-content {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between;
-            gap: 8px;
+            justify-content: center;
+            gap: 0;
             min-width: 0;
             width: 100%;
             flex: 1 1 auto;
-            min-height: 100%;
             box-sizing: border-box;
         }
-        #program-select-screen .program-select-card-title {
-            display: block;
-            font-size: clamp(0.92rem, 2.8vh, 1.02rem);
-            font-weight: 800;
-            line-height: 1.3;
-            color: #f8fafc;
-            margin: 0;
-            overflow-wrap: anywhere;
-            text-align: center;
-            width: 100%;
-        }
-        #program-select-screen .program-select-card-driving .program-select-card-title {
-            color: #22d3ee;
-        }
-        #program-select-screen .program-select-card-machine .program-select-card-title {
-            color: #fbbf24;
+        #program-select-screen .program-select-card-title,
+        #program-select-screen .program-select-card-cta {
+            display: none !important;
         }
         #program-select-screen .program-select-card-middle {
-            flex: 1 1 auto;
+            flex: 0 0 auto;
             width: 100%;
-            min-height: 18px;
-        }
-        #program-select-screen .program-select-card-cta {
-            display: inline-flex;
+            min-width: 0;
+            display: flex;
             align-items: center;
             justify-content: center;
-            align-self: center;
-            flex: 0 0 auto;
-            min-height: 28px;
-            height: 28px;
-            padding: 0 18px;
-            border-radius: 999px;
-            font-size: 0.78rem;
-            font-weight: 800;
-            letter-spacing: 0.02em;
-            color: #0f172a;
-            background: linear-gradient(145deg, #67e8f9, #22d3ee);
-            box-shadow: 0 0 16px rgba(34, 211, 238, 0.35);
             box-sizing: border-box;
-            white-space: nowrap;
-            margin-top: auto;
         }
-        #program-select-screen .program-select-card-machine .program-select-card-cta {
-            background: linear-gradient(145deg, #fde68a, #f59e0b);
-            box-shadow: 0 0 16px rgba(245, 158, 11, 0.38);
+        #program-select-screen .program-select-hero-frame {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            border-radius: 10px;
+            border: 1.5px solid rgba(255, 255, 255, 0.86);
+            background: rgba(0, 0, 0, 0.28);
+            box-sizing: border-box;
+        }
+        #program-select-screen .program-select-hero-image {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: contain;
+            border-radius: inherit;
+        }
+        #program-select-screen #program-select-driving .program-select-hero-frame {
+            box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.24),
+                0 0 8px rgba(255, 255, 255, 0.42),
+                0 0 16px rgba(255, 255, 255, 0.20),
+                0 0 14px rgba(165, 243, 252, 0.15),
+                0 0 22px rgba(34, 211, 238, 0.10),
+                0 4px 12px rgba(2, 6, 23, 0.45),
+                inset 0 1px 0 rgba(255, 255, 255, 0.39),
+                inset 0 0 10px rgba(255, 255, 255, 0.09);
+        }
+        #program-select-screen #program-select-machine .program-select-hero-frame {
+            box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.24),
+                0 0 8px rgba(255, 255, 255, 0.42),
+                0 0 16px rgba(255, 255, 255, 0.20),
+                0 0 14px rgba(251, 191, 36, 0.15),
+                0 0 22px rgba(253, 230, 138, 0.10),
+                0 4px 12px rgba(2, 6, 23, 0.45),
+                inset 0 1px 0 rgba(255, 255, 255, 0.39),
+                inset 0 0 10px rgba(255, 255, 255, 0.09);
         }
         #login-screen .program-entry-back {
             position: absolute;
@@ -7472,6 +7448,57 @@ All other login/auth files are deprecated and must not be imported.
             padding-top: 4px;
             box-sizing: border-box;
         }
+        #machine-session-screen #machine-lesson-detail.is-active {
+            padding-bottom: 96px;
+            box-sizing: border-box;
+        }
+        #machine-session-screen #machine-lesson-detail-completion-action {
+            margin-top: 18px;
+            margin-bottom: 8px;
+        }
+        #machine-session-screen .machine-lesson-detail-completion-done {
+            border: 1px solid rgba(34, 197, 94, 0.45);
+            border-radius: 14px;
+            padding: 12px 14px;
+            background:
+                linear-gradient(145deg, rgba(6, 78, 59, 0.38), rgba(10, 22, 18, 0.55)),
+                linear-gradient(120deg, rgba(34, 197, 94, 0.12), rgba(16, 185, 129, 0.08));
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.18);
+            box-sizing: border-box;
+        }
+        #machine-session-screen .machine-lesson-detail-completion-done__title {
+            color: #86efac;
+            font-weight: 700;
+            font-size: 0.95rem;
+            line-height: 1.35;
+        }
+        #machine-session-screen .machine-lesson-detail-completion-done__sub {
+            margin-top: 4px;
+            font-size: 0.8rem;
+            color: rgba(134, 239, 172, 0.88);
+            line-height: 1.4;
+        }
+        #machine-session-screen #machine-lesson-mark-complete-btn {
+            width: 100%;
+            appearance: none;
+            -webkit-appearance: none;
+            border: 1px solid rgba(45, 212, 191, 0.42);
+            border-radius: 14px;
+            padding: 12px 14px;
+            background: linear-gradient(145deg, rgba(15, 118, 110, 0.42), rgba(8, 47, 73, 0.55));
+            color: #ecfeff;
+            font-size: 0.92rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+        #machine-session-screen #machine-lesson-mark-complete-btn:active {
+            transform: scale(0.99);
+        }
+        #machine-session-screen #machine-lesson-mark-complete-btn:disabled {
+            opacity: 0.65;
+            pointer-events: none;
+        }
         #machine-session-screen .machine-lesson-premium-card {
             appearance: none;
             -webkit-appearance: none;
@@ -7557,12 +7584,31 @@ All other login/auth files are deprecated and must not be imported.
         }
         #machine-session-screen .machine-lesson-premium-desc {
             margin: 0;
-            color: #cbd5e1;
-            font-size: 0.9rem;
-            line-height: 1.45;
+            color: #e2e8f0;
+            font-size: 0.88rem;
+            font-weight: 500;
+            line-height: 1.5;
             overflow-wrap: anywhere;
+            word-break: break-word;
             text-align: center;
             flex: 1 1 auto;
+            min-width: 0;
+        }
+        #machine-session-screen .machine-lesson-premium-desc-em {
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+        #machine-session-screen .machine-lesson-premium-desc-em--cyan {
+            color: #67e8f9;
+            text-shadow: 0 0 10px rgba(34, 211, 238, 0.22);
+        }
+        #machine-session-screen .machine-lesson-premium-desc-em--gold {
+            color: #fcd34d;
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.2), 0 0 1px rgba(234, 179, 8, 0.28);
+        }
+        #machine-session-screen .machine-lesson-premium-desc-em--mint {
+            color: #5eead4;
+            text-shadow: 0 0 10px rgba(45, 212, 191, 0.2), 0 0 1px rgba(52, 211, 153, 0.2);
         }
         #machine-session-screen .machine-lesson-premium-note {
             display: block;
@@ -7597,6 +7643,195 @@ All other login/auth files are deprecated and must not be imported.
         #machine-session-screen .machine-lesson-premium-card--blue .machine-lesson-premium-cta {
             background: linear-gradient(145deg, #93c5fd, #818cf8);
             box-shadow: 0 0 16px rgba(129, 140, 248, 0.35);
+        }
+        #machine-session-screen #machine-video-shell {
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto;
+            box-sizing: border-box;
+            padding-bottom: 12px;
+        }
+        #machine-session-screen #machine-video-status {
+            display: none;
+            margin: 0 0 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            background: rgba(15, 23, 42, 0.55);
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            line-height: 1.45;
+        }
+        #machine-session-screen #machine-video-status.is-visible {
+            display: block;
+        }
+        #machine-session-screen #machine-video-status.is-error {
+            border-color: rgba(248, 113, 113, 0.45);
+            color: #fecaca;
+        }
+        #machine-session-screen #machine-video-categories,
+        #machine-session-screen #machine-video-list {
+            display: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #machine-session-screen #machine-video-categories.is-active,
+        #machine-session-screen #machine-video-list.is-active {
+            display: block;
+        }
+        #machine-session-screen #machine-video-categories.is-active {
+            padding-top: clamp(20px, 5vh, 48px);
+            padding-bottom: 8px;
+        }
+        #machine-session-screen #machine-video-list.is-active {
+            margin-top: 4px;
+            padding:
+                14px
+                12px
+                calc(
+                    var(--bottom-nav-clearance, 92px)
+                    + var(--sa-bottom, 0px)
+                    + 16px
+                );
+            border-radius: 18px;
+            border: 1px solid rgba(251, 113, 133, 0.32);
+            background:
+                linear-gradient(140deg, rgba(28, 22, 42, 0.92), rgba(15, 23, 42, 0.88)),
+                linear-gradient(120deg, rgba(251, 113, 133, 0.1), rgba(167, 139, 250, 0.12));
+            box-shadow: 0 0 0 1px rgba(251, 113, 133, 0.15), 0 12px 28px rgba(2, 6, 23, 0.45);
+            box-sizing: border-box;
+            min-width: 0;
+        }
+        #machine-session-screen .machine-video-list-header {
+            font-weight: 700;
+            color: #f8fafc;
+            font-size: 1rem;
+            margin: 0 0 12px;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+        #machine-session-screen #machine-video-list-host {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 0;
+        }
+        #machine-session-screen .machine-video-list-status {
+            color: rgba(226, 232, 240, 0.88);
+            font-size: 0.92rem;
+            line-height: 1.5;
+            margin: 0 0 10px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            text-align: left;
+            border-radius: 0;
+        }
+        #machine-session-screen .machine-video-item {
+            appearance: none;
+            -webkit-appearance: none;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            width: 100%;
+            padding: 12px;
+            border-radius: 16px;
+            border: 1px solid rgba(251, 113, 133, 0.28);
+            background:
+                linear-gradient(140deg, rgba(22, 30, 49, 0.92), rgba(15, 23, 42, 0.86)),
+                linear-gradient(120deg, rgba(251, 113, 133, 0.08), rgba(167, 139, 250, 0.1));
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.12), 0 10px 24px rgba(2, 6, 23, 0.45);
+            box-sizing: border-box;
+            min-width: 0;
+            cursor: pointer;
+            text-align: left;
+            color: #f8fafc;
+            font: inherit;
+        }
+        #machine-session-screen .machine-video-item:active {
+            box-shadow: 0 0 0 1px rgba(251, 113, 133, 0.4), 0 14px 28px rgba(2, 6, 23, 0.55);
+        }
+        #machine-session-screen .machine-video-item-thumb {
+            flex: 0 0 96px;
+            width: 96px;
+            height: 54px;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            isolation: isolate;
+            border: 1.5px solid rgba(255, 255, 255, 0.78);
+            background: rgba(0, 0, 0, 0.35);
+            box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.22),
+                0 0 8px rgba(255, 255, 255, 0.38),
+                0 0 16px rgba(255, 255, 255, 0.18),
+                0 0 14px rgba(165, 243, 252, 0.14),
+                0 4px 12px rgba(2, 6, 23, 0.45),
+                inset 0 1px 0 rgba(255, 255, 255, 0.35),
+                inset 0 0 10px rgba(255, 255, 255, 0.08);
+        }
+        #machine-session-screen .machine-video-item-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: inherit;
+        }
+        #machine-session-screen .machine-video-item-body {
+            flex: 1;
+            min-width: 0;
+        }
+        #machine-session-screen .machine-video-item-title {
+            font-weight: 700;
+            color: #f1f8ff;
+            font-size: 0.95rem;
+            line-height: 1.35;
+            margin: 0 0 6px;
+            word-break: break-word;
+        }
+        #machine-session-screen .machine-video-item-badge {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 999px;
+            margin: 0 0 6px;
+            background: rgba(251, 113, 133, 0.18);
+            color: #fda4af;
+            border: 1px solid rgba(251, 113, 133, 0.35);
+        }
+        #machine-session-screen .machine-video-item-desc {
+            color: rgba(214, 229, 247, 0.82);
+            font-size: 0.82rem;
+            line-height: 1.4;
+            margin: 0 0 8px;
+            word-break: break-word;
+        }
+        #machine-session-screen .machine-video-item-open {
+            display: inline-block;
+            margin-top: 0;
+            font-size: 0.82rem;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(56, 189, 248, 0.45);
+            background: rgba(56, 189, 248, 0.14);
+            color: #7dd3fc;
+            box-sizing: border-box;
+        }
+        @media (max-width: 420px) {
+            #machine-session-screen .machine-video-item {
+                flex-direction: column;
+            }
+            #machine-session-screen .machine-video-item-thumb {
+                width: 100%;
+                flex: 0 0 auto;
+                height: auto;
+                aspect-ratio: 16 / 9;
+                max-height: 140px;
+            }
         }
         #machine-session-screen .machine-lesson-unit-premium-card {
             appearance: none;
@@ -7715,6 +7950,26 @@ All other login/auth files are deprecated and must not be imported.
             color: #94a3b8;
             line-height: 1.3;
         }
+        #machine-session-screen .machine-lesson-unit-premium-card.is-completed {
+            border-color: rgba(34, 197, 94, 0.42);
+            box-shadow:
+                0 10px 24px rgba(0, 0, 0, 0.28),
+                0 0 14px rgba(34, 197, 94, 0.18),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+        #machine-session-screen .machine-lesson-unit-premium-check {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.35rem;
+            margin-left: 4px;
+            color: #4ade80;
+            font-size: 1.15rem;
+            font-weight: 800;
+            line-height: 1;
+            text-shadow: 0 0 10px rgba(74, 222, 128, 0.45);
+        }
         #machine-session-screen .machine-lesson-card {
             display: flex;
             align-items: center;
@@ -7804,16 +8059,59 @@ All other login/auth files are deprecated and must not be imported.
         #machine-session-screen .machine-lesson-inline--danger { color: #fca5a5; font-weight: 700; }
         #machine-session-screen .machine-lesson-inline--italic { font-style: italic; }
         #machine-session-screen .machine-lesson-detail-image-wrap {
+            position: relative;
             width: 100%;
             max-width: 100%;
             box-sizing: border-box;
+            margin-top: 12px;
+            padding: 0;
+            border-radius: 10px;
+            overflow: hidden;
+            isolation: isolate;
+            border: 1.5px solid rgba(255, 255, 255, 0.78);
+            background: rgba(0, 0, 0, 0.35);
+            box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.22),
+                0 0 8px rgba(255, 255, 255, 0.38),
+                0 0 16px rgba(255, 255, 255, 0.18),
+                0 0 14px rgba(165, 243, 252, 0.14),
+                0 4px 12px rgba(2, 6, 23, 0.45),
+                inset 0 1px 0 rgba(255, 255, 255, 0.35),
+                inset 0 0 10px rgba(255, 255, 255, 0.08);
+        }
+        #machine-session-screen .machine-lesson-image-zoom-badge {
+            position: absolute;
+            left: 8px;
+            bottom: 8px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 7px;
+            background: rgba(5, 10, 25, 0.78);
+            color: #f8fbff;
+            font-size: 13px;
+            line-height: 1;
+            border: 1px solid rgba(255, 214, 10, 0.55);
+            box-shadow:
+                0 0 8px rgba(255, 214, 10, 0.28),
+                inset 0 0 6px rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(3px);
+            pointer-events: none;
+            user-select: none;
+            z-index: 2;
         }
         #machine-session-screen .machine-lesson-detail-image-wrap img {
             display: block;
             width: 100%;
             max-width: 100%;
             height: auto;
-            border-radius: 10px;
+            border-radius: inherit;
+            cursor: zoom-in;
+        }
+        #machine-session-screen .machine-lesson-detail-image-wrap:active {
+            transform: scale(0.995);
         }
         #machine-session-screen .machine-lesson-detail-caption {
             margin-top: 8px;
@@ -7897,6 +8195,10 @@ All other login/auth files are deprecated and must not be imported.
         #machine-session-screen #machine-exam-result.is-active,
         #machine-session-screen #machine-exam-review.is-active {
             display: block;
+        }
+        #machine-session-screen #machine-exam-categories.is-active {
+            padding-top: clamp(20px, 5vh, 48px);
+            padding-bottom: 8px;
         }
         #machine-session-screen .machine-exam-premium-card {
             appearance: none;
@@ -8458,13 +8760,43 @@ All other login/auth files are deprecated and must not be imported.
             color: #c7d2fe;
         }
         #machine-session-screen .machine-exam-category-card-desc {
-            margin: 0;
-            color: #cbd5e1;
-            font-size: 0.9rem;
-            line-height: 1.45;
+            margin: 0 auto;
+            max-width: 34ch;
+            color: #e2e8f0;
+            font-size: 0.88rem;
+            font-weight: 500;
+            line-height: 1.55;
             overflow-wrap: anywhere;
+            word-break: break-word;
             text-align: center;
             flex: 1 1 auto;
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #machine-session-screen .machine-exam-category-card-desc-em {
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+        #machine-session-screen .machine-exam-category-card-desc-em--cyan {
+            color: #67e8f9;
+            text-shadow: 0 0 8px rgba(34, 211, 238, 0.18);
+        }
+        #machine-session-screen .machine-exam-category-card-desc-em--gold {
+            color: #fcd34d;
+            text-shadow: 0 0 8px rgba(251, 191, 36, 0.16);
+        }
+        #machine-session-screen .machine-exam-category-card-desc-em--mint {
+            color: #5eead4;
+            text-shadow: 0 0 8px rgba(45, 212, 191, 0.16);
+        }
+        #machine-session-screen .machine-exam-category-card-desc-em--cyan-gold {
+            color: #7dd3fc;
+            text-shadow: 0 0 8px rgba(34, 211, 238, 0.14), 0 0 1px rgba(251, 191, 36, 0.22);
+        }
+        #machine-session-screen .machine-exam-category-card-desc-em--cyan-mint {
+            color: #6ee7b7;
+            text-shadow: 0 0 8px rgba(45, 212, 191, 0.14), 0 0 1px rgba(52, 211, 153, 0.18);
         }
         #machine-session-screen .machine-exam-category-card-cta {
             display: inline-flex;
@@ -8699,6 +9031,90 @@ All other login/auth files are deprecated and must not be imported.
             font-size: 1.02rem;
             font-weight: 800;
             color: #e0f2fe;
+        }
+        /* Machine exam progress card — compact kv rows (exam card only) */
+        #machine-session-screen #machine-profile-exam-card {
+            padding: 14px 14px 12px;
+        }
+        #machine-session-screen #machine-profile-exam-card .machine-profile-card-heading {
+            margin: 0 0 8px;
+        }
+        #machine-session-screen #machine-profile-exam-card .machine-profile-exam-category-block {
+            margin: 0;
+            padding: 10px 10px 8px;
+            border-radius: 14px;
+            box-sizing: border-box;
+            min-width: 0;
+        }
+        #machine-session-screen #machine-profile-exam-card .machine-profile-exam-category-block + .machine-profile-exam-category-block {
+            margin-top: 10px;
+        }
+        #machine-session-screen #machine-profile-exam-card .machine-profile-exam-category-title {
+            margin: 0 0 8px;
+            font-size: 0.84rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+        }
+        #machine-session-screen #machine-profile-exam-card .machine-profile-exam-kv {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 6px;
+            min-width: 0;
+        }
+        #machine-session-screen #machine-profile-exam-card .machine-profile-exam-kv-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.55);
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            box-sizing: border-box;
+            min-width: 0;
+        }
+        #machine-session-screen #machine-profile-exam-card .machine-profile-exam-kv-label {
+            flex: 1 1 auto;
+            min-width: 0;
+            color: #9ca3af;
+            font-size: 0.78rem;
+            font-weight: 600;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
+        }
+        #machine-session-screen #machine-profile-exam-card .machine-profile-exam-kv-value {
+            flex: 0 1 auto;
+            max-width: 48%;
+            color: #e5e7eb;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-align: right;
+            white-space: nowrap;
+            overflow-wrap: anywhere;
+        }
+        #machine-session-screen #machine-profile-exam-work-machines-block {
+            border: 1px solid rgba(234, 179, 8, 0.32);
+            background: rgba(120, 85, 10, 0.14);
+            box-shadow: inset 0 0 18px rgba(234, 179, 8, 0.08);
+        }
+        #machine-session-screen #machine-profile-exam-work-machines-block .machine-profile-exam-category-title {
+            color: #fcd34d;
+        }
+        #machine-session-screen #machine-profile-exam-work-machines-block .machine-profile-exam-kv-row {
+            border-color: rgba(234, 179, 8, 0.22);
+        }
+        #machine-session-screen #machine-profile-exam-first-aid-block {
+            border: 1px solid rgba(52, 211, 153, 0.32);
+            background: rgba(6, 78, 59, 0.16);
+            box-shadow: inset 0 0 18px rgba(52, 211, 153, 0.08);
+        }
+        #machine-session-screen #machine-profile-exam-first-aid-block .machine-profile-exam-category-title {
+            color: #6ee7b7;
+        }
+        #machine-session-screen #machine-profile-exam-first-aid-block .machine-profile-exam-kv-row {
+            border-color: rgba(52, 211, 153, 0.22);
         }
         #machine-session-screen .machine-profile-lesson-row {
             display: flex;
@@ -9303,16 +9719,16 @@ All other login/auth files are deprecated and must not be imported.
                 margin: 0 auto 8px;
             }
             #program-select-screen .program-select-content {
-                padding-top: clamp(8px, 2.5vh, 18px);
-                gap: 6px;
+                padding-top: clamp(5px, 1.8vh, 12px);
+                gap: 3px;
                 justify-content: flex-start;
             }
             #program-select-screen .program-select-cards {
-                margin-top: clamp(18px, 2.5vh, 28px);
+                margin-top: clamp(6px, 1.4vh, 14px);
             }
             #program-select-screen .program-select-card {
-                min-height: clamp(135px, 18.75vh, 165px);
-                padding: 12px 14px 10px;
+                min-height: 0;
+                padding: 4px;
             }
             #machine-login-screen .machine-login-content {
                 padding-top: 10px;
@@ -9487,16 +9903,32 @@ All other login/auth files are deprecated and must not be imported.
             <div class="program-select-cards">
                 <button type="button" class="program-select-card program-select-card-driving" id="program-select-driving" onclick="showDrivingLogin()">
                     <div class="program-select-card-content">
-                        <div class="program-select-card-title">Ehliyet Sınavlarına Hazırlık Modülleri</div>
-                        <div class="program-select-card-middle" aria-hidden="true"></div>
-                        <span class="program-select-card-cta">Modüle Giriş</span>
+                        <div class="program-select-card-middle">
+                            <div class="program-select-hero-frame">
+                                <img
+                                    src="./assets/program-select/program-driving-hero.webp"
+                                    alt="Ehliyet Sınavlarına Hazırlık"
+                                    class="program-select-hero-image"
+                                    loading="eager"
+                                    decoding="async"
+                                >
+                            </div>
+                        </div>
                     </div>
                 </button>
                 <button type="button" class="program-select-card program-select-card-machine" id="program-select-machine" onclick="showMachineEntry()">
                     <div class="program-select-card-content">
-                        <div class="program-select-card-title">İş Makineleri Operatörlük Sınavlarına Hazırlık Modülleri</div>
-                        <div class="program-select-card-middle" aria-hidden="true"></div>
-                        <span class="program-select-card-cta">Modüle Giriş</span>
+                        <div class="program-select-card-middle">
+                            <div class="program-select-hero-frame">
+                                <img
+                                    src="./assets/program-select/program-machine-hero.webp"
+                                    alt="İş Makineleri Operatörlük Sınavlarına Hazırlık"
+                                    class="program-select-hero-image"
+                                    loading="eager"
+                                    decoding="async"
+                                >
+                            </div>
+                        </div>
                     </div>
                 </button>
             </div>
@@ -9754,10 +10186,12 @@ All other login/auth files are deprecated and must not be imported.
                     </div>
                 </section>
                 <section id="machine-videos-screen" class="machine-shell-pane" data-machine-pane="machine-videos-screen">
-                    <div class="machine-placeholder-card">
-                        <h2 class="machine-placeholder-title">Video Öğretmen</h2>
-                        <p class="machine-placeholder-text">Video ders erişimi sonraki aşamada bağlanacaktır.</p>
-                        <button type="button" class="machine-placeholder-home-btn" data-machine-target="machine-home-screen">Ana Sayfaya Dön</button>
+                    <div id="machine-video-shell">
+                        <div id="machine-video-status" role="status" aria-live="polite"></div>
+                        <div id="machine-video-categories" class="is-active"></div>
+                        <div id="machine-video-list">
+                            <div id="machine-video-list-host"></div>
+                        </div>
                     </div>
                 </section>
                 <section id="machine-profile-screen" class="machine-shell-pane" data-machine-pane="machine-profile-screen">
@@ -9788,14 +10222,49 @@ All other login/auth files are deprecated and must not be imported.
                             <div class="machine-profile-card-heading">Sınav İlerlemesi</div>
                             <div id="machine-profile-exam-loading" class="machine-profile-inline-status" style="display:none;">Sınav ilerlemesi yükleniyor…</div>
                             <div id="machine-profile-exam-error" class="machine-profile-inline-status is-error" style="display:none;">Sınav ilerlemesi şu anda yüklenemedi.</div>
-                            <div id="machine-profile-exam-empty" class="machine-profile-inline-status" style="display:none;">Henüz tamamlanmış İş Makineleri sınavınız bulunmuyor.</div>
-                            <div id="machine-profile-exam-stats" class="machine-profile-stats-grid" style="display:none;">
-                                <div class="machine-profile-stat"><span class="machine-profile-stat-label">Tamamlanan</span><span id="machine-profile-exam-completed" class="machine-profile-stat-value">0</span></div>
-                                <div class="machine-profile-stat"><span class="machine-profile-stat-label">Doğru</span><span id="machine-profile-exam-correct" class="machine-profile-stat-value">0</span></div>
-                                <div class="machine-profile-stat"><span class="machine-profile-stat-label">Yanlış</span><span id="machine-profile-exam-wrong" class="machine-profile-stat-value">0</span></div>
-                                <div class="machine-profile-stat"><span class="machine-profile-stat-label">Boş</span><span id="machine-profile-exam-blank" class="machine-profile-stat-value">0</span></div>
-                                <div class="machine-profile-stat"><span class="machine-profile-stat-label">Ortalama</span><span id="machine-profile-exam-average" class="machine-profile-stat-value">—</span></div>
-                                <div class="machine-profile-stat"><span class="machine-profile-stat-label">En İyi</span><span id="machine-profile-exam-best" class="machine-profile-stat-value">—</span></div>
+                            <div id="machine-profile-exam-categories" style="display:none;">
+                                <div id="machine-profile-exam-work-machines-block" class="machine-profile-exam-category-block">
+                                    <div class="machine-profile-exam-category-title">İş Makineleri</div>
+                                    <ul id="machine-profile-exam-work-machines-stats" class="machine-profile-exam-kv">
+                                        <li class="machine-profile-exam-kv-row">
+                                            <span class="machine-profile-exam-kv-label">Tamamlanan Sınavlar</span>
+                                            <span id="machine-profile-exam-work-machines-completed" class="machine-profile-exam-kv-value">0</span>
+                                        </li>
+                                        <li class="machine-profile-exam-kv-row">
+                                            <span class="machine-profile-exam-kv-label">Genel Başarı Oranı</span>
+                                            <span id="machine-profile-exam-work-machines-average" class="machine-profile-exam-kv-value">—</span>
+                                        </li>
+                                        <li class="machine-profile-exam-kv-row">
+                                            <span class="machine-profile-exam-kv-label">En İyi Skor</span>
+                                            <span id="machine-profile-exam-work-machines-best" class="machine-profile-exam-kv-value">—</span>
+                                        </li>
+                                        <li class="machine-profile-exam-kv-row">
+                                            <span class="machine-profile-exam-kv-label">Son Deneme</span>
+                                            <span id="machine-profile-exam-work-machines-last" class="machine-profile-exam-kv-value">—</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div id="machine-profile-exam-first-aid-block" class="machine-profile-exam-category-block">
+                                    <div class="machine-profile-exam-category-title">İlk Yardım</div>
+                                    <ul id="machine-profile-exam-first-aid-stats" class="machine-profile-exam-kv">
+                                        <li class="machine-profile-exam-kv-row">
+                                            <span class="machine-profile-exam-kv-label">Tamamlanan Sınavlar</span>
+                                            <span id="machine-profile-exam-first-aid-completed" class="machine-profile-exam-kv-value">0</span>
+                                        </li>
+                                        <li class="machine-profile-exam-kv-row">
+                                            <span class="machine-profile-exam-kv-label">Genel Başarı Oranı</span>
+                                            <span id="machine-profile-exam-first-aid-average" class="machine-profile-exam-kv-value">—</span>
+                                        </li>
+                                        <li class="machine-profile-exam-kv-row">
+                                            <span class="machine-profile-exam-kv-label">En İyi Skor</span>
+                                            <span id="machine-profile-exam-first-aid-best" class="machine-profile-exam-kv-value">—</span>
+                                        </li>
+                                        <li class="machine-profile-exam-kv-row">
+                                            <span class="machine-profile-exam-kv-label">Son Deneme</span>
+                                            <span id="machine-profile-exam-first-aid-last" class="machine-profile-exam-kv-value">—</span>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                         <div id="machine-profile-lesson-card" class="machine-profile-card machine-profile-card--turquoise">
@@ -10232,13 +10701,6 @@ justify-content:center;
             <div>
                 <span style="display:block;">Video-Animasyon Soruları</span>
                 <span style="font-size:0.8rem; color:#bdc3c7; font-weight:normal;">Hareketli ve videolu soru içerikleri</span>
-            </div>
-        </div>
-        <div class="menu-btn exams-workmachines-card" onclick="loadExamList('work_machines');">
-            <span class="menu-btn-emoji">🚜</span>
-            <div>
-                <span style="display:block;">İş Makineleri Çıkmış Sorular</span>
-                <span class="exam-category-note">Bu dersi sadece operatörlük sınavına girecek adaylar çözmelidir.</span>
             </div>
         </div>
         </div>
@@ -10812,69 +11274,6 @@ justify-content:center;
         </div>
     </div>
 
-    <div id="image-viewer-modal" class="modal-overlay" onclick="closeImageViewer()">
-        <div class="image-close-btn" onclick="closeImageViewer()">×</div>
-        
-        <div class="image-modal-box" onclick="event.stopPropagation()">
-            <img id="full-screen-image" class="full-image" src="">
-        </div>
-        
-        <div class="image-reset-btn" onclick="resetZoom()">Sıfırla</div>
-    </div>
-
-    <div id="teacher-video-player-modal" class="modal-overlay teacher-video-player-modal" style="display:none;" onclick="closeTeacherVideoPlayerMobile()" aria-hidden="true">
-        <div class="teacher-video-player-box" onclick="event.stopPropagation()">
-            <div class="teacher-video-player-head">
-                <h3 id="teacher-video-player-title" class="teacher-video-player-title"></h3>
-                <button type="button" class="teacher-video-player-close" onclick="closeTeacherVideoPlayerMobile()" aria-label="Kapat">×</button>
-            </div>
-            <div id="teacher-video-player-frame-wrap" class="teacher-video-player-frame-wrap">
-                <iframe id="teacher-video-player-iframe" class="teacher-video-player-iframe" title="Video ders oynatıcı" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-            </div>
-            <p id="teacher-video-player-error" class="teacher-video-player-error" style="display:none;"></p>
-        </div>
-    </div>
-
-    <div id="teacher-video-reward-consent-modal" class="modal-overlay teacher-video-access-overlay-modal" style="display:none;" onclick="closeTeacherVideoRewardConsentModalMobile()" aria-hidden="true">
-        <div class="teacher-video-access-dialog" onclick="event.stopPropagation()">
-            <h3 class="teacher-video-access-dialog-title">Ödüllü reklam</h3>
-            <p class="teacher-video-access-dialog-body">Bu videoyu izlemek için kısa bir ödüllü reklam izleyebilirsiniz.</p>
-            <div class="teacher-video-access-dialog-actions">
-                <button type="button" class="teacher-video-access-btn teacher-video-access-btn-secondary" onclick="closeTeacherVideoRewardConsentModalMobile()">Vazgeç</button>
-                <button type="button" class="teacher-video-access-btn teacher-video-access-btn-primary" id="teacher-video-reward-consent-watch-btn">Reklamı İzle</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="teacher-video-premium-lock-modal" class="modal-overlay teacher-video-access-overlay-modal" style="display:none;" onclick="closeTeacherVideoPremiumLockModalMobile()" aria-hidden="true">
-        <div class="teacher-video-access-dialog" onclick="event.stopPropagation()">
-            <h3 class="teacher-video-access-dialog-title">PREMIUM İLE VİDEO DERSLERİ AÇ</h3>
-            <p class="teacher-video-access-dialog-body">Öğretmen anlatımlı dersler ve ünite ünite sınav tüyolarıyla ehliyet sınavına daha güçlü hazırlan.</p>
-            <ul class="teacher-video-premium-benefits">
-                <li>Tüm öğretmen video dersleri</li>
-                <li>Ünite bazlı sınav tüyoları</li>
-                <li>Zor konular için net anlatımlar</li>
-                <li>180 gün erişim</li>
-                <li>Tek seferlik ödeme</li>
-            </ul>
-            <p class="teacher-video-premium-price">249 TL / 180 gün</p>
-            <div class="teacher-video-access-dialog-actions">
-                <button type="button" class="teacher-video-access-btn teacher-video-access-btn-secondary" onclick="closeTeacherVideoPremiumLockModalMobile()">Daha Sonra</button>
-                <button type="button" class="teacher-video-access-btn teacher-video-access-btn-primary" id="teacher-video-premium-info-btn">Satın Alma Talebi Oluştur</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="teacher-video-access-result-modal" class="modal-overlay teacher-video-access-overlay-modal" style="display:none;" onclick="closeTeacherVideoAccessResultModalMobile()" aria-hidden="true">
-        <div class="teacher-video-access-dialog" onclick="event.stopPropagation()">
-            <h3 class="teacher-video-access-dialog-title" id="teacher-video-access-result-title">Bilgi</h3>
-            <p class="teacher-video-access-dialog-body" id="teacher-video-access-result-body"></p>
-            <div class="teacher-video-access-dialog-actions">
-                <button type="button" class="teacher-video-access-btn teacher-video-access-btn-primary" onclick="closeTeacherVideoAccessResultModalMobile()">Tamam</button>
-            </div>
-        </div>
-    </div>
-
     <div id="notification-panel-modal" class="notification-panel-overlay" onclick="closeNotificationPanel()">
         <div class="notification-panel-card" onclick="event.stopPropagation()">
             <div class="notif-panel-header">
@@ -10909,6 +11308,69 @@ justify-content:center;
         </div>
     </div>
 
+</div>
+
+<!-- Shared image viewer: document-level (not under #app-container / #machine-session-screen) -->
+<div id="image-viewer-modal" class="modal-overlay" onclick="closeImageViewer()" style="display:none;" aria-hidden="true">
+    <div class="image-close-btn" onclick="closeImageViewer()">×</div>
+    <div class="image-modal-box" onclick="event.stopPropagation()">
+        <img id="full-screen-image" class="full-image" src="">
+    </div>
+    <div class="image-reset-btn" onclick="resetZoom()">Sıfırla</div>
+</div>
+
+<!-- Shared Teacher Video overlays: document-level (not under #app-container / #machine-session-screen) -->
+<div id="teacher-video-player-modal" class="modal-overlay teacher-video-player-modal" style="display:none;" onclick="closeTeacherVideoPlayerMobile()" aria-hidden="true">
+    <div class="teacher-video-player-box" onclick="event.stopPropagation()">
+        <div class="teacher-video-player-head">
+            <h3 id="teacher-video-player-title" class="teacher-video-player-title"></h3>
+            <button type="button" class="teacher-video-player-close" onclick="closeTeacherVideoPlayerMobile()" aria-label="Kapat">×</button>
+        </div>
+        <div id="teacher-video-player-frame-wrap" class="teacher-video-player-frame-wrap">
+            <iframe id="teacher-video-player-iframe" class="teacher-video-player-iframe" title="Video ders oynatıcı" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        </div>
+        <p id="teacher-video-player-error" class="teacher-video-player-error" style="display:none;"></p>
+    </div>
+</div>
+
+<div id="teacher-video-reward-consent-modal" class="modal-overlay teacher-video-access-overlay-modal" style="display:none;" onclick="closeTeacherVideoRewardConsentModalMobile()" aria-hidden="true">
+    <div class="teacher-video-access-dialog" onclick="event.stopPropagation()">
+        <h3 class="teacher-video-access-dialog-title">Ödüllü reklam</h3>
+        <p class="teacher-video-access-dialog-body">Bu videoyu izlemek için kısa bir ödüllü reklam izleyebilirsiniz.</p>
+        <div class="teacher-video-access-dialog-actions">
+            <button type="button" class="teacher-video-access-btn teacher-video-access-btn-secondary" onclick="closeTeacherVideoRewardConsentModalMobile()">Vazgeç</button>
+            <button type="button" class="teacher-video-access-btn teacher-video-access-btn-primary" id="teacher-video-reward-consent-watch-btn">Reklamı İzle</button>
+        </div>
+    </div>
+</div>
+
+<div id="teacher-video-premium-lock-modal" class="modal-overlay teacher-video-access-overlay-modal" style="display:none;" onclick="closeTeacherVideoPremiumLockModalMobile()" aria-hidden="true">
+    <div class="teacher-video-access-dialog" onclick="event.stopPropagation()">
+        <h3 class="teacher-video-access-dialog-title">PREMIUM İLE VİDEO DERSLERİ AÇ</h3>
+        <p class="teacher-video-access-dialog-body">Öğretmen anlatımlı dersler ve ünite ünite sınav tüyolarıyla ehliyet sınavına daha güçlü hazırlan.</p>
+        <ul class="teacher-video-premium-benefits">
+            <li>Tüm öğretmen video dersleri</li>
+            <li>Ünite bazlı sınav tüyoları</li>
+            <li>Zor konular için net anlatımlar</li>
+            <li>180 gün erişim</li>
+            <li>Tek seferlik ödeme</li>
+        </ul>
+        <p class="teacher-video-premium-price">249 TL / 180 gün</p>
+        <div class="teacher-video-access-dialog-actions">
+            <button type="button" class="teacher-video-access-btn teacher-video-access-btn-secondary" onclick="closeTeacherVideoPremiumLockModalMobile()">Daha Sonra</button>
+            <button type="button" class="teacher-video-access-btn teacher-video-access-btn-primary" id="teacher-video-premium-info-btn">Satın Alma Talebi Oluştur</button>
+        </div>
+    </div>
+</div>
+
+<div id="teacher-video-access-result-modal" class="modal-overlay teacher-video-access-overlay-modal" style="display:none;" onclick="closeTeacherVideoAccessResultModalMobile()" aria-hidden="true">
+    <div class="teacher-video-access-dialog" onclick="event.stopPropagation()">
+        <h3 class="teacher-video-access-dialog-title" id="teacher-video-access-result-title">Bilgi</h3>
+        <p class="teacher-video-access-dialog-body" id="teacher-video-access-result-body"></p>
+        <div class="teacher-video-access-dialog-actions">
+            <button type="button" class="teacher-video-access-btn teacher-video-access-btn-primary" onclick="closeTeacherVideoAccessResultModalMobile()">Tamam</button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -11110,20 +11572,111 @@ var MACHINE_LESSON_CATEGORY_TITLE_FALLBACK = Object.freeze({
     is_makineleri: 'İş Makineleri',
     ilk_yardim: 'İlk Yardım'
 });
+/** Same IDs as lesson allowlist — machine Video Öğretmen categories only. */
+var MACHINE_VIDEO_CATEGORY_ALLOWLIST = MACHINE_LESSON_CATEGORY_ALLOWLIST;
+var MACHINE_VIDEO_CATEGORY_PRESENTATION = Object.freeze({
+    is_makineleri: Object.freeze({
+        title: 'İş Makineleri',
+        description: 'Öğretmen anlatımlı video dersler, önemli konu vurguları ve sınavda işine yarayacak özel tüyolarla İş Makineleri sınavına daha güçlü hazırlan.',
+        variant: 'gold'
+    }),
+    ilk_yardim: Object.freeze({
+        title: 'İlk Yardım',
+        description: 'Öğretmen anlatımı, kritik bilgi vurguları ve sınava yönelik pratik tüyolarla İlk Yardım konularını daha kolay kavra ve sınava güvenle hazırlan.',
+        variant: 'blue'
+    })
+});
 var MACHINE_LESSON_CATEGORY_PRESENTATION = Object.freeze({
     is_makineleri: Object.freeze({
         title: 'İş Makineleri Dersi',
-        description: 'İş makineleri operatörlük sınavlarına yönelik ders içerikleri.',
+        description: 'Ünite ünite hazırlanan kapsamlı konu anlatımları ve yüksek kaliteli, gerçekçi görsel bilgi kartlarıyla İş Makineleri konularını daha kolay öğren, bilgini kalıcı hale getir.',
         note: '',
         variant: 'gold'
     }),
     ilk_yardim: Object.freeze({
         title: 'İlk Yardım',
-        description: 'Temel ilk yardım, kaza anı müdahale ve güvenli yardım bilgileri.',
+        description: 'Ünite ünite ilerleyen anlaşılır konu anlatımları ve gerçekçi görsel bilgi kartlarıyla İlk Yardım bilgilerini adım adım öğren ve pekiştir.',
         note: '',
         variant: 'blue'
     })
 });
+/** Approved plain-text phrases only — never store HTML in presentation descriptions. */
+var MACHINE_LESSON_DESC_EMPHASIS = Object.freeze({
+    is_makineleri: Object.freeze([
+        Object.freeze({ phrase: 'Ünite ünite hazırlanan', tone: 'cyan' }),
+        Object.freeze({ phrase: 'yüksek kaliteli, gerçekçi görsel bilgi kartlarıyla', tone: 'gold' })
+    ]),
+    ilk_yardim: Object.freeze([
+        Object.freeze({ phrase: 'Ünite ünite ilerleyen', tone: 'mint' }),
+        Object.freeze({ phrase: 'gerçekçi görsel bilgi kartlarıyla', tone: 'mint' })
+    ])
+});
+var MACHINE_VIDEO_DESC_EMPHASIS = Object.freeze({
+    is_makineleri: Object.freeze([
+        Object.freeze({ phrase: 'Öğretmen anlatımlı video dersler', tone: 'cyan' }),
+        Object.freeze({ phrase: 'özel tüyolarla', tone: 'gold' })
+    ]),
+    ilk_yardim: Object.freeze([
+        Object.freeze({ phrase: 'Öğretmen anlatımı', tone: 'mint' }),
+        Object.freeze({ phrase: 'sınava yönelik pratik tüyolarla', tone: 'mint' })
+    ])
+});
+
+function escapeMachinePremiumDescHtml(s) {
+    if (typeof escapeLessonV2MobileHtml === 'function') return escapeLessonV2MobileHtml(s);
+    return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function normalizeMachinePremiumDescTone(tone) {
+    var t = String(tone || '').trim().toLowerCase();
+    if (t === 'gold' || t === 'mint' || t === 'cyan') return t;
+    return 'cyan';
+}
+
+/** Escapes all text; wraps only known approved phrases in controlled spans. */
+function formatMachinePremiumDescHtml(description, emphasisList) {
+    var text = String(description || '');
+    if (!text) return '';
+    var specs = Array.isArray(emphasisList) ? emphasisList : [];
+    if (!specs.length) return escapeMachinePremiumDescHtml(text);
+    var html = '';
+    var i = 0;
+    while (i < text.length) {
+        var hit = null;
+        var hitLen = 0;
+        for (var s = 0; s < specs.length; s++) {
+            var phrase = String(specs[s] && specs[s].phrase || '');
+            if (!phrase) continue;
+            if (text.indexOf(phrase, i) === i && phrase.length > hitLen) {
+                hit = specs[s];
+                hitLen = phrase.length;
+            }
+        }
+        if (hit) {
+            var tone = normalizeMachinePremiumDescTone(hit.tone);
+            html += '<span class="machine-lesson-premium-desc-em machine-lesson-premium-desc-em--'
+                + tone + '">'
+                + escapeMachinePremiumDescHtml(String(hit.phrase || ''))
+                + '</span>';
+            i += hitLen;
+            continue;
+        }
+        var next = text.length;
+        for (var s2 = 0; s2 < specs.length; s2++) {
+            var p2 = String(specs[s2] && specs[s2].phrase || '');
+            if (!p2) continue;
+            var at = text.indexOf(p2, i);
+            if (at >= 0 && at < next) next = at;
+        }
+        html += escapeMachinePremiumDescHtml(text.slice(i, next));
+        i = next;
+    }
+    return html;
+}
 var MACHINE_LESSON_UNIT_ACCENT_VARIANTS = Object.freeze([
     'cyan',
     'gold',
@@ -11151,8 +11704,28 @@ var machineLessonState = {
     unitLoadToken: 0,
     detailLoadToken: 0,
     loadedOnce: false,
-    lastErrorLevel: ''
+    lastErrorLevel: '',
+    completionWriteInFlight: false
 };
+var machineVideoState = {
+    view: 'categories',
+    selectedCategoryId: '',
+    selectedCategoryTitle: '',
+    videos: [],
+    loading: false,
+    error: null,
+    loadToken: 0
+};
+/** Explicit Video Teacher tenant context for machine play gate only. Driving ignores when null. */
+var __teacherVideoTenantContextOverride = null;
+/** Session-only machine lesson completion flags keyed by machine progress doc id. */
+var __machineLessonCompletionCache = Object.create(null);
+/** Session-only: categoryId → true after successful completion hydrate. */
+var __machineLessonCompletionHydratedByCategory = Object.create(null);
+/** Session-only Lesson V2 unit totals by categoryId (content denominator). */
+var __mobileLessonUnitTotalByCategory = Object.create(null);
+var __mobileLessonUnitTotalInflightByCategory = Object.create(null);
+var __profileProgressLessonLoadToken = 0;
 var MACHINE_EXAM_CATEGORY_ALLOWLIST = Object.freeze([
     'work_machines',
     'first_aid'
@@ -11160,16 +11733,28 @@ var MACHINE_EXAM_CATEGORY_ALLOWLIST = Object.freeze([
 var MACHINE_EXAM_CATEGORY_PRESENTATION = Object.freeze({
     work_machines: Object.freeze({
         title: 'İş Makineleri',
-        subtitle: 'Operatörlük sınavlarına yönelik deneme ve çıkmış sorular',
+        subtitle: 'Yapay zekâ destekli soru yapısı, deneme sınavları ve çıkmış sorularla İş Makineleri sınavının tüm konu kapsamını çalış, eksiklerini gör ve sınava daha güçlü hazırlan.',
         iconClass: 'fa-solid fa-truck-monster',
         variant: 'gold'
     }),
     first_aid: Object.freeze({
         title: 'İlk Yardım',
-        subtitle: 'İlk yardım bilgilerini ölçen deneme ve çıkmış sorular',
+        subtitle: 'İş Makineleri sınavlarında sık karşılaşılan İlk Yardım sorularını pekiştirmen için, çıkmış sorulardan özenle hazırlanan özel deneme setleriyle bilgini güçlendir.',
         iconClass: 'fa-solid fa-kit-medical',
         variant: 'blue'
     })
+});
+var MACHINE_EXAM_CATEGORY_DESC_EMPHASIS = Object.freeze({
+    work_machines: Object.freeze([
+        Object.freeze({ phrase: 'Yapay zekâ destekli soru yapısı', tone: 'cyan' }),
+        Object.freeze({ phrase: 'tüm konu kapsamını', tone: 'gold' }),
+        Object.freeze({ phrase: 'sınava daha güçlü hazırlan', tone: 'cyan-gold' })
+    ]),
+    first_aid: Object.freeze([
+        Object.freeze({ phrase: 'İş Makineleri sınavlarında sık karşılaşılan İlk Yardım sorularını', tone: 'cyan' }),
+        Object.freeze({ phrase: 'özel deneme setleriyle', tone: 'mint' }),
+        Object.freeze({ phrase: 'bilgini güçlendir', tone: 'cyan-mint' })
+    ])
 });
 var MACHINE_EXAM_ACCENT_VARIANTS = Object.freeze([
     'cyan',
@@ -11204,6 +11789,7 @@ var machineExamState = {
     totalSeconds: MACHINE_EXAM_DEFAULT_SECONDS,
     timerId: null,
     result: null,
+    attemptPersisted: false,
     reviewMode: 'wrong',
     categoryLoadToken: 0,
     examLoadToken: 0,
@@ -11214,6 +11800,15 @@ var machineExamState = {
     finishConfirmModalOpen: false
 };
 var __machineExamUiBound = false;
+/** Public machine exam start: blocks double intro-start while rewarded request in flight. */
+var __machineExamStartAdInFlight = false;
+/** Public machine lesson-exit / exam-exit / review-mistakes in-flight guards. */
+var __machineLessonExitAdInFlight = false;
+var __machineExamExitAdInFlight = false;
+var __machineExamReviewAdInFlight = false;
+/** Session-scoped: last uid for which public-machine ad policy was refreshed. */
+var __machinePublicAdPolicyRefreshUid = null;
+var __machinePublicAdPolicyRefreshPromise = null;
 var machineProfileState = {
     uid: '',
     tenantId: '',
@@ -11307,6 +11902,12 @@ function setRootScreenVisible(screenId) {
 
 function clearMachineCandidateSession() {
     currentMachineCandidateSession = null;
+    __machineExamStartAdInFlight = false;
+    __machineLessonExitAdInFlight = false;
+    __machineExamExitAdInFlight = false;
+    __machineExamReviewAdInFlight = false;
+    __machinePublicAdPolicyRefreshUid = null;
+    __machinePublicAdPolicyRefreshPromise = null;
     invalidateMachineHomeViewportLayoutWork();
     if (typeof resetMachineExamState === 'function') resetMachineExamState(true);
     if (typeof resetMachineProfileState === 'function') resetMachineProfileState();
@@ -11829,9 +12430,26 @@ function bindMachineHomeLogoLayoutOnce() {
     });
 }
 
-function showMachineShellPane(targetId) {
+function showMachineShellPane(targetId, options) {
     var id = String(targetId || '');
     if (!MACHINE_SHELL_PANE_IDS[id]) id = 'machine-home-screen';
+    var opts = options || {};
+    if (!opts.skipLessonExitGate) {
+        var lessonsPaneGate = document.getElementById('machine-lessons-screen');
+        var onLessonDetail = !!(lessonsPaneGate
+            && lessonsPaneGate.classList.contains('is-active')
+            && String(machineLessonState.view || '') === 'detail');
+        if (onLessonDetail
+            && currentMachineCandidateSession
+            && typeof isMachinePublicSession === 'function'
+            && isMachinePublicSession(currentMachineCandidateSession)) {
+            if (__machineLessonExitAdInFlight) return;
+            exitMachineLessonDetailWithExitAd(function () {
+                showMachineShellPane(id, { skipLessonExitGate: true });
+            });
+            return;
+        }
+    }
     if (typeof isMachineAnnouncementsModalVisible === 'function' && isMachineAnnouncementsModalVisible()
         && typeof closeMachineAnnouncementsModal === 'function') {
         closeMachineAnnouncementsModal();
@@ -11869,6 +12487,9 @@ function showMachineShellPane(targetId) {
     }
     if (id === 'machine-messages-screen' && typeof openMachineMessagesPane === 'function') {
         openMachineMessagesPane();
+    }
+    if (id === 'machine-videos-screen' && typeof openMachineVideosPane === 'function') {
+        openMachineVideosPane();
     }
     if (isHome && typeof refreshMachineHomeViewportLayout === 'function') {
         refreshMachineHomeViewportLayout({ resetScroll: true, reason: 'machine_home_navigation' });
@@ -11920,6 +12541,9 @@ function syncMachineShellTopChrome(targetPaneId) {
             if (paneId === 'machine-exams-screen' && typeof getMachineExamShellTitle === 'function') {
                 titleText = getMachineExamShellTitle() || titleText;
             }
+            if (paneId === 'machine-videos-screen' && typeof getMachineVideoShellTitle === 'function') {
+                titleText = getMachineVideoShellTitle() || titleText;
+            }
             titleEl.textContent = titleText;
             if (titleText) titleEl.classList.remove('is-hidden');
             else titleEl.classList.add('is-hidden');
@@ -11935,6 +12559,10 @@ function syncMachineShellTopChrome(targetPaneId) {
 function handleMachineSystemBack() {
     if (typeof isMachineSessionRootVisible !== 'function' || !isMachineSessionRootVisible()) {
         return false;
+    }
+    if (typeof isMachineImageViewerOpen === 'function' && isMachineImageViewerOpen()) {
+        if (typeof closeImageViewer === 'function') closeImageViewer();
+        return true;
     }
     if (typeof isMobileMailboxSoftHideConfirmOpen === 'function' && isMobileMailboxSoftHideConfirmOpen()) {
         closeMobileMailboxSoftHideConfirm({ cancelled: true, force: true });
@@ -11964,6 +12592,11 @@ function handleMachineSystemBack() {
     var lessonsPane = document.getElementById('machine-lessons-screen');
     if (lessonsPane && lessonsPane.classList.contains('is-active')) {
         if (typeof handleMachineLessonBack === 'function') handleMachineLessonBack();
+        return true;
+    }
+    var videosPane = document.getElementById('machine-videos-screen');
+    if (videosPane && videosPane.classList.contains('is-active')) {
+        if (typeof handleMachineVideoBack === 'function') handleMachineVideoBack();
         return true;
     }
     var messagesPane = document.getElementById('machine-messages-screen');
@@ -12141,6 +12774,10 @@ function renderMachineLessonCategories() {
             : 'Üniteleri aç';
         var note = presentation && presentation.note ? String(presentation.note) : '';
         var variant = presentation && presentation.variant === 'blue' ? 'blue' : 'gold';
+        var descHtml = formatMachinePremiumDescHtml(
+            description,
+            (MACHINE_LESSON_DESC_EMPHASIS && MACHINE_LESSON_DESC_EMPHASIS[cat.id]) || []
+        );
         var card = document.createElement('button');
         card.type = 'button';
         card.className = 'machine-lesson-premium-card machine-lesson-premium-card--' + variant;
@@ -12148,7 +12785,7 @@ function renderMachineLessonCategories() {
         card.innerHTML =
             '<div class="machine-lesson-premium-content">'
             + '<h3 class="machine-lesson-premium-title">' + esc(title) + '</h3>'
-            + '<p class="machine-lesson-premium-desc">' + esc(description) + '</p>'
+            + '<p class="machine-lesson-premium-desc">' + descHtml + '</p>'
             + (note ? '<small class="machine-lesson-premium-note">' + esc(note) + '</small>' : '')
             + '</div>'
             + '<span class="machine-lesson-premium-cta">ÜNİTELERİ GÖR</span>';
@@ -12169,6 +12806,7 @@ function renderMachineLessonUnits() {
     var esc = typeof escapeLessonV2MobileHtml === 'function'
         ? escapeLessonV2MobileHtml
         : function (s) { return String(s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+    var categoryId = String(machineLessonState.selectedCategoryId || '').trim();
     var renderedIndex = 0;
     units.forEach(function (u, idx) {
         if (!u || !u.id) return;
@@ -12178,16 +12816,26 @@ function renderMachineLessonUnits() {
         if (!title) title = (machineLessonState.selectedCategoryTitle || 'Ders') + ' Ünite-' + String(unitOrder);
         var variant = getMachineLessonUnitAccentVariant(renderedIndex);
         renderedIndex += 1;
+        var docId = typeof buildMachineLessonProgressDocId === 'function'
+            ? buildMachineLessonProgressDocId(categoryId, u.id)
+            : '';
+        var isCompleted = docId
+            ? (getCachedMachineLessonUnitCompleted(docId) === true)
+            : false;
         var card = document.createElement('button');
         card.type = 'button';
-        card.className = 'machine-lesson-unit-premium-card machine-lesson-unit-premium-card--' + variant;
+        card.className = 'machine-lesson-unit-premium-card machine-lesson-unit-premium-card--' + variant
+            + (isCompleted ? ' is-completed' : '');
         card.setAttribute('data-machine-lesson-unit', String(u.id));
         card.innerHTML =
             '<i class="fa-solid fa-book machine-lesson-unit-premium-icon" aria-hidden="true"></i>'
             + '<div class="machine-lesson-unit-premium-copy">'
             + '<span class="machine-lesson-unit-premium-title">' + esc(title) + '</span>'
             + '<span class="machine-lesson-unit-premium-sub">Ünite ' + String(unitOrder) + ' · Açmak için dokun</span>'
-            + '</div>';
+            + '</div>'
+            + (isCompleted
+                ? '<span class="machine-lesson-unit-premium-check" aria-hidden="true">✓</span>'
+                : '');
         host.appendChild(card);
     });
 }
@@ -12214,12 +12862,15 @@ function buildMachineLessonDetailHtml(unit, blocks) {
     orderedBlocks.forEach(function (b) {
         if (!b) return;
         if (b.type === 'image') {
-            html += '<div class="machine-lesson-detail-block"><div class="machine-lesson-detail-image-wrap">'
+            html += '<div class="machine-lesson-detail-block">'
                 + (b.imageUrl
-                    ? '<img src="' + String(b.imageUrl).replace(/"/g, '&quot;') + '" alt="" loading="lazy" data-machine-lesson-image="1">'
+                    ? '<div class="machine-lesson-detail-image-wrap">'
+                        + '<img src="' + String(b.imageUrl).replace(/"/g, '&quot;') + '" alt="" loading="lazy" data-machine-lesson-image="1">'
+                        + '<span class="machine-lesson-image-zoom-badge" aria-hidden="true">&#128269;</span>'
+                        + '</div>'
                     : '')
                 + (b.caption ? '<div class="machine-lesson-detail-caption">' + esc(b.caption) + '</div>' : '')
-                + '</div></div>';
+                + '</div>';
             return;
         }
         var attached = '';
@@ -12227,8 +12878,9 @@ function buildMachineLessonDetailHtml(unit, blocks) {
         if (attUrl) {
             attached = '<div class="machine-lesson-detail-image-wrap" style="margin-top:10px;">'
                 + '<img src="' + attUrl.replace(/"/g, '&quot;') + '" alt="" loading="lazy" data-machine-lesson-image="1">'
-                + (b.caption ? '<div class="machine-lesson-detail-caption">' + esc(b.caption) + '</div>' : '')
-                + '</div>';
+                + '<span class="machine-lesson-image-zoom-badge" aria-hidden="true">&#128269;</span>'
+                + '</div>'
+                + (b.caption ? '<div class="machine-lesson-detail-caption">' + esc(b.caption) + '</div>' : '');
         }
         var segs = typeof normalizeLessonTextSegmentsMobile === 'function'
             ? normalizeLessonTextSegmentsMobile(b.textSegments)
@@ -12256,6 +12908,304 @@ function buildMachineLessonDetailHtml(unit, blocks) {
     return html;
 }
 
+function buildMachineLessonProgressDocId(categoryId, unitId) {
+    var cid = String(categoryId || '').trim();
+    var uid = String(unitId || '').trim();
+    if (!cid || !uid) return '';
+    return 'machine_operator__' + cid + '__' + uid;
+}
+
+function buildMachineLessonTenantProgressDocId(userUid, categoryId, unitId) {
+    var u = String(userUid || '').trim();
+    var cid = String(categoryId || '').trim();
+    var unit = String(unitId || '').trim();
+    if (!u || !cid || !unit) return '';
+    return u + '__machine_operator__' + cid + '__' + unit;
+}
+
+function isMachineLessonProgressPayloadValid(data, categoryId, unitId) {
+    if (!data || typeof data !== 'object') return false;
+    if (String(data.programType || '').trim() !== 'machine_operator') return false;
+    if (String(data.categoryId || '').trim() !== String(categoryId || '').trim()) return false;
+    if (String(data.unitId || '').trim() !== String(unitId || '').trim()) return false;
+    if (typeof isMobileProgressCompleted === 'function') return isMobileProgressCompleted(data);
+    return data.completed === true || String(data.status || '').trim() === 'completed';
+}
+
+function getCachedMachineLessonUnitCompleted(docId) {
+    var id = String(docId || '').trim();
+    if (!id) return null;
+    if (!Object.prototype.hasOwnProperty.call(__machineLessonCompletionCache, id)) return null;
+    return __machineLessonCompletionCache[id] === true;
+}
+
+function setCachedMachineLessonUnitCompleted(docId, isCompleted) {
+    var id = String(docId || '').trim();
+    if (!id) return;
+    __machineLessonCompletionCache[id] = !!isCompleted;
+}
+
+function isMachineLessonCompletionCategoryHydrated(categoryId) {
+    var cid = String(categoryId || '').trim();
+    if (!cid) return false;
+    return __machineLessonCompletionHydratedByCategory[cid] === true;
+}
+
+function markMachineLessonCompletionCategoryHydrated(categoryId) {
+    var cid = String(categoryId || '').trim();
+    if (!cid) return;
+    __machineLessonCompletionHydratedByCategory[cid] = true;
+}
+
+async function hydrateMachineLessonCompletionCacheForCategory(categoryId) {
+    var cid = String(categoryId || '').trim();
+    if (!isMachineLessonCategoryAllowed(cid)) return { ok: false, reason: 'category_not_allowed' };
+    if (isMachineLessonCompletionCategoryHydrated(cid)) {
+        return { ok: true, skipped: true };
+    }
+
+    var session = currentMachineCandidateSession;
+    if (!session || String(session.programType || '').trim() !== 'machine_operator') {
+        return { ok: false, reason: 'invalid_session' };
+    }
+    var sessionUid = String(session.uid || '').trim();
+    if (!sessionUid) return { ok: false, reason: 'missing_uid' };
+    var authUser = (firebase && firebase.auth && firebase.auth().currentUser) || null;
+    if (!authUser || String(authUser.uid || '') !== sessionUid) {
+        return { ok: false, reason: 'auth_mismatch' };
+    }
+    if (!firebase || !firebase.firestore) return { ok: false, reason: 'firestore_unavailable' };
+
+    try {
+        var snap = await firebase.firestore()
+            .collection('users').doc(sessionUid)
+            .collection('lessonProgress')
+            .limit(200)
+            .get();
+        (snap.docs || []).forEach(function (d) {
+            var data = d.data ? (d.data() || {}) : {};
+            if (String(data.programType || '').trim() !== 'machine_operator') return;
+            if (String(data.categoryId || '').trim() !== cid) return;
+            var unitId = String(data.unitId || '').trim();
+            if (!unitId) return;
+            if (!isMachineLessonProgressPayloadValid(data, cid, unitId)) return;
+            var docId = buildMachineLessonProgressDocId(cid, unitId);
+            if (!docId) return;
+            setCachedMachineLessonUnitCompleted(docId, true);
+        });
+        markMachineLessonCompletionCategoryHydrated(cid);
+        return { ok: true };
+    } catch (e) {
+        try { console.warn('[MachineLessons] completion hydrate failed:', e && e.message ? e.message : e); } catch (_) {}
+        return { ok: false, reason: 'hydrate_failed' };
+    }
+}
+
+function renderMachineLessonDetailCompletionActionHtml(isCompleted) {
+    if (isCompleted) {
+        return '<div id="machine-lesson-detail-completion-action" class="machine-lesson-detail-completion-done" role="status" aria-live="polite">'
+            + '<div class="machine-lesson-detail-completion-done__title">✓ Tamamlandı</div>'
+            + '<div class="machine-lesson-detail-completion-done__sub">Bu ünite tamamlandı olarak işaretlendi.</div>'
+            + '</div>';
+    }
+    return '<div id="machine-lesson-detail-completion-action">'
+        + '<button type="button" id="machine-lesson-mark-complete-btn">Tamamlandı olarak işaretle</button>'
+        + '</div>';
+}
+
+function setMachineLessonDetailCompletedStateUi() {
+    var host = document.getElementById('machine-lesson-detail-completion-action');
+    if (!host) return;
+    var parent = host.parentNode;
+    if (!parent) return;
+    var wrap = document.createElement('div');
+    wrap.innerHTML = renderMachineLessonDetailCompletionActionHtml(true);
+    var newNode = wrap.firstElementChild;
+    if (newNode) parent.replaceChild(newNode, host);
+}
+
+async function resolveMachineLessonUnitCompleted(categoryId, unitId) {
+    var cid = String(categoryId || '').trim();
+    var uId = String(unitId || '').trim();
+    var docId = buildMachineLessonProgressDocId(cid, uId);
+    if (!docId) return false;
+    var cached = getCachedMachineLessonUnitCompleted(docId);
+    if (cached != null) return cached === true;
+
+    var session = currentMachineCandidateSession;
+    var sessionUid = session && session.uid ? String(session.uid).trim() : '';
+    var authUser = (firebase && firebase.auth && firebase.auth().currentUser) || null;
+    if (!sessionUid || !authUser || String(authUser.uid || '') !== sessionUid) return false;
+    if (!firebase || !firebase.firestore) return false;
+    if (!isMachineLessonCategoryAllowed(cid)) return false;
+
+    try {
+        var snap = await firebase.firestore()
+            .collection('users').doc(sessionUid)
+            .collection('lessonProgress').doc(docId)
+            .get();
+        if (!snap || !snap.exists) {
+            setCachedMachineLessonUnitCompleted(docId, false);
+            return false;
+        }
+        var data = snap.data() || {};
+        var ok = isMachineLessonProgressPayloadValid(data, cid, uId);
+        setCachedMachineLessonUnitCompleted(docId, ok);
+        return ok;
+    } catch (e) {
+        try { console.warn('[MachineLessons] completion status read failed:', e && e.message ? e.message : e); } catch (_) {}
+        return false;
+    }
+}
+
+async function markMachineLessonUnitCompleted(categoryId, unitId) {
+    var cid = String(categoryId || '').trim();
+    var uId = String(unitId || '').trim();
+    if (!isMachineLessonCategoryAllowed(cid)) return { ok: false, reason: 'category_not_allowed' };
+    if (!uId) return { ok: false, reason: 'missing_unit' };
+
+    var session = currentMachineCandidateSession;
+    if (!session || String(session.programType || '').trim() !== 'machine_operator') {
+        return { ok: false, reason: 'invalid_session' };
+    }
+    var sessionUid = String(session.uid || '').trim();
+    if (!sessionUid) return { ok: false, reason: 'missing_uid' };
+    var authUser = (firebase && firebase.auth && firebase.auth().currentUser) || null;
+    if (!authUser || String(authUser.uid || '') !== sessionUid) {
+        return { ok: false, reason: 'auth_mismatch' };
+    }
+    if (!firebase || typeof firebase.firestore !== 'function') {
+        return { ok: false, reason: 'firestore_unavailable' };
+    }
+
+    var docId = buildMachineLessonProgressDocId(cid, uId);
+    if (!docId) return { ok: false, reason: 'bad_doc_id' };
+
+    if (getCachedMachineLessonUnitCompleted(docId) === true) {
+        return { ok: true, skipped: true };
+    }
+
+    var ts = firebase.firestore.FieldValue.serverTimestamp();
+    var payload = {
+        uid: sessionUid,
+        categoryId: cid,
+        unitId: uId,
+        programType: 'machine_operator',
+        completed: true,
+        status: 'completed',
+        progressPercent: 100,
+        source: 'mobile',
+        platform: 'mobile',
+        completedAt: ts,
+        lastSeenAt: ts
+    };
+
+    try {
+        await firebase.firestore()
+            .collection('users').doc(sessionUid)
+            .collection('lessonProgress').doc(docId)
+            .set(payload, { merge: true });
+    } catch (e) {
+        try { console.warn('[MachineLessons] user lessonProgress write failed:', e && e.message ? e.message : e); } catch (_) {}
+        return { ok: false, reason: 'write_failed' };
+    }
+
+    setCachedMachineLessonUnitCompleted(docId, true);
+    try {
+        if (typeof machineProfileState !== 'undefined' && machineProfileState) {
+            machineProfileState.lessonStats = null;
+            machineProfileState.loadedOnce = false;
+        }
+    } catch (_) {}
+
+    var tenantId = '';
+    if (typeof isMachinePublicSession === 'function' && !isMachinePublicSession(session)) {
+        tenantId = String(session.tenantId || '').trim();
+    }
+    if (tenantId) {
+        try {
+            var tenantDocId = buildMachineLessonTenantProgressDocId(sessionUid, cid, uId);
+            if (tenantDocId) {
+                await firebase.firestore()
+                    .collection('tenants').doc(tenantId)
+                    .collection('lesson_progress').doc(tenantDocId)
+                    .set({
+                        uid: sessionUid,
+                        tenantId: tenantId,
+                        userType: 'institution_student',
+                        categoryId: cid,
+                        unitId: uId,
+                        programType: 'machine_operator',
+                        completed: true,
+                        status: 'completed',
+                        progressPercent: 100,
+                        source: 'mobile',
+                        platform: 'mobile',
+                        completedAt: ts,
+                        updatedAt: ts,
+                        lastSeenAt: ts
+                    }, { merge: true });
+            }
+        } catch (tenantErr) {
+            try { console.warn('[MachineLessons] tenant lesson_progress mirror failed:', tenantErr && tenantErr.message ? tenantErr.message : tenantErr); } catch (_) {}
+        }
+    }
+
+    return { ok: true, docId: docId };
+}
+
+function bindMachineLessonDetailCompletionAction(categoryId, unitId, detailToken) {
+    var cid = String(categoryId || '').trim();
+    var uId = String(unitId || '').trim();
+    var token = Number(detailToken) || 0;
+    var completeBtn = document.getElementById('machine-lesson-mark-complete-btn');
+    if (!completeBtn) return;
+    completeBtn.onclick = async function () {
+        if (machineLessonState.completionWriteInFlight) return;
+        if (Number(machineLessonState.detailLoadToken) !== token) return;
+        if (String(machineLessonState.selectedCategoryId || '') !== cid) return;
+        if (String(machineLessonState.selectedUnitId || '') !== uId) return;
+        var docId = buildMachineLessonProgressDocId(cid, uId);
+        if (getCachedMachineLessonUnitCompleted(docId) === true) {
+            setMachineLessonDetailCompletedStateUi();
+            return;
+        }
+        machineLessonState.completionWriteInFlight = true;
+        completeBtn.disabled = true;
+        var result = await markMachineLessonUnitCompleted(cid, uId);
+        machineLessonState.completionWriteInFlight = false;
+        if (Number(machineLessonState.detailLoadToken) !== token) return;
+        if (String(machineLessonState.selectedUnitId || '') !== uId) return;
+        if (result && result.ok) {
+            setMachineLessonDetailCompletedStateUi();
+        } else {
+            completeBtn.disabled = false;
+            try { console.warn('[MachineLessons] mark complete failed:', result && result.reason ? result.reason : 'unknown'); } catch (_) {}
+        }
+    };
+}
+
+async function mountMachineLessonDetailCompletion(categoryId, unitId, detailToken) {
+    var cid = String(categoryId || '').trim();
+    var uId = String(unitId || '').trim();
+    var token = Number(detailToken) || 0;
+    if (!isMachineLessonCategoryAllowed(cid) || !uId) return;
+    var completed = false;
+    try {
+        completed = await resolveMachineLessonUnitCompleted(cid, uId);
+    } catch (_) {
+        completed = false;
+    }
+    if (Number(machineLessonState.detailLoadToken) !== token) return;
+    if (String(machineLessonState.selectedCategoryId || '') !== cid) return;
+    if (String(machineLessonState.selectedUnitId || '') !== uId) return;
+    if (completed) {
+        setMachineLessonDetailCompletedStateUi();
+        return;
+    }
+    bindMachineLessonDetailCompletionAction(cid, uId, token);
+}
+
 function renderMachineLessonDetail() {
     var host = document.getElementById('machine-lesson-detail');
     if (!host) return;
@@ -12273,8 +13223,15 @@ function renderMachineLessonDetail() {
         unit.order = found.order;
         unit.youtubeUrl = found.youtubeUrl || '';
     }
-    host.innerHTML = buildMachineLessonDetailHtml(unit, machineLessonState.blocks);
+    var detailToken = Number(machineLessonState.detailLoadToken) || 0;
+    var cid = String(machineLessonState.selectedCategoryId || '').trim();
+    var uId = String(machineLessonState.selectedUnitId || '').trim();
+    host.innerHTML = buildMachineLessonDetailHtml(unit, machineLessonState.blocks)
+        + renderMachineLessonDetailCompletionActionHtml(false);
     setMachineLessonStatus('');
+    Promise.resolve(mountMachineLessonDetailCompletion(cid, uId, detailToken)).catch(function (e) {
+        try { console.warn('[MachineLessons] completion mount failed:', e && e.message ? e.message : e); } catch (_) {}
+    });
 }
 
 async function loadMachineLessonCategories(force) {
@@ -12361,8 +13318,19 @@ async function loadMachineLessonUnits(categoryId) {
                 youtubeUrl: String(data.youtubeUrl || '')
             };
         }).filter(function (u) { return !!u.id; });
+        if (typeof setCachedMobileLessonUnitTotal === 'function') {
+            setCachedMobileLessonUnitTotal(cid, machineLessonState.units.length);
+        }
         if (token !== machineLessonState.unitLoadToken) return;
         if (!isMachineLessonContextFresh(capturedUid)) return;
+        try {
+            await hydrateMachineLessonCompletionCacheForCategory(cid);
+        } catch (hydrateErr) {
+            try { console.warn('[MachineLessons] completion hydrate error:', hydrateErr && hydrateErr.message ? hydrateErr.message : hydrateErr); } catch (_) {}
+        }
+        if (token !== machineLessonState.unitLoadToken) return;
+        if (!isMachineLessonContextFresh(capturedUid)) return;
+        if (String(machineLessonState.selectedCategoryId) !== cid) return;
         renderMachineLessonUnits();
     } catch (e) {
         try { console.warn('[MachineLessons] units load failed:', e && e.message ? e.message : e); } catch (_) {}
@@ -12376,6 +13344,113 @@ async function loadMachineLessonUnits(categoryId) {
             retryLevel: 'units'
         });
     }
+}
+
+async function ensureMachinePublicAdPolicyRefreshed() {
+    var session = currentMachineCandidateSession;
+    if (!session || typeof isMachinePublicSession !== 'function' || !isMachinePublicSession(session)) {
+        return;
+    }
+    var uid = '';
+    try {
+        var authUser = (typeof firebase !== 'undefined' && firebase.auth)
+            ? firebase.auth().currentUser
+            : null;
+        uid = authUser && authUser.uid ? String(authUser.uid) : String(session.uid || '').trim();
+    } catch (_) {
+        uid = String(session.uid || '').trim();
+    }
+    if (!uid) return;
+    if (__machinePublicAdPolicyRefreshUid === uid
+        && typeof window !== 'undefined'
+        && window.__SA_AD_POLICY_CONTEXT
+        && window.__SA_AD_POLICY_CONTEXT.fetchFailed !== true) {
+        return;
+    }
+    if (__machinePublicAdPolicyRefreshPromise && __machinePublicAdPolicyRefreshUid === uid) {
+        try { await __machinePublicAdPolicyRefreshPromise; } catch (_) {}
+        return;
+    }
+    if (!window.SA_AD_POLICY
+        || typeof window.SA_AD_POLICY.refreshAdPolicyForCurrentUser !== 'function') {
+        return;
+    }
+    var userArg = { uid: uid };
+    try {
+        var cu = firebase.auth().currentUser;
+        if (cu && cu.uid) userArg = cu;
+    } catch (_) {}
+    __machinePublicAdPolicyRefreshUid = uid;
+    __machinePublicAdPolicyRefreshPromise = Promise.resolve(
+        window.SA_AD_POLICY.refreshAdPolicyForCurrentUser(userArg)
+    ).catch(function (e) {
+        try { console.warn('[MachineAds] ad policy refresh failed', e && e.message ? e.message : e); } catch (_) {}
+        __machinePublicAdPolicyRefreshUid = null;
+    }).then(function () {
+        __machinePublicAdPolicyRefreshPromise = null;
+    });
+    try { await __machinePublicAdPolicyRefreshPromise; } catch (_) {}
+}
+
+/**
+ * Public machine lesson unit open: soft gate mirroring
+ * openLessonUnitDetailWithEntryAdMobile (lesson-entry).
+ * Institution machine: direct loadMachineLessonDetail.
+ */
+async function openMachineLessonDetailWithEntryAd(categoryId, unitId) {
+    var cid = String(categoryId || '').trim();
+    var uid = String(unitId || '').trim();
+    if (!isMachineLessonCategoryAllowed(cid) || !uid) return;
+    var session = currentMachineCandidateSession;
+    if (!session
+        || typeof isMachinePublicSession !== 'function'
+        || !isMachinePublicSession(session)) {
+        await loadMachineLessonDetail(cid, uid);
+        return;
+    }
+    var capturedUid = String(session.uid || '');
+    await ensureMachinePublicAdPolicyRefreshed();
+    async function continueOpen() {
+        if (!isMachineLessonContextFresh(capturedUid)) return;
+        await loadMachineLessonDetail(cid, uid);
+    }
+    var allowLessonAd = true;
+    try {
+        if (window.SA_AD_POLICY && typeof window.SA_AD_POLICY.getCanShowAds === 'function') {
+            allowLessonAd = window.SA_AD_POLICY.getCanShowAds();
+        }
+    } catch (e) { allowLessonAd = true; }
+    if (!allowLessonAd) {
+        await continueOpen();
+        return;
+    }
+    if (typeof requestNativeAd !== 'function') {
+        await continueOpen();
+        return;
+    }
+    try {
+        var entryRes = await requestNativeAd('rewarded', 'lesson-entry');
+        if (!isMachineLessonContextFresh(capturedUid)) return;
+        if (entryRes && entryRes.examActiveSkip) {
+            await continueOpen();
+            return;
+        }
+        if (entryRes && entryRes.policySkipped) {
+            await continueOpen();
+            return;
+        }
+        if (!entryRes || entryRes.rewarded !== true) {
+            try {
+                console.warn('[AdsGate] machine lesson-entry rewarded not granted, continuing:', entryRes);
+            } catch (_) {}
+        }
+    } catch (err) {
+        try {
+            console.warn('[AdsGate] machine lesson-entry rewarded error, continuing:', err);
+        } catch (_) {}
+    }
+    if (!isMachineLessonContextFresh(capturedUid)) return;
+    await continueOpen();
 }
 
 async function loadMachineLessonDetail(categoryId, unitId) {
@@ -12471,17 +13546,80 @@ async function loadMachineLessonDetail(categoryId, unitId) {
     }
 }
 
+function continueMachineLessonDetailExitToUnits() {
+    machineLessonState.selectedUnitId = '';
+    machineLessonState.selectedUnitTitle = '';
+    machineLessonState.blocks = [];
+    machineLessonState.detailLoadToken += 1;
+    clearMachineLessonHosts('detail');
+    setMachineLessonStatus('');
+    applyMachineLessonView('units');
+    renderMachineLessonUnits();
+}
+
+/**
+ * Public machine: soft rewarded lesson-exit before leaving open lesson detail.
+ * Institution: direct detail → units. Optional afterFn for bottom-nav continuation.
+ */
+async function exitMachineLessonDetailWithExitAd(afterFn) {
+    var session = currentMachineCandidateSession;
+    var capturedUid = session && session.uid ? String(session.uid) : '';
+    var isPublic = !!(session
+        && typeof isMachinePublicSession === 'function'
+        && isMachinePublicSession(session));
+    if (!isPublic) {
+        if (String(machineLessonState.view || '') === 'detail') {
+            continueMachineLessonDetailExitToUnits();
+        }
+        if (typeof afterFn === 'function') afterFn();
+        return;
+    }
+    if (__machineLessonExitAdInFlight) return;
+    __machineLessonExitAdInFlight = true;
+    try {
+        await ensureMachinePublicAdPolicyRefreshed();
+        var allowExitAd = true;
+        try {
+            if (window.SA_AD_POLICY && typeof window.SA_AD_POLICY.getCanShowAds === 'function') {
+                allowExitAd = window.SA_AD_POLICY.getCanShowAds();
+            }
+        } catch (e) { allowExitAd = true; }
+        if (allowExitAd && typeof requestNativeAd === 'function') {
+            try {
+                var exitRes = await requestNativeAd('rewarded', 'lesson-exit');
+                if (exitRes && exitRes.rewarded !== true && !exitRes.policySkipped && !exitRes.examActiveSkip) {
+                    try {
+                        console.warn('[AdsGate] machine lesson-exit rewarded not completed, continuing:', exitRes);
+                    } catch (_) {}
+                }
+            } catch (err) {
+                try {
+                    console.warn('[AdsGate] machine lesson-exit rewarded error, continuing:', err);
+                } catch (_) {}
+            }
+        }
+        if (!isMachineSessionRootVisible()) return;
+        if (capturedUid
+            && currentMachineCandidateSession
+            && String(currentMachineCandidateSession.uid || '') !== capturedUid) {
+            return;
+        }
+        if (String(machineLessonState.view || '') === 'detail') {
+            var lessonsPane = document.getElementById('machine-lessons-screen');
+            if (lessonsPane && lessonsPane.classList.contains('is-active')) {
+                continueMachineLessonDetailExitToUnits();
+            }
+        }
+        if (typeof afterFn === 'function') afterFn();
+    } finally {
+        __machineLessonExitAdInFlight = false;
+    }
+}
+
 function handleMachineLessonBack() {
     var view = String(machineLessonState.view || 'categories');
     if (view === 'detail') {
-        machineLessonState.selectedUnitId = '';
-        machineLessonState.selectedUnitTitle = '';
-        machineLessonState.blocks = [];
-        machineLessonState.detailLoadToken += 1;
-        clearMachineLessonHosts('detail');
-        setMachineLessonStatus('');
-        applyMachineLessonView('units');
-        renderMachineLessonUnits();
+        exitMachineLessonDetailWithExitAd(null);
         return;
     }
     if (view === 'units') {
@@ -12608,6 +13746,7 @@ function resetMachineExamState(fullReset) {
     machineExamState.answers = {};
     machineExamState.currentIndex = 0;
     machineExamState.result = null;
+    machineExamState.attemptPersisted = false;
     machineExamState.startedAtMs = 0;
     machineExamState.remainingSeconds = 0;
     machineExamState.totalSeconds = MACHINE_EXAM_DEFAULT_SECONDS;
@@ -12724,6 +13863,56 @@ function openMachineExamsPane() {
     else renderMachineExamCategories();
 }
 
+function normalizeMachineExamDescTone(tone) {
+    var t = String(tone || '').trim().toLowerCase();
+    if (t === 'gold' || t === 'mint' || t === 'cyan' || t === 'cyan-gold' || t === 'cyan-mint') return t;
+    return 'cyan';
+}
+
+function formatMachineExamCategoryDescHtml(subtitle, emphasisList) {
+    var text = String(subtitle || '');
+    if (!text) return '';
+    var specs = Array.isArray(emphasisList)
+        ? emphasisList
+        : (emphasisList
+            ? [{ phrase: String(emphasisList), tone: 'cyan' }]
+            : []);
+    if (!specs.length) return escapeMachineExamHtml(text);
+    var html = '';
+    var i = 0;
+    while (i < text.length) {
+        var hit = null;
+        var hitLen = 0;
+        for (var s = 0; s < specs.length; s++) {
+            var phrase = String(specs[s] && specs[s].phrase || '');
+            if (!phrase) continue;
+            if (text.indexOf(phrase, i) === i && phrase.length > hitLen) {
+                hit = specs[s];
+                hitLen = phrase.length;
+            }
+        }
+        if (hit) {
+            var tone = normalizeMachineExamDescTone(hit.tone);
+            html += '<span class="machine-exam-category-card-desc-em machine-exam-category-card-desc-em--'
+                + tone + '">'
+                + escapeMachineExamHtml(String(hit.phrase || ''))
+                + '</span>';
+            i += hitLen;
+            continue;
+        }
+        var next = text.length;
+        for (var s2 = 0; s2 < specs.length; s2++) {
+            var p2 = String(specs[s2] && specs[s2].phrase || '');
+            if (!p2) continue;
+            var at = text.indexOf(p2, i);
+            if (at >= 0 && at < next) next = at;
+        }
+        html += escapeMachineExamHtml(text.slice(i, next));
+        i = next;
+    }
+    return html;
+}
+
 function renderMachineExamCategories() {
     var host = document.getElementById('machine-exam-categories');
     if (!host) return;
@@ -12735,13 +13924,15 @@ function renderMachineExamCategories() {
         var variant = String(pres.variant || 'gold').trim() || 'gold';
         if (variant !== 'gold' && variant !== 'blue') variant = 'gold';
         var title = escapeMachineExamHtml(pres.title || catId);
-        var subtitle = escapeMachineExamHtml(pres.subtitle || '');
+        var emphasis = (MACHINE_EXAM_CATEGORY_DESC_EMPHASIS
+            && MACHINE_EXAM_CATEGORY_DESC_EMPHASIS[catId]) || [];
+        var subtitleHtml = formatMachineExamCategoryDescHtml(pres.subtitle || '', emphasis);
         html += '<button type="button" class="machine-exam-category-card machine-exam-category-card--'
             + escapeMachineExamHtml(variant)
             + '" data-machine-exam-category="' + escapeMachineExamHtml(catId) + '">'
             + '<div class="machine-exam-category-card-content">'
             + '<div class="machine-exam-category-card-title">' + title + '</div>'
-            + '<p class="machine-exam-category-card-desc">' + subtitle + '</p>'
+            + '<p class="machine-exam-category-card-desc">' + subtitleHtml + '</p>'
             + '<span class="machine-exam-category-card-cta">SINAVLARI GÖR</span>'
             + '</div></button>';
     });
@@ -12898,6 +14089,7 @@ function openMachineExamIntro(exam) {
     machineExamState.questions = [];
     machineExamState.answers = {};
     machineExamState.result = null;
+    machineExamState.attemptPersisted = false;
     machineExamState.quizActive = false;
     setMachineExamStatus('');
     renderMachineExamIntro();
@@ -12950,6 +14142,59 @@ function getMachineExamOptionLetter(index) {
     return String.fromCharCode(65 + Number(index || 0));
 }
 
+/**
+ * Public machine exam start: hard gate mirroring maybeShowRewardedThen('exam-open').
+ * Institution: direct loadMachineExamQuestions. Call only before quizActive.
+ */
+async function startMachineExamWithEntryAd(examId) {
+    var id = String(examId || '').trim();
+    if (!id) return;
+    var session = currentMachineCandidateSession;
+    if (!session
+        || typeof isMachinePublicSession !== 'function'
+        || !isMachinePublicSession(session)) {
+        await loadMachineExamQuestions(id);
+        return;
+    }
+    if (__machineExamStartAdInFlight) return;
+    if (machineExamState.quizActive) return;
+    if (String(machineExamState.selectedExamId || '') !== id) return;
+    __machineExamStartAdInFlight = true;
+    try {
+        await ensureMachinePublicAdPolicyRefreshed();
+        if (!isMachineSessionRootVisible()) return;
+        if (!currentMachineCandidateSession
+            || !isMachinePublicSession(currentMachineCandidateSession)) {
+            await loadMachineExamQuestions(id);
+            return;
+        }
+        if (machineExamState.quizActive) return;
+        if (String(machineExamState.selectedExamId || '') !== id) return;
+        var examsPane = document.getElementById('machine-exams-screen');
+        if (!examsPane || !examsPane.classList.contains('is-active')) return;
+        if (typeof maybeShowRewardedThen !== 'function') {
+            try {
+                console.warn('[MachineExams] maybeShowRewardedThen unavailable; public exam start blocked');
+            } catch (_) {}
+            return;
+        }
+        await maybeShowRewardedThen('exam-open', async function () {
+            if (!isMachineSessionRootVisible()) return;
+            if (!currentMachineCandidateSession
+                || !isMachinePublicSession(currentMachineCandidateSession)) {
+                return;
+            }
+            if (machineExamState.quizActive) return;
+            if (String(machineExamState.selectedExamId || '') !== id) return;
+            var pane = document.getElementById('machine-exams-screen');
+            if (!pane || !pane.classList.contains('is-active')) return;
+            await loadMachineExamQuestions(id);
+        });
+    } finally {
+        __machineExamStartAdInFlight = false;
+    }
+}
+
 async function loadMachineExamQuestions(examId) {
     var id = String(examId || '').trim();
     if (!id) return;
@@ -12981,6 +14226,7 @@ async function loadMachineExamQuestions(examId) {
         machineExamState.answers = {};
         machineExamState.currentIndex = 0;
         machineExamState.result = null;
+        machineExamState.attemptPersisted = false;
         machineExamState.totalSeconds = durationSec;
         machineExamState.remainingSeconds = durationSec;
         machineExamState.startedAtMs = Date.now();
@@ -13144,6 +14390,142 @@ function finishMachineExam(fromTimer) {
     completeMachineExamFinish();
 }
 
+function buildMachineExamAttemptPayload(result, session, categoryId, examId, examTitle, tenantId) {
+    var r = result || {};
+    var total = Math.max(0, Number(r.total) || 0);
+    var correct = Math.max(0, Number(r.correct) || 0);
+    var wrong = Math.max(0, Number(r.wrong) || 0);
+    var blank = Math.max(0, Number(r.blank) || 0);
+    var percentage = Math.round(Number(r.percentage) || 0);
+    var elapsed = Math.max(0, Number(r.elapsedSeconds) || 0);
+    return {
+        uid: String(session && session.uid || '').trim(),
+        tenantId: String(tenantId || '').trim(),
+        examId: String(examId || '').trim(),
+        examTitle: examTitle ? String(examTitle).trim() : null,
+        category: String(categoryId || '').trim(),
+        programType: 'machine_operator',
+        totalQuestions: total,
+        correctCount: correct,
+        wrongCount: wrong,
+        blankCount: blank,
+        percentage: percentage,
+        elapsedSeconds: elapsed,
+        source: 'mobile',
+        platform: 'mobile'
+    };
+}
+
+async function persistMachineExamAttempt(result) {
+    try {
+        if (machineExamState.attemptPersisted) return { ok: false, skipped: true, reason: 'already_persisted' };
+        var session = currentMachineCandidateSession;
+        if (!session || String(session.programType || '').trim() !== 'machine_operator') {
+            return { ok: false, skipped: true, reason: 'invalid_session' };
+        }
+        var uid = String(session.uid || '').trim();
+        if (!uid) return { ok: false, skipped: true, reason: 'missing_uid' };
+        var authUser = (firebase && firebase.auth && firebase.auth().currentUser) || null;
+        if (!authUser || String(authUser.uid || '') !== uid) {
+            return { ok: false, skipped: true, reason: 'auth_mismatch' };
+        }
+        var categoryId = String(machineExamState.categoryId || '').trim();
+        if (!isMachineExamCategoryAllowed(categoryId)) {
+            return { ok: false, skipped: true, reason: 'category_not_allowed' };
+        }
+        var examId = String(machineExamState.selectedExamId || '').trim();
+        if (!examId) return { ok: false, skipped: true, reason: 'missing_exam_id' };
+        if (!result || typeof result !== 'object') {
+            return { ok: false, skipped: true, reason: 'missing_result' };
+        }
+        if (!firebase || typeof firebase.firestore !== 'function') {
+            return { ok: false, skipped: true, reason: 'firestore_unavailable' };
+        }
+
+        machineExamState.attemptPersisted = true;
+
+        var tenantId = getMachineExamTenantId();
+        if (!tenantId) {
+            machineExamState.attemptPersisted = false;
+            return { ok: false, skipped: true, reason: 'missing_tenant' };
+        }
+        var isPublic = typeof isMachinePublicSession === 'function'
+            ? isMachinePublicSession(session)
+            : !!(String(session.enrollmentSource || '') === 'public' || String(session.mode || '') === 'public');
+        var examTitle = String(machineExamState.selectedExamTitle || '').trim();
+        var payload = buildMachineExamAttemptPayload(result, session, categoryId, examId, examTitle, tenantId);
+        if (!payload.uid || !payload.tenantId || !payload.examId || !payload.category) {
+            machineExamState.attemptPersisted = false;
+            return { ok: false, skipped: true, reason: 'incomplete_payload' };
+        }
+
+        var db = firebase.firestore();
+        var ts = firebase.firestore.FieldValue.serverTimestamp();
+        var primaryPayload = Object.assign({}, payload, {
+            completedAt: ts,
+            createdAt: ts
+        });
+
+        if (isPublic) {
+            var primaryRef = db.collection('tenants').doc(tenantId).collection('exam_attempts').doc();
+            var mirrorRef = db.collection('users').doc(uid).collection('web_exam_attempts').doc(primaryRef.id);
+            var mirrorPayload = {
+                uid: uid,
+                examId: payload.examId,
+                examTitle: payload.examTitle,
+                category: payload.category,
+                programType: 'machine_operator',
+                totalQuestions: payload.totalQuestions,
+                correctCount: payload.correctCount,
+                wrongCount: payload.wrongCount,
+                blankCount: payload.blankCount,
+                scorePercent: Math.round(Number(payload.percentage) || 0),
+                percentage: payload.percentage,
+                durationSeconds: payload.elapsedSeconds,
+                elapsedSeconds: payload.elapsedSeconds,
+                completedAt: ts,
+                createdAt: ts,
+                userType: 'public_user',
+                source: 'mobile',
+                platform: 'mobile',
+                mirrorSource: 'machine_exam_attempts'
+            };
+            try {
+                var batch = db.batch();
+                batch.set(primaryRef, primaryPayload);
+                batch.set(mirrorRef, mirrorPayload);
+                await batch.commit();
+                try { console.log('[MachineExamProgress] public attempt saved', primaryRef.id); } catch (_) {}
+                return { ok: true, id: primaryRef.id, mode: 'public_batch' };
+            } catch (batchErr) {
+                try { console.warn('[MachineExamProgress] public batch failed, primary-only fallback', batchErr && batchErr.message ? batchErr.message : batchErr); } catch (_) {}
+                try {
+                    var fallbackRef = await db.collection('tenants').doc(tenantId).collection('exam_attempts').add(primaryPayload);
+                    try { console.log('[MachineExamProgress] public primary-only saved', fallbackRef && fallbackRef.id); } catch (_) {}
+                    return { ok: true, id: fallbackRef && fallbackRef.id, mode: 'public_primary_only' };
+                } catch (primaryErr) {
+                    machineExamState.attemptPersisted = false;
+                    try { console.warn('[MachineExamProgress] public save failed', primaryErr && primaryErr.message ? primaryErr.message : primaryErr); } catch (_) {}
+                    return { ok: false, reason: 'write_failed' };
+                }
+            }
+        }
+
+        try {
+            var instRef = await db.collection('tenants').doc(tenantId).collection('exam_attempts').add(primaryPayload);
+            try { console.log('[MachineExamProgress] institution attempt saved', instRef && instRef.id); } catch (_) {}
+            return { ok: true, id: instRef && instRef.id, mode: 'institution' };
+        } catch (instErr) {
+            machineExamState.attemptPersisted = false;
+            try { console.warn('[MachineExamProgress] institution save failed', instErr && instErr.message ? instErr.message : instErr); } catch (_) {}
+            return { ok: false, reason: 'write_failed' };
+        }
+    } catch (e) {
+        try { console.warn('[MachineExamProgress] persist error', e && e.message ? e.message : e); } catch (_) {}
+        return { ok: false, reason: 'unexpected_error' };
+    }
+}
+
 function completeMachineExamFinish() {
     if (!machineExamState.quizActive && !machineExamState.questions.length) return;
     closeMachineExamFinishConfirmModal();
@@ -13154,6 +14536,13 @@ function completeMachineExamFinish() {
     closeMachineExamExitModal();
     renderMachineExamResult();
     applyMachineExamView('result');
+    try {
+        Promise.resolve(persistMachineExamAttempt(machineExamState.result)).catch(function (e) {
+            try { console.warn('[MachineExamProgress] persist rejected', e && e.message ? e.message : e); } catch (_) {}
+        });
+    } catch (persistKickoffErr) {
+        try { console.warn('[MachineExamProgress] persist kickoff failed', persistKickoffErr && persistKickoffErr.message ? persistKickoffErr.message : persistKickoffErr); } catch (_) {}
+    }
 }
 
 function renderMachineExamResult() {
@@ -13224,6 +14613,7 @@ function returnMachineExamToList() {
     machineExamState.questions = [];
     machineExamState.answers = {};
     machineExamState.result = null;
+    machineExamState.attemptPersisted = false;
     machineExamState.selectedExamId = '';
     machineExamState.selectedExamTitle = '';
     machineExamState.selectedExam = null;
@@ -13234,6 +14624,105 @@ function returnMachineExamToList() {
     renderMachineExamList();
 }
 
+/**
+ * Public machine result leave: hard interstitial exam-exit.
+ * destination: 'list' | 'home'
+ */
+async function requestMachineExamResultExitWithAd(destination) {
+    var dest = String(destination || '') === 'home' ? 'home' : 'list';
+    function continueResultExit() {
+        if (dest === 'home') {
+            resetMachineExamState(true);
+            showMachineShellPane('machine-home-screen');
+        } else {
+            returnMachineExamToList();
+        }
+    }
+    var session = currentMachineCandidateSession;
+    if (!session
+        || typeof isMachinePublicSession !== 'function'
+        || !isMachinePublicSession(session)) {
+        continueResultExit();
+        return;
+    }
+    if (__machineExamExitAdInFlight) return;
+    if (String(machineExamState.view || '') !== 'result') return;
+    __machineExamExitAdInFlight = true;
+    try {
+        await ensureMachinePublicAdPolicyRefreshed();
+        if (String(machineExamState.view || '') !== 'result') return;
+        if (!isMachineSessionRootVisible()) return;
+        if (typeof maybeShowInterstitialThen !== 'function') return;
+        await maybeShowInterstitialThen('exam-exit', async function () {
+            if (String(machineExamState.view || '') !== 'result') return;
+            if (!isMachineSessionRootVisible()) return;
+            continueResultExit();
+        });
+    } finally {
+        __machineExamExitAdInFlight = false;
+    }
+}
+
+/**
+ * Public machine mid-quiz confirm exit: hard interstitial exam-exit, then confirmMachineExamExit.
+ */
+async function confirmMachineExamExitWithAd() {
+    var session = currentMachineCandidateSession;
+    if (!session
+        || typeof isMachinePublicSession !== 'function'
+        || !isMachinePublicSession(session)) {
+        confirmMachineExamExit();
+        return;
+    }
+    if (__machineExamExitAdInFlight) return;
+    __machineExamExitAdInFlight = true;
+    try {
+        await ensureMachinePublicAdPolicyRefreshed();
+        if (!isMachineSessionRootVisible()) return;
+        if (!currentMachineCandidateSession
+            || !isMachinePublicSession(currentMachineCandidateSession)) {
+            confirmMachineExamExit();
+            return;
+        }
+        if (typeof maybeShowInterstitialThen !== 'function') return;
+        await maybeShowInterstitialThen('exam-exit', async function () {
+            if (!isMachineSessionRootVisible()) return;
+            confirmMachineExamExit();
+        });
+    } finally {
+        __machineExamExitAdInFlight = false;
+    }
+}
+
+/**
+ * Public machine "Yanlışları İncele": hard interstitial exam-review-mistakes.
+ */
+async function openMachineExamReviewWithAd() {
+    var session = currentMachineCandidateSession;
+    if (!session
+        || typeof isMachinePublicSession !== 'function'
+        || !isMachinePublicSession(session)) {
+        renderMachineExamReview();
+        applyMachineExamView('review');
+        return;
+    }
+    if (__machineExamReviewAdInFlight) return;
+    if (String(machineExamState.view || '') !== 'result') return;
+    __machineExamReviewAdInFlight = true;
+    try {
+        await ensureMachinePublicAdPolicyRefreshed();
+        if (String(machineExamState.view || '') !== 'result') return;
+        if (typeof maybeShowInterstitialThen !== 'function') return;
+        await maybeShowInterstitialThen('exam-review-mistakes', async function () {
+            if (String(machineExamState.view || '') !== 'result') return;
+            renderMachineExamReview();
+            applyMachineExamView('review');
+        });
+    } finally {
+        __machineExamReviewAdInFlight = false;
+    }
+}
+
 function confirmMachineExamExit() {
     stopMachineExamTimer();
     closeMachineExamExitModal();
@@ -13242,6 +14731,7 @@ function confirmMachineExamExit() {
     machineExamState.questions = [];
     machineExamState.answers = {};
     machineExamState.result = null;
+    machineExamState.attemptPersisted = false;
     machineExamState.currentIndex = 0;
     machineExamState.startedAtMs = 0;
     machineExamState.remainingSeconds = 0;
@@ -13281,7 +14771,7 @@ function handleMachineExamBack() {
         return;
     }
     if (view === 'result') {
-        returnMachineExamToList();
+        requestMachineExamResultExitWithAd('list');
         return;
     }
     if (view === 'intro') {
@@ -13325,7 +14815,7 @@ function bindMachineExamUiOnce() {
     if (confirmBtn) {
         confirmBtn.addEventListener('click', function (ev) {
             if (ev && ev.preventDefault) ev.preventDefault();
-            confirmMachineExamExit();
+            confirmMachineExamExitWithAd();
         });
     }
     if (finishCancelBtn) {
@@ -13360,7 +14850,7 @@ function bindMachineExamUiOnce() {
             var level = String(retryBtn.getAttribute('data-machine-exam-retry') || '');
             if (level === 'list' && machineExamState.categoryId) loadMachineExamList(machineExamState.categoryId);
             else if (level === 'questions' && machineExamState.selectedExamId) {
-                loadMachineExamQuestions(machineExamState.selectedExamId);
+                startMachineExamWithEntryAd(machineExamState.selectedExamId);
             }
             return;
         }
@@ -13416,7 +14906,7 @@ function bindMachineExamUiOnce() {
             return;
         }
         if (action === 'intro-start') {
-            if (machineExamState.selectedExamId) loadMachineExamQuestions(machineExamState.selectedExamId);
+            if (machineExamState.selectedExamId) startMachineExamWithEntryAd(machineExamState.selectedExamId);
             return;
         }
         if (action === 'quiz-prev') {
@@ -13438,17 +14928,15 @@ function bindMachineExamUiOnce() {
             return;
         }
         if (action === 'result-review') {
-            renderMachineExamReview();
-            applyMachineExamView('review');
+            openMachineExamReviewWithAd();
             return;
         }
         if (action === 'result-list') {
-            returnMachineExamToList();
+            requestMachineExamResultExitWithAd('list');
             return;
         }
         if (action === 'result-home') {
-            resetMachineExamState(true);
-            showMachineShellPane('machine-home-screen');
+            requestMachineExamResultExitWithAd('home');
             return;
         }
         if (action === 'review-back') {
@@ -13529,8 +15017,7 @@ function paintMachineProfileSafeInitial() {
     var instDetail = document.getElementById('machine-profile-institution-detail');
     var examLoading = document.getElementById('machine-profile-exam-loading');
     var examError = document.getElementById('machine-profile-exam-error');
-    var examEmpty = document.getElementById('machine-profile-exam-empty');
-    var examStats = document.getElementById('machine-profile-exam-stats');
+    var examCategories = document.getElementById('machine-profile-exam-categories');
     var lessonLoading = document.getElementById('machine-profile-lesson-loading');
     var lessonError = document.getElementById('machine-profile-lesson-error');
     var lessonEmpty = document.getElementById('machine-profile-lesson-empty');
@@ -13549,8 +15036,7 @@ function paintMachineProfileSafeInitial() {
     updateMachineProfileUnreadBadge(0);
     if (examLoading) examLoading.style.display = 'none';
     if (examError) examError.style.display = 'none';
-    if (examEmpty) examEmpty.style.display = 'none';
-    if (examStats) examStats.style.display = 'none';
+    if (examCategories) examCategories.style.display = 'none';
     if (lessonLoading) lessonLoading.style.display = 'none';
     if (lessonError) lessonError.style.display = 'none';
     if (lessonEmpty) lessonEmpty.style.display = 'none';
@@ -13689,28 +15175,39 @@ function applyMachineProfileInstitutionBranding(profile, session) {
     machineProfileState.branding = { kind: 'institution', name: name, tenantId: tenantId };
 }
 
+function fillMachineProfileExamCategoryMetricEls(prefix, stats) {
+    var s = stats || {};
+    var completedEl = document.getElementById(prefix + '-completed');
+    var averageEl = document.getElementById(prefix + '-average');
+    var bestEl = document.getElementById(prefix + '-best');
+    var lastEl = document.getElementById(prefix + '-last');
+    if (completedEl) completedEl.textContent = String(s.completed || 0);
+    if (averageEl) averageEl.textContent = s.average != null ? ('%' + String(s.average)) : '—';
+    if (bestEl) bestEl.textContent = s.best != null ? ('%' + String(s.best)) : '—';
+    if (lastEl) {
+        lastEl.textContent = typeof formatProfileExamDateShort === 'function'
+            ? formatProfileExamDateShort(s.lastAttemptAt)
+            : '—';
+    }
+}
+
 function setMachineProfileExamUi(mode, stats) {
     var loading = document.getElementById('machine-profile-exam-loading');
     var errorEl = document.getElementById('machine-profile-exam-error');
-    var emptyEl = document.getElementById('machine-profile-exam-empty');
-    var statsEl = document.getElementById('machine-profile-exam-stats');
-    var completedEl = document.getElementById('machine-profile-exam-completed');
-    var correctEl = document.getElementById('machine-profile-exam-correct');
-    var wrongEl = document.getElementById('machine-profile-exam-wrong');
-    var blankEl = document.getElementById('machine-profile-exam-blank');
-    var averageEl = document.getElementById('machine-profile-exam-average');
-    var bestEl = document.getElementById('machine-profile-exam-best');
+    var categoriesEl = document.getElementById('machine-profile-exam-categories');
     if (loading) loading.style.display = mode === 'loading' ? 'block' : 'none';
     if (errorEl) errorEl.style.display = mode === 'error' ? 'block' : 'none';
-    if (emptyEl) emptyEl.style.display = mode === 'empty' ? 'block' : 'none';
-    if (statsEl) statsEl.style.display = mode === 'stats' ? 'grid' : 'none';
-    if (mode !== 'stats' || !stats) return;
-    if (completedEl) completedEl.textContent = String(stats.completed || 0);
-    if (correctEl) correctEl.textContent = String(stats.correct || 0);
-    if (wrongEl) wrongEl.textContent = String(stats.wrong || 0);
-    if (blankEl) blankEl.textContent = String(stats.blank || 0);
-    if (averageEl) averageEl.textContent = stats.average != null ? ('%' + String(stats.average)) : '—';
-    if (bestEl) bestEl.textContent = stats.best != null ? ('%' + String(stats.best)) : '—';
+    if (categoriesEl) categoriesEl.style.display = mode === 'stats' ? 'block' : 'none';
+    if (mode !== 'stats') return;
+    var payload = stats || {};
+    fillMachineProfileExamCategoryMetricEls(
+        'machine-profile-exam-work-machines',
+        payload.work_machines || aggregateMachineExamStatsFromDocs([])
+    );
+    fillMachineProfileExamCategoryMetricEls(
+        'machine-profile-exam-first-aid',
+        payload.first_aid || aggregateMachineExamStatsFromDocs([])
+    );
 }
 
 function escapeMachineProfileHtml(s) {
@@ -13721,12 +15218,104 @@ function escapeMachineProfileHtml(s) {
         .replace(/"/g, '&quot;');
 }
 
+function getCachedMobileLessonUnitTotal(categoryId) {
+    var cid = String(categoryId || '').trim();
+    if (!cid) return null;
+    if (!Object.prototype.hasOwnProperty.call(__mobileLessonUnitTotalByCategory, cid)) return null;
+    var n = Number(__mobileLessonUnitTotalByCategory[cid]);
+    if (!isFinite(n) || n < 0) return null;
+    return n;
+}
+
+function setCachedMobileLessonUnitTotal(categoryId, total) {
+    var cid = String(categoryId || '').trim();
+    var n = Number(total);
+    if (!cid || !isFinite(n) || n < 0) return;
+    __mobileLessonUnitTotalByCategory[cid] = n;
+}
+
+function peekLoadedMobileLessonUnitTotal(categoryId) {
+    var cid = String(categoryId || '').trim();
+    if (!cid) return null;
+    try {
+        if (typeof machineLessonState !== 'undefined' && machineLessonState
+            && String(machineLessonState.selectedCategoryId || '').trim() === cid
+            && Array.isArray(machineLessonState.units)
+            && machineLessonState.units.length > 0) {
+            return machineLessonState.units.length;
+        }
+    } catch (_) {}
+    try {
+        if (typeof lessonV2MobileState !== 'undefined' && lessonV2MobileState
+            && String(lessonV2MobileState.selectedCategoryId || '').trim() === cid
+            && Array.isArray(lessonV2MobileState.units)
+            && lessonV2MobileState.units.length > 0) {
+            return lessonV2MobileState.units.length;
+        }
+    } catch (_) {}
+    return null;
+}
+
+async function resolveMobileLessonUnitTotal(categoryId) {
+    var cid = String(categoryId || '').trim();
+    if (!cid) return null;
+
+    var cached = getCachedMobileLessonUnitTotal(cid);
+    if (cached != null) return cached;
+
+    var peeked = peekLoadedMobileLessonUnitTotal(cid);
+    if (peeked != null) {
+        setCachedMobileLessonUnitTotal(cid, peeked);
+        return peeked;
+    }
+
+    if (__mobileLessonUnitTotalInflightByCategory[cid]) {
+        return __mobileLessonUnitTotalInflightByCategory[cid];
+    }
+
+    var inflight = (async function () {
+        try {
+            if (typeof lessonV2UnitsRefMobile !== 'function') return null;
+            var snap = await lessonV2UnitsRefMobile(cid).where('status', '==', 'active').orderBy('order', 'asc').get();
+            var count = (snap && snap.docs) ? snap.docs.length : 0;
+            setCachedMobileLessonUnitTotal(cid, count);
+            return count;
+        } catch (e) {
+            try { console.warn('[LessonUnitTotal] resolve failed:', cid, e && e.message ? e.message : e); } catch (_) {}
+            return null;
+        } finally {
+            try { delete __mobileLessonUnitTotalInflightByCategory[cid]; } catch (_) {}
+        }
+    })();
+
+    __mobileLessonUnitTotalInflightByCategory[cid] = inflight;
+    return inflight;
+}
+
+async function enrichLessonProfileRowsWithUnitTotals(rows) {
+    var list = Array.isArray(rows) ? rows : [];
+    if (!list.length) return list;
+    await Promise.all(list.map(function (row) {
+        var cid = String(row && row.categoryId || '').trim();
+        if (!cid) return Promise.resolve();
+        return Promise.resolve(resolveMobileLessonUnitTotal(cid)).then(function (total) {
+            if (total == null || !isFinite(Number(total)) || Number(total) < 0) return;
+            row.totalCount = Number(total);
+        });
+    }));
+    return list;
+}
+
 function getMachineProfileLessonTotalHint(categoryId) {
     var cid = String(categoryId || '').trim();
-    if (!cid || typeof machineLessonState === 'undefined' || !machineLessonState) return null;
+    if (!cid) return null;
+    var cached = getCachedMobileLessonUnitTotal(cid);
+    if (cached != null) return cached;
+    if (typeof machineLessonState === 'undefined' || !machineLessonState) return null;
     if (String(machineLessonState.selectedCategoryId || '').trim() !== cid) return null;
     var units = Array.isArray(machineLessonState.units) ? machineLessonState.units : [];
     if (!units.length) return null;
+    setCachedMobileLessonUnitTotal(cid, units.length);
     return units.length;
 }
 
@@ -13783,6 +15372,27 @@ function isMachineProfileExamAttemptEligible(item, uid, tenantId) {
     return true;
 }
 
+function getMachineProfileExamAttemptCategoryId(item) {
+    var d = item && item.data ? item.data : null;
+    if (!d || typeof d !== 'object') return '';
+    return String(d.category || d.categoryId || '').trim();
+}
+
+function partitionMachineProfileExamDocsByCategory(docs) {
+    var workMachines = [];
+    var firstAid = [];
+    var list = Array.isArray(docs) ? docs : [];
+    for (var i = 0; i < list.length; i++) {
+        var category = getMachineProfileExamAttemptCategoryId(list[i]);
+        if (category === 'work_machines') workMachines.push(list[i]);
+        else if (category === 'first_aid') firstAid.push(list[i]);
+    }
+    return {
+        work_machines: workMachines,
+        first_aid: firstAid
+    };
+}
+
 function aggregateMachineExamStatsFromDocs(docs) {
     var list = Array.isArray(docs) ? docs : [];
     var correct = 0;
@@ -13791,6 +15401,8 @@ function aggregateMachineExamStatsFromDocs(docs) {
     var sum = 0;
     var countWithScore = 0;
     var best = 0;
+    var lastAttemptAt = null;
+    var lastMs = 0;
     for (var i = 0; i < list.length; i++) {
         var d = list[i] && list[i].data ? list[i].data : {};
         correct += Math.max(0, Number(d.correctCount) || 0);
@@ -13804,6 +15416,13 @@ function aggregateMachineExamStatsFromDocs(docs) {
             countWithScore += 1;
             if (p > best) best = p;
         }
+        var ms = typeof profileExamCompletedAtMs === 'function'
+            ? profileExamCompletedAtMs(d)
+            : 0;
+        if (ms > lastMs) {
+            lastMs = ms;
+            lastAttemptAt = d.completedAt || d.createdAt || null;
+        }
     }
     return {
         completed: list.length,
@@ -13811,7 +15430,8 @@ function aggregateMachineExamStatsFromDocs(docs) {
         wrong: wrong,
         blank: blank,
         average: countWithScore ? Math.round(sum / countWithScore) : null,
-        best: countWithScore ? Math.round(best) : null
+        best: countWithScore ? Math.round(best) : null,
+        lastAttemptAt: lastAttemptAt
     };
 }
 
@@ -13851,7 +15471,14 @@ async function fetchMachineProfileExamStats(uid, tenantId) {
     var merged = typeof mergeProfileExamAttemptDocs === 'function'
         ? mergeProfileExamAttemptDocs(filteredLists)
         : [].concat.apply([], filteredLists);
-    return aggregateMachineExamStatsFromDocs(merged);
+    var parts = partitionMachineProfileExamDocsByCategory(merged);
+    var workMachinesStats = aggregateMachineExamStatsFromDocs(parts.work_machines);
+    var firstAidStats = aggregateMachineExamStatsFromDocs(parts.first_aid);
+    return {
+        work_machines: workMachinesStats,
+        first_aid: firstAidStats,
+        completed: (workMachinesStats.completed || 0) + (firstAidStats.completed || 0)
+    };
 }
 
 function buildMachineLessonProgressDedupeKey(item) {
@@ -14093,13 +15720,8 @@ function startMachineProfileLoad(isManualRefresh) {
     Promise.resolve(fetchMachineProfileExamStats(captured.uid, captured.tenantId)).then(function (stats) {
         if (!isMachineProfileLoadFresh(captured)) return;
         machineProfileState.examStats = stats;
-        if (stats && stats.completed > 0) {
-            machineProfileState.examStatus = 'ready';
-            setMachineProfileExamUi('stats', stats);
-        } else {
-            machineProfileState.examStatus = 'empty';
-            setMachineProfileExamUi('empty', null);
-        }
+        machineProfileState.examStatus = (stats && stats.completed > 0) ? 'ready' : 'empty';
+        setMachineProfileExamUi('stats', stats);
         syncMachineProfileOverallStatus();
     }).catch(function (e) {
         if (!isMachineProfileLoadFresh(captured)) return;
@@ -14118,6 +15740,13 @@ function startMachineProfileLoad(isManualRefresh) {
         machineProfileState.lessonStatus = totalCompleted > 0 ? 'ready' : 'empty';
         setMachineProfileLessonUi(totalCompleted > 0 ? 'rows' : 'rows-empty', rows);
         syncMachineProfileOverallStatus();
+        return Promise.resolve(enrichLessonProfileRowsWithUnitTotals(rows)).then(function (enrichedRows) {
+            if (!isMachineProfileLoadFresh(captured)) return;
+            if (lessonStats) lessonStats.rows = enrichedRows;
+            machineProfileState.lessonStats = lessonStats;
+            setMachineProfileLessonUi(totalCompleted > 0 ? 'rows' : 'rows-empty', enrichedRows);
+            syncMachineProfileOverallStatus();
+        });
     }).catch(function (e) {
         if (!isMachineProfileLoadFresh(captured)) return;
         try { console.warn('[MachineProfile] lesson progress failed', e && e.message ? e.message : e); } catch (_) {}
@@ -15830,7 +17459,7 @@ function bindMachineLessonUiOnce() {
             else if (level === 'units' && machineLessonState.selectedCategoryId) {
                 loadMachineLessonUnits(machineLessonState.selectedCategoryId);
             } else if (level === 'detail' && machineLessonState.selectedCategoryId && machineLessonState.selectedUnitId) {
-                loadMachineLessonDetail(machineLessonState.selectedCategoryId, machineLessonState.selectedUnitId);
+                openMachineLessonDetailWithEntryAd(machineLessonState.selectedCategoryId, machineLessonState.selectedUnitId);
             } else {
                 loadMachineLessonCategories(true);
             }
@@ -15846,16 +17475,42 @@ function bindMachineLessonUiOnce() {
         if (unitBtn && root.contains(unitBtn)) {
             var unitId = String(unitBtn.getAttribute('data-machine-lesson-unit') || '').trim();
             if (unitId && machineLessonState.selectedCategoryId) {
-                loadMachineLessonDetail(machineLessonState.selectedCategoryId, unitId);
+                openMachineLessonDetailWithEntryAd(machineLessonState.selectedCategoryId, unitId);
             }
             return;
         }
         var img = (t.closest && t.closest('img[data-machine-lesson-image]')) || null;
         if (img && root.contains(img)) {
             var src = img.getAttribute && img.getAttribute('src');
-            if (src && typeof openImageViewer === 'function') openImageViewer(src);
+            if (!src) return;
+            openMachineLessonImage(src);
         }
     });
+}
+
+function isMachineImageViewerOpen() {
+    var modal = document.getElementById('image-viewer-modal');
+    if (!modal) return false;
+    return modal.style.display === 'flex'
+        || window.getComputedStyle(modal).display === 'flex';
+}
+
+/**
+ * Public machine: reuse Driving openLessonImageWithCooldownAd (lesson-image-click).
+ * Institution: openImageViewer directly.
+ */
+function openMachineLessonImage(src) {
+    var url = String(src || '').trim();
+    if (!url) return;
+    var session = currentMachineCandidateSession;
+    var isPublic = !!(session
+        && typeof isMachinePublicSession === 'function'
+        && isMachinePublicSession(session));
+    if (isPublic && typeof openLessonImageWithCooldownAd === 'function') {
+        openLessonImageWithCooldownAd(url);
+        return;
+    }
+    if (typeof openImageViewer === 'function') openImageViewer(url);
 }
 
 function openMachineLessonsPane() {
@@ -15878,6 +17533,387 @@ function openMachineLessonsPane() {
     } else {
         renderMachineLessonCategories();
     }
+}
+
+function isMachineVideoCategoryAllowed(categoryId) {
+    var id = String(categoryId || '').trim();
+    return MACHINE_VIDEO_CATEGORY_ALLOWLIST.indexOf(id) >= 0;
+}
+
+function getMachineVideoCategoryTitle(categoryId) {
+    var id = String(categoryId || '').trim();
+    var presentation = MACHINE_VIDEO_CATEGORY_PRESENTATION[id];
+    if (presentation && presentation.title) return String(presentation.title);
+    if (MACHINE_LESSON_CATEGORY_TITLE_FALLBACK[id]) return MACHINE_LESSON_CATEGORY_TITLE_FALLBACK[id];
+    return id || 'Video';
+}
+
+function getMachineVideoShellTitle() {
+    if (machineVideoState.view === 'list' && machineVideoState.selectedCategoryTitle) {
+        return String(machineVideoState.selectedCategoryTitle);
+    }
+    return MACHINE_SHELL_PANE_TITLES['machine-videos-screen'] || 'Video Öğretmen';
+}
+
+function isMachineVideoContextFresh() {
+    if (!isMachineSessionRootVisible()) return false;
+    if (!currentMachineCandidateSession) return false;
+    var pane = document.getElementById('machine-videos-screen');
+    return !!(pane && pane.classList.contains('is-active'));
+}
+
+function setMachineVideoStatus(message, options) {
+    var el = document.getElementById('machine-video-status');
+    if (!el) return;
+    var opts = options || {};
+    var text = String(message || '').trim();
+    if (!text) {
+        el.className = '';
+        el.textContent = '';
+        el.style.display = 'none';
+        return;
+    }
+    el.style.display = '';
+    el.className = 'is-visible' + (opts.isError ? ' is-error' : '');
+    el.textContent = text;
+}
+
+function resetMachineShellMainScroll() {
+    var main = document.getElementById('machine-shell-main');
+    if (main) main.scrollTop = 0;
+}
+
+function syncMachineVideoShellTitle() {
+    var titleEl = document.getElementById('machine-shell-top-title');
+    var pane = document.getElementById('machine-videos-screen');
+    if (!titleEl || !pane || !pane.classList.contains('is-active')) return;
+    var text = getMachineVideoShellTitle();
+    titleEl.textContent = text || '';
+    if (text) titleEl.classList.remove('is-hidden');
+    else titleEl.classList.add('is-hidden');
+}
+
+function applyMachineVideoView(view) {
+    var mode = String(view || 'categories') === 'list' ? 'list' : 'categories';
+    machineVideoState.view = mode;
+    var cats = document.getElementById('machine-video-categories');
+    var list = document.getElementById('machine-video-list');
+    if (cats) {
+        if (mode === 'categories') cats.classList.add('is-active');
+        else cats.classList.remove('is-active');
+    }
+    if (list) {
+        if (mode === 'list') list.classList.add('is-active');
+        else list.classList.remove('is-active');
+    }
+    syncMachineVideoShellTitle();
+    resetMachineShellMainScroll();
+}
+
+function beginMachineTeacherVideoAccessContext() {
+    var session = currentMachineCandidateSession;
+    if (!session || typeof isMachineSessionRootVisible !== 'function' || !isMachineSessionRootVisible()) {
+        __teacherVideoTenantContextOverride = null;
+        return;
+    }
+    if (typeof isMachinePublicSession === 'function' && isMachinePublicSession(session)) {
+        __teacherVideoTenantContextOverride = { mode: 'public', tenantId: '' };
+        return;
+    }
+    var tid = String(session.tenantId || '').trim();
+    var enrollment = String(session.enrollmentSource || '').trim();
+    var mode = String(session.mode || '').trim();
+    if (tid && (enrollment === 'institution' || mode === 'institution')) {
+        __teacherVideoTenantContextOverride = { mode: 'institution', tenantId: tid };
+        return;
+    }
+    __teacherVideoTenantContextOverride = { mode: 'public', tenantId: '' };
+}
+
+function endMachineTeacherVideoAccessContext() {
+    __teacherVideoTenantContextOverride = null;
+}
+
+async function handleMachineTeacherVideoPlayRequest(video) {
+    if (!video) {
+        setMachineVideoStatus('Video açılamadı. Lütfen tekrar deneyin.', { isError: true });
+        return;
+    }
+    // Canonical category = selected machine list path (not untrusted video.categoryId).
+    var canonicalCategoryId = String(machineVideoState.selectedCategoryId || '').trim();
+    if (!isMachineVideoCategoryAllowed(canonicalCategoryId)) {
+        try {
+            console.warn('[MachineVideos] blocked play: invalid selected category', canonicalCategoryId);
+        } catch (_) {}
+        setMachineVideoStatus('Bu kategori için video açılamıyor.', { isError: true });
+        return;
+    }
+    var playVideo = null;
+    try {
+        playVideo = Object.assign({}, video, { categoryId: canonicalCategoryId });
+    } catch (_) {
+        playVideo = {
+            id: video.id,
+            categoryId: canonicalCategoryId,
+            title: video.title,
+            lessonNo: video.lessonNo,
+            order: video.order,
+            youtubeUrl: video.youtubeUrl,
+            youtubeVideoId: video.youtubeVideoId,
+            youtubeThumbnailUrl: video.youtubeThumbnailUrl,
+            description: video.description,
+            isPublished: video.isPublished,
+            createdAt: video.createdAt
+        };
+    }
+    beginMachineTeacherVideoAccessContext();
+    try {
+        var wantTid = typeof resolveTeacherVideoTenantIdMobile === 'function'
+            ? String(resolveTeacherVideoTenantIdMobile() || '').trim()
+            : '';
+        if (typeof teacherVideoTenantEntitlementState !== 'undefined'
+            && String(teacherVideoTenantEntitlementState.tenantId || '').trim() !== wantTid
+            && typeof clearTeacherVideoTenantEntitlementCacheMobile === 'function') {
+            clearTeacherVideoTenantEntitlementCacheMobile();
+        }
+        if (typeof handleTeacherVideoPlayRequestMobile === 'function') {
+            await handleTeacherVideoPlayRequestMobile(playVideo);
+        } else if (typeof openTeacherVideoPlayerMobile === 'function') {
+            openTeacherVideoPlayerMobile(playVideo);
+        } else {
+            setMachineVideoStatus('Video oynatıcı şu anda kullanılamıyor.', { isError: true });
+        }
+    } catch (e) {
+        try {
+            console.warn('[MachineVideos] play failed', e && e.message ? e.message : e);
+        } catch (_) {}
+        setMachineVideoStatus('Video açılamadı. Lütfen tekrar deneyin.', { isError: true });
+    } finally {
+        endMachineTeacherVideoAccessContext();
+    }
+}
+
+function renderMachineVideoCategories() {
+    var host = document.getElementById('machine-video-categories');
+    if (!host) return;
+    host.innerHTML = '';
+    setMachineVideoStatus('');
+    var esc = typeof escapeLessonV2MobileHtml === 'function'
+        ? escapeLessonV2MobileHtml
+        : function (s) { return String(s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+    for (var i = 0; i < MACHINE_VIDEO_CATEGORY_ALLOWLIST.length; i++) {
+        var id = MACHINE_VIDEO_CATEGORY_ALLOWLIST[i];
+        if (!isMachineVideoCategoryAllowed(id)) continue;
+        var presentation = MACHINE_VIDEO_CATEGORY_PRESENTATION[id] || null;
+        var title = presentation && presentation.title
+            ? String(presentation.title)
+            : getMachineVideoCategoryTitle(id);
+        var description = presentation && presentation.description
+            ? String(presentation.description)
+            : 'Video dersleri aç';
+        var variant = presentation && presentation.variant === 'blue' ? 'blue' : 'gold';
+        var descHtml = formatMachinePremiumDescHtml(
+            description,
+            (MACHINE_VIDEO_DESC_EMPHASIS && MACHINE_VIDEO_DESC_EMPHASIS[id]) || []
+        );
+        var card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'machine-lesson-premium-card machine-lesson-premium-card--' + variant;
+        card.setAttribute('data-machine-video-category', id);
+        card.innerHTML =
+            '<div class="machine-lesson-premium-content">'
+            + '<h3 class="machine-lesson-premium-title">' + esc(title) + '</h3>'
+            + '<p class="machine-lesson-premium-desc">' + descHtml + '</p>'
+            + '</div>'
+            + '<span class="machine-lesson-premium-cta">VİDEOLARI GÖR</span>';
+        card.addEventListener('click', function (cid, ctitle) {
+            return function () { openMachineVideoCategory(cid, ctitle); };
+        }(id, title));
+        host.appendChild(card);
+    }
+}
+
+function renderMachineVideoList() {
+    var host = document.getElementById('machine-video-list-host');
+    if (!host) return;
+    var esc = typeof escapeLessonV2MobileHtml === 'function'
+        ? escapeLessonV2MobileHtml
+        : function (s) { return String(s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+    var headerTitle = String(machineVideoState.selectedCategoryTitle || '').trim() || 'Video dersler';
+    if (machineVideoState.loading) {
+        host.innerHTML =
+            '<div class="machine-video-list-header">' + esc(headerTitle) + '</div>'
+            + '<p class="machine-video-list-status">Video dersler yükleniyor…</p>';
+        setMachineVideoStatus('Video dersler yükleniyor…');
+        return;
+    }
+    if (machineVideoState.error) {
+        host.innerHTML =
+            '<div class="machine-video-list-header">' + esc(headerTitle) + '</div>'
+            + '<p class="machine-video-list-status">Video dersler yüklenemedi. Lütfen tekrar deneyin.</p>';
+        setMachineVideoStatus('Video dersler yüklenemedi. Lütfen tekrar deneyin.', { isError: true });
+        return;
+    }
+    var videos = Array.isArray(machineVideoState.videos) ? machineVideoState.videos : [];
+    if (!videos.length) {
+        host.innerHTML =
+            '<div class="machine-video-list-header">' + esc(headerTitle) + '</div>'
+            + '<p class="machine-video-list-status">Bu kategoride yayınlanmış video ders bulunmuyor.</p>';
+        setMachineVideoStatus('');
+        return;
+    }
+    setMachineVideoStatus('');
+    host.innerHTML = '<div class="machine-video-list-header">' + esc(headerTitle) + '</div>';
+    videos.forEach(function (v) {
+        if (!v) return;
+        var thumbUrl = String(v.youtubeThumbnailUrl || '').trim();
+        if (!thumbUrl && typeof buildTeacherVideoThumbnailUrlMobile === 'function') {
+            thumbUrl = buildTeacherVideoThumbnailUrlMobile(v.youtubeVideoId);
+        }
+        var desc = String(v.description || '').trim();
+        var row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'machine-video-item';
+        row.innerHTML =
+            '<div class="machine-video-item-thumb">'
+            + (thumbUrl
+                ? '<img src="' + String(thumbUrl).replace(/"/g, '&quot;') + '" alt="" loading="lazy" />'
+                : '')
+            + '</div>'
+            + '<div class="machine-video-item-body">'
+            + '<div class="machine-video-item-title">' + esc(String(v.title || 'Video ders')) + '</div>'
+            + '<span class="machine-video-item-badge">Ders No: '
+            + esc(String(v.lessonNo != null ? v.lessonNo : '—')) + '</span>'
+            + (desc ? '<p class="machine-video-item-desc">' + esc(desc) + '</p>' : '')
+            + '<span class="machine-video-item-open">Videoyu Aç</span>'
+            + '</div>';
+        row.addEventListener('click', function () {
+            handleMachineTeacherVideoPlayRequest(v);
+        });
+        host.appendChild(row);
+    });
+}
+
+async function loadMachineVideosForCategory(categoryId) {
+    var cid = String(categoryId || '').trim();
+    if (!isMachineVideoCategoryAllowed(cid)) return;
+    machineVideoState.loadToken += 1;
+    var token = machineVideoState.loadToken;
+    machineVideoState.loading = true;
+    machineVideoState.error = null;
+    machineVideoState.videos = [];
+    renderMachineVideoList();
+    try {
+        if (typeof firebase === 'undefined' || !firebase.firestore) {
+            throw new Error('firestore_unavailable');
+        }
+        if (typeof teacherVideoVideosRefMobile !== 'function') {
+            throw new Error('videos_ref_unavailable');
+        }
+        var snap = await teacherVideoVideosRefMobile(cid).orderBy('lessonNo', 'asc').get();
+        if (token !== machineVideoState.loadToken) return;
+        if (!isMachineVideoContextFresh()) return;
+        if (String(machineVideoState.selectedCategoryId || '') !== cid) return;
+        var list = [];
+        snap.forEach(function (doc) {
+            var d = doc.data() || {};
+            if (d.isPublished !== true) return;
+            list.push({
+                id: doc.id,
+                categoryId: String(d.categoryId || cid),
+                title: String(d.title || ''),
+                lessonNo: Number(d.lessonNo != null ? d.lessonNo : d.order != null ? d.order : 0),
+                order: Number(d.order != null ? d.order : d.lessonNo != null ? d.lessonNo : 0),
+                youtubeUrl: String(d.youtubeUrl || ''),
+                youtubeVideoId: String(d.youtubeVideoId || ''),
+                youtubeThumbnailUrl: String(d.youtubeThumbnailUrl || ''),
+                description: String(d.description || ''),
+                isPublished: true,
+                createdAt: d.createdAt || null
+            });
+        });
+        if (typeof sortTeacherVideosMobile === 'function') {
+            list = sortTeacherVideosMobile(list);
+        }
+        machineVideoState.videos = list;
+        machineVideoState.loading = false;
+        machineVideoState.error = null;
+    } catch (e) {
+        try { console.warn('[MachineVideos] load failed', e && e.message ? e.message : e); } catch (_) {}
+        if (token !== machineVideoState.loadToken) return;
+        machineVideoState.loading = false;
+        machineVideoState.error = 'load';
+        machineVideoState.videos = [];
+    }
+    if (token !== machineVideoState.loadToken) return;
+    if (!isMachineVideoContextFresh()) return;
+    renderMachineVideoList();
+}
+
+function openMachineVideoCategory(categoryId, categoryTitle) {
+    var cid = String(categoryId || '').trim();
+    if (!isMachineVideoCategoryAllowed(cid)) return;
+    machineVideoState.selectedCategoryId = cid;
+    machineVideoState.selectedCategoryTitle = String(categoryTitle || '').trim() || getMachineVideoCategoryTitle(cid);
+    applyMachineVideoView('list');
+    loadMachineVideosForCategory(cid);
+}
+
+function closeMachineVideoListView() {
+    machineVideoState.loadToken += 1;
+    machineVideoState.selectedCategoryId = '';
+    machineVideoState.selectedCategoryTitle = '';
+    machineVideoState.videos = [];
+    machineVideoState.loading = false;
+    machineVideoState.error = null;
+    var host = document.getElementById('machine-video-list-host');
+    if (host) host.innerHTML = '';
+    setMachineVideoStatus('');
+    applyMachineVideoView('categories');
+    renderMachineVideoCategories();
+}
+
+function closeMachineVideoAccessOverlaysIfOpen() {
+    if (typeof isTeacherVideoAccessResultOpenMobile === 'function' && isTeacherVideoAccessResultOpenMobile()) {
+        if (typeof closeTeacherVideoAccessResultModalMobile === 'function') closeTeacherVideoAccessResultModalMobile();
+        return true;
+    }
+    if (typeof isTeacherVideoRewardConsentOpenMobile === 'function' && isTeacherVideoRewardConsentOpenMobile()) {
+        if (typeof closeTeacherVideoRewardConsentModalMobile === 'function') closeTeacherVideoRewardConsentModalMobile();
+        return true;
+    }
+    if (typeof isTeacherVideoPremiumLockOpenMobile === 'function' && isTeacherVideoPremiumLockOpenMobile()) {
+        if (typeof closeTeacherVideoPremiumLockModalMobile === 'function') closeTeacherVideoPremiumLockModalMobile();
+        return true;
+    }
+    if (typeof isTeacherVideoPlayerOpenMobile === 'function' && isTeacherVideoPlayerOpenMobile()) {
+        if (typeof closeTeacherVideoPlayerMobile === 'function') closeTeacherVideoPlayerMobile();
+        return true;
+    }
+    return false;
+}
+
+function handleMachineVideoBack() {
+    if (closeMachineVideoAccessOverlaysIfOpen()) return;
+    if (machineVideoState.view === 'list') {
+        closeMachineVideoListView();
+        return;
+    }
+    showMachineShellPane('machine-home-screen');
+}
+
+function openMachineVideosPane() {
+    machineVideoState.loadToken += 1;
+    machineVideoState.selectedCategoryId = '';
+    machineVideoState.selectedCategoryTitle = '';
+    machineVideoState.videos = [];
+    machineVideoState.loading = false;
+    machineVideoState.error = null;
+    var host = document.getElementById('machine-video-list-host');
+    if (host) host.innerHTML = '';
+    setMachineVideoStatus('');
+    applyMachineVideoView('categories');
+    renderMachineVideoCategories();
 }
 
 function bindMachineShellNavigationOnce() {
@@ -16836,6 +18872,7 @@ function showMachineSessionPlaceholder(session) {
     if (isPublic) {
         applyMachineHomePublicBranding();
         applyMachinePublicContactDefaults();
+        try { ensureMachinePublicAdPolicyRefreshed(); } catch (_) {}
     } else {
         applyMachineHomeInstitutionFallbackBranding(session);
         startMachineInstitutionProfileLoad(session);
@@ -19315,8 +21352,25 @@ const MOBILE_PROFILE_LESSON_CATALOG = [
     { categoryId: 'is_makineleri', title: 'İş Makineleri Operatörlük Dersi' }
 ];
 
+/** Driving #app-container only — machine shell uses MACHINE_* allowlists. */
+function isDrivingBlockedMachineLessonCategoryId(categoryId) {
+    return String(categoryId || '').trim() === 'is_makineleri';
+}
+
+function isDrivingBlockedMachineExamType(type) {
+    return String(type || '').trim() === 'work_machines';
+}
+
+function getDrivingLessonFixedCategoriesMobile() {
+    return LESSON_V2_FIXED_CATEGORIES_MOBILE.filter(function (c) {
+        return !isDrivingBlockedMachineLessonCategoryId(c && (c.id || c.key));
+    });
+}
+
 function getMobileLessonCatalogCategories() {
-    return MOBILE_PROFILE_LESSON_CATALOG.slice();
+    return MOBILE_PROFILE_LESSON_CATALOG.filter(function (c) {
+        return !isDrivingBlockedMachineLessonCategoryId(c && c.categoryId);
+    });
 }
 
 function isMobileProgressCompleted(data) {
@@ -19439,10 +21493,14 @@ function computeMobileLessonStatsByCategory(progressItems) {
         counts[key] = (counts[key] || 0) + 1;
     });
     return getMobileLessonCatalogCategories().map(function (cat) {
+        var cachedTotal = typeof getCachedMobileLessonUnitTotal === 'function'
+            ? getCachedMobileLessonUnitTotal(cat.categoryId)
+            : null;
         return {
             categoryId: cat.categoryId,
             title: cat.title,
-            completedCount: counts[cat.categoryId] || 0
+            completedCount: counts[cat.categoryId] || 0,
+            totalCount: cachedTotal
         };
     });
 }
@@ -19465,6 +21523,10 @@ async function resolveInstitutionStudentTenantIdForLessonWrite() {
     return null;
 }
 
+function isExplicitMachineOperatorLessonProgressData(data) {
+    return String(data && data.programType || '').trim() === 'machine_operator';
+}
+
 async function fetchWebLessonProgressItemsForProfile(uid) {
     if (!uid || !firebase.firestore) return [];
     var db = firebase.firestore();
@@ -19482,7 +21544,9 @@ async function fetchWebLessonProgressItemsForProfile(uid) {
             snap = await db.collection('users').doc(uid).collection('web_lesson_progress').limit(200).get();
         }
         (snap.docs || []).forEach(function (d) {
-            items.push(normalizeMobileLessonProgressItem(d.id, d.data ? d.data() : {}, originPath));
+            var raw = d.data ? d.data() : {};
+            if (isExplicitMachineOperatorLessonProgressData(raw)) return;
+            items.push(normalizeMobileLessonProgressItem(d.id, raw, originPath));
         });
     } catch (e) {
         try { console.warn('[ProfileProgress] web_lesson_progress read failed:', e && e.message ? e.message : e); } catch (_) {}
@@ -19499,7 +21563,9 @@ async function fetchProfileLessonProgressItems(tenantId) {
     try {
         var userSnap = await db.collection('users').doc(user.uid).collection('lessonProgress').limit(200).get();
         (userSnap.docs || []).forEach(function (d) {
-            items.push(normalizeMobileLessonProgressItem(d.id, d.data ? d.data() : {}, userOrigin));
+            var raw = d.data ? d.data() : {};
+            if (isExplicitMachineOperatorLessonProgressData(raw)) return;
+            items.push(normalizeMobileLessonProgressItem(d.id, raw, userOrigin));
         });
     } catch (e) {
         try { console.warn('[ProfileProgress] user lessonProgress read failed:', e && e.message ? e.message : e); } catch (_) {}
@@ -19522,7 +21588,9 @@ async function fetchProfileLessonProgressItems(tenantId) {
             var tenantSnap = await db.collection('tenants').doc(institutionTenantId).collection('lesson_progress')
                 .where('uid', '==', user.uid).limit(200).get();
             (tenantSnap.docs || []).forEach(function (d) {
-                items.push(normalizeMobileLessonProgressItem(d.id, d.data ? d.data() : {}, tenantOrigin));
+                var raw = d.data ? d.data() : {};
+                if (isExplicitMachineOperatorLessonProgressData(raw)) return;
+                items.push(normalizeMobileLessonProgressItem(d.id, raw, tenantOrigin));
             });
         } catch (e) {
             try { console.warn('[ProfileProgress] tenant lesson_progress read failed:', e && e.message ? e.message : e); } catch (_) {}
@@ -19535,12 +21603,25 @@ function renderProfileLessonSummaryRows(categoryStats) {
     var host = document.getElementById('profile-lesson-summary-rows');
     if (!host) return;
     var rows = Array.isArray(categoryStats) ? categoryStats : getMobileLessonCatalogCategories().map(function (c) {
-        return { categoryId: c.categoryId, title: c.title, completedCount: 0 };
+        return { categoryId: c.categoryId, title: c.title, completedCount: 0, totalCount: null };
     });
     host.innerHTML = rows.map(function (row) {
-        var hasCount = row.completedCount > 0;
+        var completed = Math.max(0, Number(row.completedCount) || 0);
+        var totalRaw = row.totalCount;
+        var total = totalRaw != null && isFinite(Number(totalRaw)) && Number(totalRaw) >= 0
+            ? Number(totalRaw)
+            : null;
+        var hasCount = completed > 0;
         var countClass = hasCount ? 'profile-karne-lesson-row__count--filled' : 'profile-karne-lesson-row__count--empty';
-        var countText = hasCount ? ('Tamamlanan Ünite Sayısı: ' + String(row.completedCount)) : 'Tamamlanan Ünite Sayısı: -';
+        var countText;
+        if (total != null) {
+            countText = 'Tamamlanan Ünite Sayısı: ' + String(completed) + '/' + String(total);
+            if (hasCount) countClass = 'profile-karne-lesson-row__count--filled';
+        } else if (hasCount) {
+            countText = 'Tamamlanan Ünite Sayısı: ' + String(completed);
+        } else {
+            countText = 'Tamamlanan Ünite Sayısı: -';
+        }
         var title = String(row.title || row.categoryId || 'Ders').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         return (
             '<div class="profile-karne-lesson-row">' +
@@ -20131,6 +22212,32 @@ function collectTeacherVideoEntitlementSourcesMobile() {
 }
 
 function resolveTeacherVideoTenantIdMobile() {
+    // Machine Video play gate may set an explicit override for one request.
+    // Driving path leaves override null and keeps existing SA_TENANT / public behavior.
+    if (__teacherVideoTenantContextOverride
+        && typeof __teacherVideoTenantContextOverride === 'object') {
+        if (__teacherVideoTenantContextOverride.mode === 'public') {
+            saTvDebugLog('resolveTeacherVideoTenantIdMobile', 'resolve tenant', {
+                isPublicSession: true,
+                selectedTenantId: null,
+                returnedTenantId: null,
+                returnedEmpty: true,
+                machineOverride: 'public'
+            });
+            return '';
+        }
+        if (__teacherVideoTenantContextOverride.mode === 'institution') {
+            var machineTid = String(__teacherVideoTenantContextOverride.tenantId || '').trim();
+            saTvDebugLog('resolveTeacherVideoTenantIdMobile', 'resolve tenant', {
+                isPublicSession: false,
+                selectedTenantId: machineTid || null,
+                returnedTenantId: machineTid || null,
+                returnedEmpty: !machineTid,
+                machineOverride: 'institution'
+            });
+            return machineTid;
+        }
+    }
     var isPublic = false;
     try {
         if (window.SA_PUBLIC_USER_SESSION
@@ -20823,6 +22930,7 @@ function renderTeacherVideoListMobile() {
 async function loadTeacherVideosMobile(categoryId) {
     var cid = String(categoryId || '').trim();
     if (!cid) return;
+    if (isDrivingBlockedMachineLessonCategoryId(cid)) return;
     teacherVideoMobileState.isLoading = true;
     teacherVideoMobileState.error = null;
     teacherVideoMobileState.videos = [];
@@ -20860,8 +22968,10 @@ async function loadTeacherVideosMobile(categoryId) {
 }
 
 async function openTeacherVideoCategoryMobile(categoryId, categoryTitle) {
+    var cid = String(categoryId || '').trim();
+    if (!cid || isDrivingBlockedMachineLessonCategoryId(cid)) return;
     bindTeacherVideoAccessUiMobileOnce();
-    teacherVideoMobileState.selectedCategoryId = String(categoryId || '').trim();
+    teacherVideoMobileState.selectedCategoryId = cid;
     teacherVideoMobileState.selectedCategoryTitle = String(categoryTitle || '').trim() || 'Video ders';
     __teacherVideoViewMode = 'list';
     applyLessonV2MobileViewMode();
@@ -20892,15 +23002,12 @@ function renderTeacherVideoCategoriesMobile() {
     var host = document.getElementById('teacher-video-categories-mobile');
     if (!host) return;
     host.innerHTML = '';
-    LESSON_V2_FIXED_CATEGORIES_MOBILE.forEach(function (fixed, idx) {
+    getDrivingLessonFixedCategoriesMobile().forEach(function (fixed, idx) {
         var c = fixed;
         var card = document.createElement('div');
         card.className = 'card teacher-video-category-card';
         var icon = TEACHER_VIDEO_CARD_ICONS_MOBILE[idx] || '▶️';
-        var noteHtml = (fixed.id === 'is_makineleri' || fixed.key === 'is_makineleri')
-            ? '<span class="video-teacher-work-machines-note">Sadece Operatörlük Sınavlarına Girecek Adaylar İçindir.</span>'
-            : '';
-        card.innerHTML = '<div class="card-icon">' + icon + '</div><div class="teacher-video-category-copy"><span class="card-title">' + escapeLessonV2MobileHtml(String(c.title || fixed.title || 'Kategori')) + '</span><span class="card-subtitle">Video dersleri aç</span>' + noteHtml + '</div>';
+        card.innerHTML = '<div class="card-icon">' + icon + '</div><div class="teacher-video-category-copy"><span class="card-title">' + escapeLessonV2MobileHtml(String(c.title || fixed.title || 'Kategori')) + '</span><span class="card-subtitle">Video dersleri aç</span></div>';
         card.onclick = function () {
             openTeacherVideoCategoryMobile(fixed.id, String(fixed.title || c.title || 'Kategori'));
         };
@@ -21247,6 +23354,7 @@ function clearLessonUnitsLoadingStateMobileV2(host) {
  */
 function beginLessonUnitsSelectionMobileV2(categoryId) {
     var cid = String(categoryId || '').trim();
+    if (!cid || isDrivingBlockedMachineLessonCategoryId(cid)) return null;
     __lessonV2UnitsLoadToken += 1;
     var token = __lessonV2UnitsLoadToken;
     lessonV2MobileState.selectedCategoryId = cid;
@@ -21272,24 +23380,22 @@ function renderLessonCategoriesMobileV2() {
     })();
     // #endregion
 
-    // Presentation layer: always show only the fixed 5 categories in stable order
+    // Presentation layer: driving fixed categories (excludes machine-only is_makineleri)
     var byId = {};
     (lessonV2MobileState.categories || []).forEach(function (c) { if (c && c.id) byId[String(c.id)] = c; });
 
     host.innerHTML = '';
-    LESSON_V2_FIXED_CATEGORIES_MOBILE.forEach(function (fixed) {
+    getDrivingLessonFixedCategoriesMobile().forEach(function (fixed) {
         var c = byId[fixed.id] || { id: fixed.id, title: fixed.title };
         var card = document.createElement('div');
         card.className = 'card';
-        var noteHtml = (fixed.id === 'is_makineleri' || fixed.key === 'is_makineleri')
-            ? '<span class="lesson-category-note">Sadece operatörlük sınavına girecek adaylar içindir.</span>'
-            : '';
-        card.innerHTML = '<div class="card-icon">📚</div><div><span class="card-title">' + String(c.title || fixed.title || 'Kategori').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span><span class="card-subtitle">Üniteleri aç</span>' + noteHtml + '</div>';
+        card.innerHTML = '<div class="card-icon">📚</div><div><span class="card-title">' + String(c.title || fixed.title || 'Kategori').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span><span class="card-subtitle">Üniteleri aç</span></div>';
         card.onclick = async function () {
             __teacherVideoViewMode = 'home';
             teacherVideoMobileState.selectedCategoryId = null;
             teacherVideoMobileState.selectedCategoryTitle = '';
             var token = beginLessonUnitsSelectionMobileV2(fixed.id);
+            if (token == null) return;
             __lessonV2ViewMode = 'units';
             applyLessonV2MobileViewMode();
             await loadLessonUnitsMobileV2(fixed.id, token);
@@ -21937,7 +24043,7 @@ async function enrichDashboardIndicatorUnitsPreviewMobile(categoryId, units) {
 
 async function loadLessonUnitsMobileV2(categoryId, requestToken) {
     var cid = String(categoryId || '').trim();
-    if (!cid) return;
+    if (!cid || isDrivingBlockedMachineLessonCategoryId(cid)) return;
     var token = requestToken;
     if (token == null) {
         var alreadyOnCategory =
@@ -21945,6 +24051,7 @@ async function loadLessonUnitsMobileV2(categoryId, requestToken) {
             && String(__lessonV2ViewMode) === 'units';
         if (!alreadyOnCategory) {
             token = beginLessonUnitsSelectionMobileV2(cid);
+            if (token == null) return;
         } else {
             /* Silent refresh (e.g. after mark-complete): bump token, keep current UI */
             __lessonV2UnitsLoadToken += 1;
@@ -21988,6 +24095,9 @@ async function loadLessonUnitsMobileV2(categoryId, requestToken) {
         if (!isLessonV2UnitsLoadCurrentMobile(token, cid)) return;
 
         lessonV2MobileState.units = mappedUnits;
+        if (typeof setCachedMobileLessonUnitTotal === 'function') {
+            setCachedMobileLessonUnitTotal(cid, mappedUnits.length);
+        }
         renderLessonUnitsMobileV2();
     } catch (e) {
         try { console.warn('[LessonV2] loadLessonUnitsMobileV2 failed:', e && e.message ? e.message : e); } catch (_) {}
@@ -21998,10 +24108,12 @@ async function loadLessonUnitsMobileV2(categoryId, requestToken) {
 }
 
 async function loadLessonUnitDetailMobileV2(categoryId, unitId) {
-    var unitSnap = await lessonV2UnitsRefMobile(categoryId).doc(unitId).get();
+    var cid = String(categoryId || '').trim();
+    if (!cid || isDrivingBlockedMachineLessonCategoryId(cid)) return;
+    var unitSnap = await lessonV2UnitsRefMobile(cid).doc(unitId).get();
     if (!unitSnap.exists) return;
     var unitData = unitSnap.data() || {};
-    var blockSnap = await lessonV2BlocksRefMobile(categoryId, unitId).orderBy('order', 'asc').get();
+    var blockSnap = await lessonV2BlocksRefMobile(cid, unitId).orderBy('order', 'asc').get();
     var blocks = blockSnap.docs.map(function (d) {
         var data = d.data() || {};
         return {
@@ -22394,6 +24506,7 @@ async function loadExamList(type) {
     // #region agent log
     fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3ce40e'},body:JSON.stringify({sessionId:'3ce40e',runId:'tenant-debug-1',hypothesisId:'H1',location:'index.html:loadExamList:entry',message:'loadExamList entry',data:{type:type||null,hasQuizState:!!quizState,quizExamMode:quizState&&quizState.examMode?String(quizState.examMode):null,quizTenantId:quizState&&quizState.tenantId?String(quizState.tenantId):null,lastExamListType:lastExamListType||null,lastExamListItemsLen:Array.isArray(lastExamListItems)?lastExamListItems.length:null},timestamp:Date.now()})}).catch(()=>{});
     // #endregion
+    if (isDrivingBlockedMachineExamType(type)) return;
     lastExamListType = type;
     const listTitle = document.getElementById('exam-list-title');
     const listContainer = document.getElementById('dynamic-exam-list');
@@ -40204,7 +42317,21 @@ async function loadStudentProgressSummary() {
         pillEl.textContent = 'Öğrenci karnesi hazır';
 
         renderProfileExamSummary(docs);
-        renderProfileLessonSummaryRows(computeMobileLessonStatsByCategory(lessonItems));
+        var lessonCategoryStats = computeMobileLessonStatsByCategory(lessonItems);
+        renderProfileLessonSummaryRows(lessonCategoryStats);
+
+        var lessonTotalsToken = (++__profileProgressLessonLoadToken);
+        var uidAtLoad = String(user.uid || '');
+        try {
+            await enrichLessonProfileRowsWithUnitTotals(lessonCategoryStats);
+            if (lessonTotalsToken !== __profileProgressLessonLoadToken) return;
+            var stillSameUser = firebase.auth().currentUser
+                && String(firebase.auth().currentUser.uid || '') === uidAtLoad;
+            if (!stillSameUser) return;
+            renderProfileLessonSummaryRows(lessonCategoryStats);
+        } catch (totalErr) {
+            try { console.warn('[ProfileProgress] lesson unit totals failed:', totalErr && totalErr.message ? totalErr.message : totalErr); } catch (_) {}
+        }
     } catch (e) {
         console.warn('[ProfileProgress] query failed:', e && e.message ? e.message : e);
         loadingEl.style.display = 'none';

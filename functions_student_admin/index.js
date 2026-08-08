@@ -611,6 +611,143 @@ function resolveMembershipId(data, tenantId) {
   return uidRaw + '_' + tenantId;
 }
 
+/** Max writes per Firestore batch for student hard-delete cascade cleanup. */
+const STUDENT_CLEANUP_BATCH_SIZE = 400;
+
+/**
+ * Paginated delete for an arbitrary Firestore query (bounded batches).
+ * Empty query / already-cleared docs → success (0).
+ * @param {FirebaseFirestore.Query} queryRef
+ * @param {number} [batchSize]
+ * @returns {Promise<number>}
+ */
+async function deleteQueryDocsPaginated(queryRef, batchSize) {
+  const limit = batchSize || STUDENT_CLEANUP_BATCH_SIZE;
+  let deleted = 0;
+  while (true) {
+    const snap = await queryRef.limit(limit).get();
+    if (!snap || snap.empty) break;
+    const batch = db.batch();
+    snap.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+    deleted += snap.size;
+    if (snap.size < limit) break;
+  }
+  return deleted;
+}
+
+/**
+ * Paginated delete of all docs in a collection (no recursion into nested subs).
+ * @param {FirebaseFirestore.CollectionReference} collectionRef
+ * @param {number} [batchSize]
+ * @returns {Promise<number>}
+ */
+async function deleteCollectionDocsPaginated(collectionRef, batchSize) {
+  const limit = batchSize || STUDENT_CLEANUP_BATCH_SIZE;
+  let deleted = 0;
+  while (true) {
+    const snap = await collectionRef.limit(limit).get();
+    if (!snap || snap.empty) break;
+    const batch = db.batch();
+    snap.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+    deleted += snap.size;
+    if (snap.size < limit) break;
+  }
+  return deleted;
+}
+
+/**
+ * Recursive delete of a document and all descendant subcollections.
+ * Missing root doc → success.
+ * @param {FirebaseFirestore.DocumentReference} docRef
+ * @returns {Promise<boolean>}
+ */
+async function deleteDocRecursiveSafe(docRef) {
+  try {
+    await db.recursiveDelete(docRef);
+    return true;
+  } catch (e) {
+    const snap = await docRef.get();
+    if (!snap.exists) return true;
+    try {
+      await docRef.delete();
+      return true;
+    } catch (_) {
+      const again = await docRef.get();
+      if (!again.exists) return true;
+      throw e;
+    }
+  }
+}
+
+/**
+ * Delete a top-level doc if present. Missing → success.
+ * @param {FirebaseFirestore.DocumentReference} docRef
+ * @returns {Promise<boolean>} true if deleted or already absent
+ */
+async function deleteDocIfExists(docRef) {
+  const snap = await docRef.get();
+  if (!snap.exists) return true;
+  await docRef.delete();
+  return true;
+}
+
+/**
+ * Internal cascade cleanup for hard-deleted institution student identity.
+ * Call ONLY after single-membership guard has passed.
+ * Does NOT touch tenantMailbox, forum, shared duels, paymentOrders/paymentEvents, Storage.
+ *
+ * @param {{ tenantId: string, uid: string }} params
+ * @returns {Promise<object>}
+ */
+async function cleanupDeletedStudentOwnedData(params) {
+  const tenantId = String((params && params.tenantId) || '').trim();
+  const uid = String((params && params.uid) || '').trim();
+  if (!tenantId || !uid) {
+    throw new HttpsError('invalid-argument', 'tenantId and uid are required for student cleanup.');
+  }
+
+  const counts = {
+    tenantExamAttempts: 0,
+    tenantLessonProgress: 0,
+    webExamAttempts: 0,
+    lessonProgress: 0,
+    webLessonProgress: 0,
+    announcementPopupState: 0,
+    deviceTokens: 0,
+    mailboxThreadStates: 0
+  };
+
+  // Tenant-scoped learning data (this tenant only).
+  counts.tenantExamAttempts = await deleteQueryDocsPaginated(
+    db.collection('tenants').doc(tenantId).collection('exam_attempts').where('uid', '==', uid)
+  );
+  counts.tenantLessonProgress = await deleteQueryDocsPaginated(
+    db.collection('tenants').doc(tenantId).collection('lesson_progress').where('uid', '==', uid)
+  );
+
+  // User-owned learning mirrors / progress (global to deleted Auth identity).
+  const userRef = db.collection('users').doc(uid);
+  counts.webExamAttempts = await deleteCollectionDocsPaginated(userRef.collection('web_exam_attempts'));
+  counts.lessonProgress = await deleteCollectionDocsPaginated(userRef.collection('lessonProgress'));
+  counts.webLessonProgress = await deleteCollectionDocsPaginated(userRef.collection('web_lesson_progress'));
+  counts.announcementPopupState = await deleteCollectionDocsPaginated(userRef.collection('announcementPopupState'));
+  counts.deviceTokens = await deleteCollectionDocsPaginated(userRef.collection('deviceTokens'));
+  counts.mailboxThreadStates = await deleteCollectionDocsPaginated(userRef.collection('mailboxThreadStates'));
+
+  // Private mailbox tree (NOT tenantMailbox).
+  await deleteDocRecursiveSafe(db.collection('userMailbox').doc(uid));
+
+  // Live access grant + public display + duel ephemeral / user league tree.
+  await deleteDocIfExists(db.collection('userEntitlements').doc(uid));
+  await deleteDocIfExists(db.collection('publicProfiles').doc(uid));
+  await deleteDocIfExists(db.collection('duel_presence').doc(uid));
+  await deleteDocRecursiveSafe(db.collection('duelLeague').doc(uid));
+
+  return counts;
+}
+
 /** Temporary duration-only diagnostics for deactivateTenantStudentForInstitutionAdmin. */
 function saTpServerPerfNowMs() {
   try {
@@ -949,6 +1086,28 @@ exports.deleteTenantStudentForInstitutionAdmin = onCall(
     );
   }
 
+  // Cascade owned/private data BEFORE membership / users / Auth finalization.
+  // Abort hard delete if cleanup fails so identity remains recoverable.
+  let cleanupCounts = null;
+  try {
+    cleanupCounts = await cleanupDeletedStudentOwnedData({
+      tenantId: tenantId,
+      uid: targetUid
+    });
+  } catch (cleanupErr) {
+    if (cleanupErr instanceof HttpsError) throw cleanupErr;
+    console.error('[deleteTenantStudentForInstitutionAdmin] cascade cleanup failed', {
+      tenantId: tenantId,
+      uid: targetUid,
+      membershipId: membershipId,
+      error: cleanupErr && cleanupErr.message ? cleanupErr.message : String(cleanupErr)
+    });
+    throw new HttpsError(
+      'internal',
+      'Öğrenciye bağlı veriler temizlenirken hata oluştu. Kalıcı silme iptal edildi.'
+    );
+  }
+
   const paymentRef = db.collection('tenants').doc(tenantId).collection('studentPayments').doc(targetUid);
   const paymentLogRef = paymentRef.collection('paymentLog');
   const paymentSnap = await paymentRef.get();
@@ -1002,7 +1161,8 @@ exports.deleteTenantStudentForInstitutionAdmin = onCall(
     authDeleted: authDeleted,
     userDocDeleted: userDocDeleted,
     membershipDeleted: membershipDeleted,
-    paymentDeleted: paymentDeleted
+    paymentDeleted: paymentDeleted,
+    cleanup: cleanupCounts || {}
   };
 });
 

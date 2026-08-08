@@ -57,6 +57,7 @@
       examId: normalizeString(raw.examId) || null,
       examTitle: normalizeString(raw.examTitle) || normalizeString(raw.title) || 'Sınav',
       category: normalizeString(raw.category) || null,
+      programType: normalizeString(raw.programType) || null,
       scorePercent: scorePercent,
       correctCount: toNumber(raw.correctCount, 0),
       wrongCount: toNumber(raw.wrongCount, 0),
@@ -159,6 +160,7 @@
       completed: isLessonCompleted(raw),
       status: normalizeString(raw.status) || null,
       progressPercent: toNumber(raw.progressPercent, NaN),
+      programType: normalizeString(raw.programType) || null,
       completedAt: completedAt,
       updatedAt: updatedAt,
       lastSeenAt: lastSeenAt,
@@ -349,6 +351,16 @@
   // Explicit machine_operator only. Omitted/driving_license keep full catalog behavior.
   var MACHINE_OPERATOR_LESSON_CATEGORY_IDS = ['is_makineleri', 'ilk_yardim'];
   var MACHINE_OPERATOR_EXAM_CATEGORY_IDS = ['work_machines', 'first_aid'];
+  var MACHINE_OPERATOR_EXAM_CATEGORY_TITLES = {
+    work_machines: 'İş Makineleri',
+    first_aid: 'İlk Yardım'
+  };
+  var MACHINE_OPERATOR_LESSON_CATEGORY_TITLES = {
+    is_makineleri: 'İş Makineleri',
+    ilk_yardim: 'İlk Yardım'
+  };
+  /** Runtime session cache: categoryId → active unit count. */
+  var __adminLessonUnitTotalByCategory = Object.create(null);
 
   function isMachineOperatorProgressProgram(value) {
     return normalizeString(value) === 'machine_operator';
@@ -359,11 +371,12 @@
       var out = [];
       for (var i = 0; i < MACHINE_OPERATOR_LESSON_CATEGORY_IDS.length; i++) {
         var wantId = MACHINE_OPERATOR_LESSON_CATEGORY_IDS[i];
+        var titleOverride = MACHINE_OPERATOR_LESSON_CATEGORY_TITLES[wantId];
         for (var j = 0; j < ADMIN_LESSON_CATEGORIES.length; j++) {
           if (ADMIN_LESSON_CATEGORIES[j].categoryId === wantId) {
             out.push({
               categoryId: ADMIN_LESSON_CATEGORIES[j].categoryId,
-              title: ADMIN_LESSON_CATEGORIES[j].title
+              title: titleOverride || ADMIN_LESSON_CATEGORIES[j].title
             });
             break;
           }
@@ -380,31 +393,50 @@
   }
 
   function filterAttemptsForProgressProgram(attempts, programType) {
-    if (!isMachineOperatorProgressProgram(programType)) {
-      return Array.isArray(attempts) ? attempts : [];
-    }
     var list = Array.isArray(attempts) ? attempts : [];
+    if (!isMachineOperatorProgressProgram(programType)) {
+      // Driving/legacy mode: keep existing docs; exclude only explicit machine_operator.
+      var drivingOut = [];
+      for (var d = 0; d < list.length; d++) {
+        var driveItem = list[d];
+        if (!driveItem) continue;
+        if (isMachineOperatorProgressProgram(driveItem.programType)) continue;
+        drivingOut.push(driveItem);
+      }
+      return drivingOut;
+    }
     var out = [];
     for (var i = 0; i < list.length; i++) {
       var item = list[i];
       if (!item) continue;
+      if (!isMachineOperatorProgressProgram(item.programType)) continue;
       var cat = normalizeString(item.category).toLowerCase();
-      if (MACHINE_OPERATOR_EXAM_CATEGORY_IDS.indexOf(cat) !== -1) out.push(item);
+      if (MACHINE_OPERATOR_EXAM_CATEGORY_IDS.indexOf(cat) === -1) continue;
+      out.push(item);
     }
     return out;
   }
 
   function filterLessonItemsForProgressProgram(items, programType) {
-    if (!isMachineOperatorProgressProgram(programType)) {
-      return Array.isArray(items) ? items : [];
-    }
     var list = Array.isArray(items) ? items : [];
+    if (!isMachineOperatorProgressProgram(programType)) {
+      var drivingOut = [];
+      for (var d = 0; d < list.length; d++) {
+        var driveItem = list[d];
+        if (!driveItem) continue;
+        if (isMachineOperatorProgressProgram(driveItem.programType)) continue;
+        drivingOut.push(driveItem);
+      }
+      return drivingOut;
+    }
     var out = [];
     for (var i = 0; i < list.length; i++) {
       var item = list[i];
       if (!item) continue;
+      if (!isMachineOperatorProgressProgram(item.programType)) continue;
       var key = resolveLessonCategoryKey(item);
-      if (MACHINE_OPERATOR_LESSON_CATEGORY_IDS.indexOf(key) !== -1) out.push(item);
+      if (MACHINE_OPERATOR_LESSON_CATEGORY_IDS.indexOf(key) === -1) continue;
+      out.push(item);
     }
     return out;
   }
@@ -413,11 +445,119 @@
     if (!item) return '';
     var categoryId = normalizeString(item.categoryId);
     var unitId = normalizeString(item.unitId);
-    if (categoryId && unitId) return categoryId + '__' + unitId;
+    var programType = normalizeString(item.programType);
+    if (categoryId && unitId) {
+      if (isMachineOperatorProgressProgram(programType)) {
+        return 'machine_operator__' + categoryId + '__' + unitId;
+      }
+      return categoryId + '__' + unitId;
+    }
     var id = normalizeString(item.id);
-    if (id) return id;
-    if (unitId) return '__unit__' + unitId;
+    if (id) {
+      if (isMachineOperatorProgressProgram(programType)) {
+        return 'machine_operator__' + id;
+      }
+      return id;
+    }
+    if (unitId) {
+      if (isMachineOperatorProgressProgram(programType)) {
+        return 'machine_operator____unit__' + unitId;
+      }
+      return '__unit__' + unitId;
+    }
     return '';
+  }
+
+  function partitionMachineExamAttemptsByCategory(attempts) {
+    var list = Array.isArray(attempts) ? attempts : [];
+    var workMachines = [];
+    var firstAid = [];
+    for (var i = 0; i < list.length; i++) {
+      var item = list[i];
+      if (!item) continue;
+      var cat = normalizeString(item.category).toLowerCase();
+      if (cat === 'work_machines') workMachines.push(item);
+      else if (cat === 'first_aid') firstAid.push(item);
+    }
+    return {
+      work_machines: workMachines,
+      first_aid: firstAid
+    };
+  }
+
+  function computeMachineExamCategoryStats(attempts) {
+    var parts = partitionMachineExamAttemptsByCategory(attempts);
+    return {
+      work_machines: {
+        categoryId: 'work_machines',
+        title: MACHINE_OPERATOR_EXAM_CATEGORY_TITLES.work_machines,
+        stats: computeAttemptStats(parts.work_machines),
+        items: parts.work_machines
+      },
+      first_aid: {
+        categoryId: 'first_aid',
+        title: MACHINE_OPERATOR_EXAM_CATEGORY_TITLES.first_aid,
+        stats: computeAttemptStats(parts.first_aid),
+        items: parts.first_aid
+      }
+    };
+  }
+
+  function getCachedAdminLessonUnitTotal(categoryId) {
+    var cid = normalizeString(categoryId);
+    if (!cid) return null;
+    if (!Object.prototype.hasOwnProperty.call(__adminLessonUnitTotalByCategory, cid)) return null;
+    var n = Number(__adminLessonUnitTotalByCategory[cid]);
+    if (!isFinite(n) || n < 0) return null;
+    return n;
+  }
+
+  function setCachedAdminLessonUnitTotal(categoryId, total) {
+    var cid = normalizeString(categoryId);
+    var n = Number(total);
+    if (!cid || !isFinite(n) || n < 0) return;
+    __adminLessonUnitTotalByCategory[cid] = n;
+  }
+
+  async function resolveAdminLessonCategoryUnitTotal(categoryId) {
+    var cid = normalizeString(categoryId);
+    if (!cid) return null;
+    var cached = getCachedAdminLessonUnitTotal(cid);
+    if (cached != null) return cached;
+    var db = getDb();
+    if (!db) return null;
+    try {
+      var snap = await db
+        .collection('content')
+        .doc('lesson_categories')
+        .collection('items')
+        .doc(cid)
+        .collection('units')
+        .where('status', '==', 'active')
+        .get();
+      var count = (snap && snap.docs) ? snap.docs.length : 0;
+      setCachedAdminLessonUnitTotal(cid, count);
+      return count;
+    } catch (e) {
+      try {
+        console.warn(LOG_PREFIX + ' unit total resolve failed', cid, e && e.message ? e.message : e);
+      } catch (_) {}
+      return null;
+    }
+  }
+
+  async function enrichLessonCategoryStatsWithUnitTotals(rows) {
+    var list = Array.isArray(rows) ? rows : [];
+    if (!list.length) return list;
+    await Promise.all(list.map(function (row) {
+      var cid = normalizeString(row && row.categoryId);
+      if (!cid) return Promise.resolve();
+      return Promise.resolve(resolveAdminLessonCategoryUnitTotal(cid)).then(function (total) {
+        if (total == null || !isFinite(Number(total)) || Number(total) < 0) return;
+        row.totalCount = Number(total);
+      });
+    }));
+    return list;
   }
 
   function dedupeCompletedLessonItems(items) {
@@ -877,17 +1017,27 @@
     var mobileStats = computeMobileLessonStats(mobileLessonItems);
     mobileStats.recentCompleted = mobileStats.recentCompleted || [];
 
+    var lessonByCategory = computeLessonStatsByCategory(lessonItems, progressProgramType);
+    // Driving + machine: attach canonical active unit totals (session-cached).
+    await enrichLessonCategoryStatsWithUnitTotals(lessonByCategory);
+
+    var attemptsPayload = {
+      items: attemptItems,
+      stats: computeAttemptStats(attemptItems),
+      byExam: groupAttemptsByExam(attemptItems)
+    };
+    if (isMachineOperatorProgressProgram(progressProgramType)) {
+      attemptsPayload.byMachineCategory = computeMachineExamCategoryStats(attemptItems);
+    }
+
     return {
       programType: progressProgramType || undefined,
-      attempts: {
-        items: attemptItems,
-        stats: computeAttemptStats(attemptItems),
-        byExam: groupAttemptsByExam(attemptItems)
-      },
+      attempts: attemptsPayload,
       lessons: {
         items: lessonItems,
         stats: lessonStats,
-        recentCompleted: lessonStats.recentCompleted
+        recentCompleted: lessonStats.recentCompleted,
+        byCategory: lessonByCategory
       },
       mobileLessons: {
         items: mobileLessonItems,
@@ -910,7 +1060,10 @@
     computeAttemptStats: computeAttemptStats,
     computeLessonStats: computeLessonStats,
     computeLessonStatsByCategory: computeLessonStatsByCategory,
+    computeMachineExamCategoryStats: computeMachineExamCategoryStats,
     getAdminLessonCatalogCategories: getAdminLessonCatalogCategories,
+    resolveAdminLessonCategoryUnitTotal: resolveAdminLessonCategoryUnitTotal,
+    getCachedAdminLessonUnitTotal: getCachedAdminLessonUnitTotal,
     groupAttemptsByExam: groupAttemptsByExam,
     fetchStudentProgressSummary: fetchStudentProgressSummary
   };
