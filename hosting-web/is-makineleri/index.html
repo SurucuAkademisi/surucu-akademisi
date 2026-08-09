@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>İş Makineleri — Sürücü Akademisi</title>
+  <style>
+    :root {
+      --mh-bg-0: #020617;
+      --mh-bg-1: #0b1224;
+      --mh-gold: #fbbf24;
+      --mh-program-orange: #fb923c;
+      --mh-text: #f8fafc;
+      --mh-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      min-height: 100svh;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      color: var(--mh-text);
+      background:
+        radial-gradient(1000px 480px at 50% -8%, rgba(251, 191, 36, 0.12), transparent 55%),
+        radial-gradient(800px 360px at 100% 10%, rgba(56, 189, 248, 0.12), transparent 50%),
+        linear-gradient(165deg, var(--mh-bg-0), var(--mh-bg-1));
+    }
+
+    body {
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #machine-web-home {
+      width: 100%;
+      min-height: 100svh;
+      min-height: 100dvh;
+      padding:
+        max(12px, env(safe-area-inset-top, 0px))
+        max(16px, env(safe-area-inset-right, 0px))
+        max(20px, env(safe-area-inset-bottom, 0px))
+        max(16px, env(safe-area-inset-left, 0px));
+    }
+
+    .machine-web-home-header {
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .machine-web-home-logout {
+      appearance: none;
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      background: rgba(15, 23, 42, 0.85);
+      color: #fef3c7;
+      border-radius: 10px;
+      min-height: 40px;
+      padding: 8px 14px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .machine-web-home-main {
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .machine-web-home-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      width: 100%;
+      padding: 8px 8px 14px;
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      border-radius: 0;
+    }
+
+    .machine-web-home-logo-wrap {
+      width: clamp(160px, 24vh, 220px);
+      height: clamp(160px, 24vh, 220px);
+      max-width: min(220px, 72vw);
+      max-height: min(220px, 36vh);
+      margin: 0 auto 16px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #machine-web-home-logo {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    #machine-web-home-monogram {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(2.4rem, 8vw, 3.4rem);
+      font-weight: 800;
+      color: #0f172a;
+      background: linear-gradient(145deg, #f5c518, #eab308);
+      border: 1px solid rgba(251, 191, 36, 0.5);
+    }
+
+    /* Win over ID display rules so element.hidden is mutually exclusive */
+    #machine-web-home-logo[hidden],
+    #machine-web-home-monogram[hidden] {
+      display: none !important;
+    }
+
+    #machine-web-home-institution-name {
+      margin: 0 0 8px;
+      max-width: 100%;
+      font-size: clamp(1.35rem, 3.4vw, 1.75rem);
+      font-weight: 800;
+      color: #fbbf24;
+      line-height: 1.2;
+      letter-spacing: 0.01em;
+      text-shadow: 0 0 18px rgba(251, 191, 36, 0.28);
+    }
+
+    #machine-web-home-brand-name {
+      margin: 0 0 8px;
+      font-size: clamp(1.2rem, 2.8vw, 1.45rem);
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      color: #e2e8f0;
+      line-height: 1.2;
+    }
+
+    .machine-web-home-hero[data-brand-mode="public"] #machine-web-home-brand-name {
+      font-size: clamp(1.35rem, 3.2vw, 1.7rem);
+      color: #f0f9ff;
+      text-shadow: 0 0 16px rgba(56, 189, 248, 0.28);
+    }
+
+    .machine-web-home-hero[data-brand-mode="institution"] #machine-web-home-brand-name {
+      font-size: clamp(1.1rem, 2.6vw, 1.3rem);
+      font-weight: 700;
+      color: #e2e8f0;
+      text-shadow: 0 0 12px rgba(56, 189, 248, 0.16);
+    }
+
+    #machine-web-home-program-title {
+      margin: 0;
+      width: 100%;
+      max-width: none;
+      font-size: clamp(1.05rem, 2.5vw, 1.28rem);
+      font-weight: 800;
+      line-height: 1.3;
+      letter-spacing: 0.01em;
+    }
+
+    .machine-web-home-hero[data-brand-mode="public"] #machine-web-home-program-title {
+      color: #fbbf24;
+      text-shadow: 0 0 16px rgba(251, 191, 36, 0.26);
+    }
+
+    .machine-web-home-hero[data-brand-mode="institution"] #machine-web-home-program-title {
+      color: var(--mh-program-orange);
+      text-shadow: 0 0 14px rgba(251, 146, 60, 0.22);
+    }
+
+    @media (min-width: 721px) {
+      #machine-web-home-program-title {
+        white-space: nowrap;
+      }
+    }
+
+    .machine-web-home-note {
+      margin: 20px auto 0;
+      max-width: 420px;
+      text-align: center;
+      color: var(--mh-muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    /* Machine home module cards — visual parity with Driving /dersler/ premium cards */
+    .machine-web-module-grid {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .machine-web-module-card {
+      --hub-card-accent-rgb: 34, 211, 238;
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 236px;
+      padding: 20px 18px 86px;
+      border-radius: 16px;
+      border: 1.5px solid rgba(var(--hub-card-accent-rgb), 0.55);
+      background:
+        radial-gradient(ellipse 120% 80% at 100% -10%, rgba(var(--hub-card-accent-rgb), 0.22), transparent 52%),
+        radial-gradient(ellipse 70% 50% at 0% 100%, rgba(var(--hub-card-accent-rgb), 0.08), transparent 48%),
+        linear-gradient(158deg, rgba(12, 24, 46, 0.94) 0%, rgba(8, 16, 32, 0.88) 48%, rgba(5, 10, 22, 0.92) 100%);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow:
+        0 0 0 1px rgba(var(--hub-card-accent-rgb), 0.12) inset,
+        0 0 36px rgba(var(--hub-card-accent-rgb), 0.22),
+        0 10px 32px rgba(2, 8, 23, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+      transition: border-color 0.24s ease, box-shadow 0.24s ease, transform 0.24s ease, background 0.24s ease;
+      cursor: default;
+      user-select: none;
+    }
+
+    .machine-web-module-card::before {
+      content: "";
+      position: absolute;
+      inset: -20% -10% auto auto;
+      width: 72%;
+      height: 72%;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle,
+        rgba(var(--hub-card-accent-rgb), 0.42) 0%,
+        rgba(var(--hub-card-accent-rgb), 0.14) 38%,
+        transparent 68%
+      );
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.95;
+    }
+
+    .machine-web-module-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(
+        128deg,
+        transparent 34%,
+        rgba(255, 255, 255, 0.09) 46%,
+        rgba(var(--hub-card-accent-rgb), 0.14) 50%,
+        transparent 62%
+      );
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.55;
+      transition: opacity 0.24s ease;
+    }
+
+    .machine-web-module-card--green { --hub-card-accent-rgb: 52, 211, 153; }
+    .machine-web-module-card--gold { --hub-card-accent-rgb: 251, 191, 36; }
+    .machine-web-module-card--cyan { --hub-card-accent-rgb: 34, 211, 238; }
+    .machine-web-module-card--purple { --hub-card-accent-rgb: 167, 139, 250; }
+
+    .machine-web-module-card:hover,
+    .machine-web-module-card:focus-visible {
+      outline: none;
+      transform: translateY(-4px);
+      border-color: rgba(var(--hub-card-accent-rgb), 0.78);
+      background:
+        radial-gradient(ellipse 120% 80% at 100% -10%, rgba(var(--hub-card-accent-rgb), 0.32), transparent 52%),
+        radial-gradient(ellipse 70% 50% at 0% 100%, rgba(var(--hub-card-accent-rgb), 0.12), transparent 48%),
+        linear-gradient(158deg, rgba(14, 28, 52, 0.96) 0%, rgba(10, 20, 38, 0.9) 48%, rgba(6, 12, 26, 0.94) 100%);
+      box-shadow:
+        0 0 0 1px rgba(var(--hub-card-accent-rgb), 0.2) inset,
+        0 0 52px rgba(var(--hub-card-accent-rgb), 0.42),
+        0 16px 44px rgba(2, 8, 23, 0.62),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .machine-web-module-card:hover::after,
+    .machine-web-module-card:focus-visible::after {
+      opacity: 0.88;
+    }
+
+    .machine-web-module-card__title,
+    .machine-web-module-card__desc {
+      position: relative;
+      z-index: 1;
+    }
+
+    .machine-web-module-card__title {
+      margin: 0 0 10px;
+      font-weight: 800;
+      font-size: 1.16rem;
+      line-height: 1.35;
+      color: #f8fafc;
+      text-shadow:
+        0 0 22px rgba(var(--hub-card-accent-rgb), 0.55),
+        0 0 8px rgba(var(--hub-card-accent-rgb), 0.35),
+        0 1px 2px rgba(0, 0, 0, 0.65);
+    }
+
+    .machine-web-module-card__desc {
+      flex: 1;
+      margin: 0;
+      font-size: 0.92rem;
+      line-height: 1.55;
+      color: rgba(236, 242, 255, 0.9);
+    }
+
+    .machine-web-module-card__cta {
+      position: absolute;
+      left: 50%;
+      right: auto;
+      bottom: 14px;
+      transform: translateX(-50%);
+      width: min(220px, calc(100% - 72px));
+      max-width: calc(100% - 36px);
+      min-height: 28px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      border: 1px solid rgba(var(--hub-card-accent-rgb), 0.52);
+      background: linear-gradient(180deg, rgba(10, 18, 36, 0.88), rgba(6, 12, 26, 0.92));
+      box-shadow:
+        0 0 18px rgba(var(--hub-card-accent-rgb), 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.69rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    a.machine-web-module-card--link {
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    a.machine-web-module-card--link .machine-web-module-card__cta {
+      border-color: rgba(52, 211, 153, 0.65);
+      color: #a7f3d0;
+      background: linear-gradient(180deg, rgba(8, 52, 42, 0.88), rgba(4, 36, 30, 0.92));
+      box-shadow:
+        0 0 22px rgba(52, 211, 153, 0.38),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    }
+
+    a.machine-web-module-card--gold.machine-web-module-card--link .machine-web-module-card__cta {
+      border-color: rgba(251, 191, 36, 0.65);
+      color: #fde68a;
+      background: linear-gradient(180deg, rgba(69, 45, 8, 0.88), rgba(40, 28, 6, 0.92));
+      box-shadow:
+        0 0 22px rgba(251, 191, 36, 0.38),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    }
+
+    a.machine-web-module-card--cyan.machine-web-module-card--link .machine-web-module-card__cta {
+      border-color: rgba(34, 211, 238, 0.65);
+      color: #a5f3fc;
+      background: linear-gradient(180deg, rgba(8, 47, 73, 0.88), rgba(4, 32, 48, 0.92));
+      box-shadow:
+        0 0 22px rgba(34, 211, 238, 0.38),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    }
+
+    @media (min-width: 960px) {
+      .machine-web-module-card:last-child {
+        grid-column: 1 / -1;
+        justify-self: center;
+        width: min(100%, 320px);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .machine-web-module-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .machine-web-module-card {
+        min-height: 218px;
+        padding-bottom: 80px;
+      }
+
+      .machine-web-module-card__cta {
+        bottom: 12px;
+        width: min(200px, calc(100% - 56px));
+        min-height: 26px;
+        padding: 4px 10px;
+        font-size: 0.66rem;
+      }
+    }
+
+    #machine-web-home-gate {
+      min-height: 40vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--mh-muted);
+      font-size: 0.95rem;
+    }
+
+    #machine-web-home-gate[hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 720px) {
+      .machine-web-home-logo-wrap {
+        width: clamp(128px, 34vw, 180px);
+        height: clamp(128px, 34vw, 180px);
+        max-width: min(180px, 70vw);
+        max-height: min(180px, 30vh);
+        margin-bottom: 14px;
+      }
+
+      #machine-web-home-program-title {
+        white-space: normal;
+        font-size: clamp(0.98rem, 3.8vw, 1.12rem);
+      }
+
+      .machine-web-home-hero[data-brand-mode="public"] #machine-web-home-brand-name {
+        font-size: clamp(1.22rem, 5vw, 1.45rem);
+      }
+
+      #machine-web-home-institution-name {
+        font-size: clamp(1.2rem, 5vw, 1.5rem);
+      }
+    }
+
+    @media (max-height: 740px) {
+      .machine-web-home-logo-wrap {
+        width: clamp(120px, 20vh, 168px);
+        height: clamp(120px, 20vh, 168px);
+        max-height: min(168px, 28vh);
+        margin-bottom: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="machine-web-home" hidden>
+    <header class="machine-web-home-header">
+      <div aria-hidden="true"></div>
+      <button type="button" class="machine-web-home-logout" id="machine-web-home-logout">Çıkış</button>
+    </header>
+
+    <main class="machine-web-home-main">
+      <section class="machine-web-home-hero" aria-label="İş Makineleri program başlığı">
+        <div class="machine-web-home-logo-wrap">
+          <img id="machine-web-home-logo" alt="" hidden />
+          <div id="machine-web-home-monogram" hidden>S</div>
+        </div>
+        <h1 id="machine-web-home-institution-name" hidden></h1>
+        <p id="machine-web-home-brand-name">Sürücü Akademisi</p>
+        <p id="machine-web-home-program-title">İş Makineleri Operatörlük Sınavlarına Hazırlık</p>
+      </section>
+
+      <p class="machine-web-home-note">
+        Modülleriniz hazır. İlerlemenizi Profilim’den takip edebilirsiniz.
+      </p>
+
+      <section class="machine-web-module-grid" aria-label="İş Makineleri modülleri">
+        <a
+          class="machine-web-module-card machine-web-module-card--green machine-web-module-card--link"
+          data-module="dersler"
+          href="dersler/"
+          aria-label="Dersler modülüne git"
+        >
+          <h2 class="machine-web-module-card__title">Dersler</h2>
+          <p class="machine-web-module-card__desc">İş Makineleri ve İlk Yardım konu anlatımlı üniteleri.</p>
+          <span class="machine-web-module-card__cta">Modüle Git</span>
+        </a>
+
+        <a
+          class="machine-web-module-card machine-web-module-card--gold machine-web-module-card--link"
+          data-module="videolar"
+          href="videolar/"
+          aria-label="Video Dersler modülüne git"
+        >
+          <h2 class="machine-web-module-card__title">Video Dersler</h2>
+          <p class="machine-web-module-card__desc">Öğretmen anlatımlı İş Makineleri ve İlk Yardım videoları.</p>
+          <span class="machine-web-module-card__cta">Modüle Git</span>
+        </a>
+
+        <a
+          class="machine-web-module-card machine-web-module-card--cyan machine-web-module-card--link"
+          data-module="sinavlar"
+          href="sinavlar/"
+          aria-label="Deneme Sınavları modülüne git"
+        >
+          <h2 class="machine-web-module-card__title">Deneme Sınavları</h2>
+          <p class="machine-web-module-card__desc">İş Makineleri ve İlk Yardım deneme sınavları.</p>
+          <span class="machine-web-module-card__cta">Modüle Git</span>
+        </a>
+
+        <a
+          class="machine-web-module-card machine-web-module-card--purple machine-web-module-card--link"
+          data-module="profilim"
+          href="profilim/"
+          aria-label="Profilim modülüne git"
+        >
+          <h2 class="machine-web-module-card__title">Profilim</h2>
+          <p class="machine-web-module-card__desc">Ders ve sınav ilerlemenizi tek ekranda görün.</p>
+          <span class="machine-web-module-card__cta">Profilime Git</span>
+        </a>
+      </section>
+    </main>
+  </div>
+
+  <div id="machine-web-home-gate">Oturum doğrulanıyor…</div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
+  <script src="../assets/js/web-firebase.js"></script>
+  <script src="../assets/js/machine-web-session.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      var LOGIN_HREF = 'giris/';
+      var REGION = 'us-central1';
+      var settled = false;
+
+      function $(id) {
+        return document.getElementById(id);
+      }
+
+      function getAuth() {
+        var fb = window.SA_WEB_FIREBASE;
+        return fb && fb.ready && fb.auth ? fb.auth : null;
+      }
+
+      function getFunctions() {
+        if (typeof firebase === 'undefined' || !firebase.app) return null;
+        try {
+          return firebase.app().functions(REGION);
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function redirectLogin() {
+        var api = window.SA_MACHINE_WEB_SESSION;
+        if (api) api.clearMachineSession();
+        window.location.replace(LOGIN_HREF);
+      }
+
+      function showHome() {
+        var home = $('machine-web-home');
+        var gate = $('machine-web-home-gate');
+        if (home) home.hidden = false;
+        if (gate) gate.hidden = true;
+      }
+
+      async function revalidateSession(session) {
+        var fns = getFunctions();
+        if (!fns || !session) return session;
+        try {
+          var callable = fns.httpsCallable('resolveMachineCandidateSession');
+          var payload =
+            session.mode === 'institution'
+              ? { mode: 'institution', tenantId: session.tenantId }
+              : { mode: 'public' };
+          var result = await callable(payload);
+          var data = (result && result.data && typeof result.data === 'object') ? result.data : null;
+          if (!data || data.ok !== true) {
+            redirectLogin();
+            return null;
+          }
+          var api = window.SA_MACHINE_WEB_SESSION;
+          var next = Object.assign({}, session, {
+            uid: data.uid != null ? String(data.uid) : session.uid,
+            tenantId: data.tenantId != null ? String(data.tenantId) : session.tenantId,
+            membershipId: data.membershipId != null ? String(data.membershipId) : session.membershipId,
+            programType: 'machine_operator',
+            enrollmentSource:
+              data.enrollmentSource != null ? String(data.enrollmentSource) : session.enrollmentSource,
+            accessStatus: data.accessStatus != null ? String(data.accessStatus) : session.accessStatus,
+            accessExpiresAt:
+              data.accessExpiresAt == null || data.accessExpiresAt === ''
+                ? null
+                : Number(data.accessExpiresAt),
+            accessDaysRemaining:
+              data.accessDaysRemaining == null || data.accessDaysRemaining === ''
+                ? null
+                : Number(data.accessDaysRemaining),
+            savedAt: Date.now()
+          });
+          if (api) api.saveMachineSession(next);
+          return next;
+        } catch (e) {
+          console.warn('[machine-web-home] revalidate failed', e);
+          redirectLogin();
+          return null;
+        }
+      }
+
+      async function paintBranding(session) {
+        var api = window.SA_MACHINE_WEB_SESSION;
+        if (!api || !session) return;
+
+        var heroEl = document.querySelector('.machine-web-home-hero');
+        var instNameEl = $('machine-web-home-institution-name');
+        var brandEl = $('machine-web-home-brand-name');
+        var programEl = $('machine-web-home-program-title');
+        var logoEl = $('machine-web-home-logo');
+        var monoEl = $('machine-web-home-monogram');
+
+        if (programEl) {
+          programEl.textContent = 'İş Makineleri Operatörlük Sınavlarına Hazırlık';
+        }
+        if (brandEl) brandEl.textContent = 'Sürücü Akademisi';
+
+        var isPublic = String(session.mode || '') === 'public';
+        if (heroEl) {
+          heroEl.setAttribute('data-brand-mode', isPublic ? 'public' : 'institution');
+        }
+
+        var branding = await api.loadTenantBranding(session.tenantId);
+
+        if (isPublic) {
+          if (instNameEl) {
+            instNameEl.hidden = true;
+            instNameEl.textContent = '';
+          }
+          if (branding.showInstitutionLogo === false) {
+            if (logoEl) {
+              logoEl.hidden = true;
+              logoEl.removeAttribute('src');
+            }
+            if (monoEl) {
+              monoEl.hidden = false;
+              monoEl.textContent = 'S';
+            }
+          } else {
+            api.applyLogoWithFallback(
+              logoEl,
+              monoEl,
+              api.DEFAULT_SA_LOGO,
+              ['/assets/tenant-logos/surucu_akademisi.png'],
+              'Sürücü Akademisi logosu',
+              'S'
+            );
+          }
+          return;
+        }
+
+        if (instNameEl) {
+          instNameEl.hidden = false;
+          instNameEl.textContent = branding.tenantName || session.tenantId || 'Kurum';
+        }
+
+        if (branding.showInstitutionLogo === false) {
+          if (logoEl) {
+            logoEl.hidden = true;
+            logoEl.removeAttribute('src');
+          }
+          if (monoEl) {
+            monoEl.hidden = false;
+            monoEl.textContent = api.getMonogram(branding.tenantName, session.tenantId);
+          }
+          return;
+        }
+
+        api.applyLogoWithFallback(
+          logoEl,
+          monoEl,
+          branding.logoUrl,
+          [
+            '/assets/tenant-logos/' + String(session.tenantId || '').trim() + '.png',
+            api.DEFAULT_SA_LOGO
+          ],
+          (branding.tenantName || 'Kurum') + ' logosu',
+          branding.monogram || 'K'
+        );
+      }
+
+      async function boot(user) {
+        if (settled) return;
+        var api = window.SA_MACHINE_WEB_SESSION;
+        if (!user || !api) {
+          settled = true;
+          redirectLogin();
+          return;
+        }
+
+        var session = api.requireMachineSession();
+        if (!session) {
+          settled = true;
+          redirectLogin();
+          return;
+        }
+
+        session = await revalidateSession(session);
+        if (!session) {
+          settled = true;
+          return;
+        }
+
+        await paintBranding(session);
+        showHome();
+        settled = true;
+      }
+
+      var logoutBtn = $('machine-web-home-logout');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', function () {
+          logoutBtn.disabled = true;
+          var api = window.SA_MACHINE_WEB_SESSION;
+          var p = api && api.logoutMachine ? api.logoutMachine() : Promise.resolve();
+          p.then(function () {
+            window.location.replace(LOGIN_HREF);
+          }).catch(function () {
+            window.location.replace(LOGIN_HREF);
+          });
+        });
+      }
+
+      function waitAuth() {
+        var auth = getAuth();
+        if (!auth) {
+          setTimeout(function () {
+            if (!getAuth()) redirectLogin();
+            else waitAuth();
+          }, 120);
+          return;
+        }
+        auth.onAuthStateChanged(function (user) {
+          boot(user);
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', waitAuth);
+      } else {
+        waitAuth();
+      }
+    })();
+  </script>
+</body>
+</html>

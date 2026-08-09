@@ -23,6 +23,34 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/site.css?v=20260728-landing-navband-boundary-fix-1" />
+  <style>
+    /* Phase A — Machine program card only (page-scoped; site.css untouched) */
+    #modul-machine.content-module-card[data-module-key="machine"] {
+      --card-accent: #fbbf24;
+      --card-glow: rgba(251, 191, 36, 0.34);
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+    }
+    #modul-machine.content-module-card[data-module-key="machine"]:hover,
+    #modul-machine.content-module-card[data-module-key="machine"]:focus-visible {
+      text-decoration: none;
+      color: inherit;
+    }
+    #modul-machine.content-module-card[data-module-key="machine"] .module-card-visual {
+      --module-cover-image: url('/assets/images/machine-operator-program.webp');
+    }
+    #modul-machine.content-module-card[data-module-key="machine"] .module-card-body p,
+    #modul-machine.content-module-card[data-module-key="machine"] .module-card-title {
+      text-decoration: none;
+    }
+
+    /* Authenticated public Driving portal: hide Machine entry card */
+    html.page-public-header-pending #modul-machine,
+    body.page-landing--public-user #modul-machine {
+      display: none !important;
+    }
+  </style>
 </head>
 <body class="page-landing">
   <header class="site-header site-header--landing">
@@ -264,6 +292,24 @@
               <span class="content-module-status">Aktif</span>
             </div>
           </article>
+          <a
+            class="content-module-card content-module-card--gold"
+            id="modul-machine"
+            data-module-key="machine"
+            href="is-makineleri/giris/"
+            aria-label="İş Makineleri Operatörlük Sınavlarına Hazırlık"
+          >
+            <div class="module-card-visual">
+              <h3 class="module-card-visual-title">
+                <span class="module-card-emoji" aria-hidden="true">🚜</span>
+                <span class="module-card-title">İş Makineleri Operatörlük Sınavlarına Hazırlık</span>
+              </h3>
+            </div>
+            <div class="module-card-body">
+              <p>İş makineleri operatörlük sınavlarına özel dersler, videolar ve deneme sınavlarıyla ayrı program girişine geçin.</p>
+              <span class="content-module-status">AKTİF</span>
+            </div>
+          </a>
         </div>
       </div>
     </section>

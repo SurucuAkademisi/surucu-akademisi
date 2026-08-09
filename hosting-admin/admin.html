@@ -11111,6 +11111,12 @@
             <select id="users-filter-tenant" style="min-width:180px;">
               <option value="">Tüm Kurumlar</option>
             </select>
+            <label class="muted" for="users-filter-program">Program:</label>
+            <select id="users-filter-program" style="min-width:180px;">
+              <option value="">Tüm Programlar</option>
+              <option value="driving_license">Ehliyet Öğrencileri</option>
+              <option value="machine_operator">İş Makineleri Öğrencileri</option>
+            </select>
             <button class="btn" id="btn-refresh"><i class="fa-solid fa-rotate"></i> Yenile</button>
           </div>
         </div>
@@ -29385,6 +29391,132 @@
       return String(value || '').trim() === 'machine_operator' ? 'machine_operator' : 'driving_license';
     }
 
+    function isSaActiveStudentMembership(membership) {
+      if (!membership || typeof membership !== 'object') return false;
+      if (String(membership.role || '').toLowerCase() !== 'student') return false;
+      return String(membership.status || '').toLowerCase() === 'active';
+    }
+
+    function getSaActiveStudentMemberships(user) {
+      var mems = (user && Array.isArray(user.memberships)) ? user.memberships : [];
+      return mems.filter(isSaActiveStudentMembership);
+    }
+
+    function getSaActiveDrivingMemberships(user) {
+      return getSaActiveStudentMemberships(user).filter(function (m) {
+        return normalizeSaMembershipProgramType(m.programType) === 'driving_license';
+      });
+    }
+
+    function getSaActiveMachineMemberships(user) {
+      return getSaActiveStudentMemberships(user).filter(function (m) {
+        return normalizeSaMembershipProgramType(m.programType) === 'machine_operator';
+      });
+    }
+
+    function hasSaActiveDrivingMembershipAtTenant(user, tenantId) {
+      var tid = String(tenantId || '').trim();
+      if (!tid) return false;
+      return getSaActiveDrivingMemberships(user).some(function (m) {
+        return String(m.tenantId || '').trim() === tid;
+      });
+    }
+
+    function hasSaActiveMachineMembershipAtTenant(user, tenantId) {
+      var tid = String(tenantId || '').trim();
+      if (!tid) return false;
+      return getSaActiveMachineMemberships(user).some(function (m) {
+        return String(m.tenantId || '').trim() === tid;
+      });
+    }
+
+    function getSaDrivingEnrollmentRecord(user) {
+      if (!user || typeof user !== 'object') return null;
+      var pe = (user.programEnrollments && typeof user.programEnrollments === 'object')
+        ? user.programEnrollments
+        : null;
+      var nested = (pe && pe.driving_license && typeof pe.driving_license === 'object')
+        ? pe.driving_license
+        : null;
+      if (nested) return nested;
+      var literal = user['programEnrollments.driving_license'];
+      if (literal && typeof literal === 'object') return literal;
+      return null;
+    }
+
+    function isSaDrivingEnrollmentActive(user) {
+      var dl = getSaDrivingEnrollmentRecord(user);
+      return !!(dl && String(dl.status || '').trim().toLowerCase() === 'active');
+    }
+
+    function isSaDrivingEnrollmentPublic(user) {
+      if (!isSaDrivingEnrollmentActive(user)) return false;
+      var dl = getSaDrivingEnrollmentRecord(user);
+      var source = String((dl && dl.source) || '').trim().toLowerCase();
+      return source === 'public';
+    }
+
+    function isSaLegacyDrivingPublicUser(user) {
+      if (!user) return false;
+      var role = String(user.role || user.globalRole || '').trim().toLowerCase();
+      if (role !== 'student') return false;
+      if (getSaActiveMachineMemberships(user).length) return false;
+      if (getSaActiveDrivingMemberships(user).length) return false;
+      if (getSaActiveStudentMemberships(user).length) return false;
+      return true;
+    }
+
+    function isSaMachinePublicParticipant(user) {
+      return getSaActiveMachineMemberships(user).some(function (m) {
+        return String(m.enrollmentSource || '').trim().toLowerCase() === 'public';
+      });
+    }
+
+    function getSaUserProgramFlags(user) {
+      var drivingMembership = getSaActiveDrivingMemberships(user).length > 0;
+      var machine = getSaActiveMachineMemberships(user).length > 0;
+      var drivingEnrollment = isSaDrivingEnrollmentActive(user);
+      var legacyDrivingPublic = isSaLegacyDrivingPublicUser(user);
+      return {
+        driving: !!(drivingEnrollment || drivingMembership || legacyDrivingPublic),
+        machine: !!machine
+      };
+    }
+
+    function matchesSaStudentKurumProgramFilters(user, kurumValue, programValue) {
+      var kurum = String(kurumValue == null ? '' : kurumValue).trim();
+      var program = String(programValue == null ? '' : programValue).trim();
+      var flags = getSaUserProgramFlags(user);
+
+      if (program === 'driving_license' && !flags.driving) return false;
+      if (program === 'machine_operator' && !flags.machine) return false;
+
+      // Program = Tüm Programlar → preserve exact current Kurum semantics.
+      if (!program) {
+        if (!kurum) return true;
+        if (kurum === USERS_FILTER_KURUMSUZ) return isSaKurumsuzListUser(user);
+        return Array.isArray(user.tenantIds) && user.tenantIds.indexOf(kurum) !== -1;
+      }
+
+      if (program === 'driving_license') {
+        if (!kurum) return true;
+        if (kurum === USERS_FILTER_KURUMSUZ) {
+          return isSaDrivingEnrollmentPublic(user) || isSaLegacyDrivingPublicUser(user);
+        }
+        return hasSaActiveDrivingMembershipAtTenant(user, kurum);
+      }
+
+      if (program === 'machine_operator') {
+        if (!kurum) return true;
+        if (kurum === USERS_FILTER_KURUMSUZ) {
+          return isSaMachinePublicParticipant(user);
+        }
+        return hasSaActiveMachineMembershipAtTenant(user, kurum);
+      }
+
+      return true;
+    }
+
     function resolveSaStudentMembershipForTenant(user, tenantId) {
       var tid = String(tenantId || '').trim();
       if (!user || !tid) return null;
@@ -30553,10 +30685,12 @@
           if (curVal && (curVal === USERS_FILTER_KURUMSUZ || tenantMap[curVal] !== undefined)) filterEl.value = curVal;
         }
 
+        const programFilterEl = document.getElementById('users-filter-program');
         const filterValue = filterEl ? filterEl.value : '';
-        const filtered = filterValue === '' ? users
-          : filterValue === USERS_FILTER_KURUMSUZ ? users.filter(isSaKurumsuzListUser)
-          : users.filter((u) => u.tenantIds.indexOf(filterValue) !== -1);
+        const programValue = programFilterEl ? String(programFilterEl.value || '').trim() : '';
+        const filtered = users.filter(function (u) {
+          return matchesSaStudentKurumProgramFilters(u, filterValue, programValue);
+        });
 
         __saStudentListCache = filtered;
 
@@ -35063,6 +35197,10 @@
     const usersFilterTenant = document.getElementById('users-filter-tenant');
     if (usersFilterTenant) {
       usersFilterTenant.addEventListener('change', () => { renderStudentUsers(); });
+    }
+    const usersFilterProgram = document.getElementById('users-filter-program');
+    if (usersFilterProgram) {
+      usersFilterProgram.addEventListener('change', () => { renderStudentUsers(); });
     }
 
     const btnTenantAdd = document.getElementById('btn-tenant-add');

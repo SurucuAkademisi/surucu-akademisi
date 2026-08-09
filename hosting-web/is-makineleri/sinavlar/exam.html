@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Sınav — İş Makineleri | Sürücü Akademisi</title>
+  <style>
+    :root {
+      --me-bg-0: #020617;
+      --me-bg-1: #0b1224;
+      --me-gold: #fbbf24;
+      --me-program-orange: #fb923c;
+      --me-text: #f8fafc;
+      --me-muted: #94a3b8;
+      --me-cyan: #22d3ee;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; min-height: 100%; min-height: 100svh;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      color: var(--me-text);
+      background:
+        radial-gradient(1000px 480px at 50% -8%, rgba(251, 191, 36, 0.12), transparent 55%),
+        radial-gradient(800px 360px at 100% 10%, rgba(56, 189, 248, 0.12), transparent 50%),
+        linear-gradient(165deg, var(--me-bg-0), var(--me-bg-1));
+    }
+    body { overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    body.machine-web-exams-finish-open { overflow: hidden; }
+    #machine-web-exams {
+      width: 100%; min-height: 100svh; min-height: 100dvh;
+      padding: max(12px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    }
+    .machine-web-exams-header {
+      width: 100%; max-width: 760px; margin: 0 auto 14px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .machine-web-exams-home {
+      appearance: none; display: inline-flex; align-items: center; justify-content: center;
+      min-height: 40px; padding: 8px 14px; border-radius: 10px;
+      border: 1px solid rgba(34, 211, 238, 0.45); background: rgba(15, 23, 42, 0.85);
+      color: #e0f2fe; font-size: 0.86rem; font-weight: 700; text-decoration: none; cursor: pointer;
+    }
+    .machine-web-exams-logout {
+      appearance: none; border: 1px solid rgba(251, 191, 36, 0.4); background: rgba(15, 23, 42, 0.85);
+      color: #fef3c7; border-radius: 10px; min-height: 40px; padding: 8px 14px;
+      font-size: 0.86rem; font-weight: 700; cursor: pointer;
+    }
+    .machine-web-exams-main { width: 100%; max-width: 760px; margin: 0 auto; }
+    .machine-web-exams-hero {
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      width: 100%; padding: 4px 8px 10px;
+    }
+    .machine-web-exams-logo-wrap {
+      width: clamp(84px, 12vh, 112px); height: clamp(84px, 12vh, 112px);
+      max-width: min(112px, 42vw); margin: 0 auto 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #machine-web-exams-logo { width: 100%; height: 100%; object-fit: contain; display: block; }
+    #machine-web-exams-monogram {
+      width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: clamp(1.6rem, 5vw, 2.2rem); font-weight: 800; color: #0f172a;
+      background: linear-gradient(145deg, #f5c518, #eab308); border: 1px solid rgba(251, 191, 36, 0.5);
+    }
+    #machine-web-exams-logo[hidden], #machine-web-exams-monogram[hidden] { display: none !important; }
+    #machine-web-exams-institution-name { margin: 0 0 4px; font-size: clamp(1rem, 2.6vw, 1.25rem); font-weight: 800; color: #fbbf24; }
+    #machine-web-exams-brand-name { margin: 0 0 4px; font-size: clamp(0.95rem, 2.2vw, 1.1rem); font-weight: 800; color: #e2e8f0; }
+    #machine-web-exams-program-title { margin: 0; font-size: clamp(0.88rem, 2vw, 1.02rem); font-weight: 800; line-height: 1.3; }
+    .machine-web-exams-hero[data-brand-mode="public"] #machine-web-exams-program-title { color: var(--me-gold); }
+    .machine-web-exams-hero[data-brand-mode="institution"] #machine-web-exams-program-title { color: var(--me-program-orange); }
+    .machine-web-exams-status { margin: 0 auto 14px; text-align: center; color: var(--me-muted); font-size: 0.9rem; }
+    .machine-web-exams-error { margin: 0 auto 14px; text-align: center; color: #fca5a5; font-size: 0.92rem; }
+    .machine-web-exams-panel {
+      margin-top: 8px; padding: 20px 18px; border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      background: linear-gradient(160deg, rgba(15, 23, 42, 0.92), rgba(8, 15, 30, 0.9));
+      box-shadow: 0 12px 36px rgba(2, 8, 23, 0.45);
+    }
+    .machine-web-exams-intro__title { margin: 0 0 8px; font-size: clamp(1.3rem, 3.2vw, 1.65rem); font-weight: 800; }
+    .machine-web-exams-intro__category { margin: 0 0 12px; color: #93c5fd; font-weight: 700; }
+    .machine-web-exams-intro__meta {
+      margin: 0 0 14px; padding-left: 1.2rem; color: var(--me-muted); line-height: 1.6;
+    }
+    .machine-web-exams-intro__instruction {
+      margin: 0 0 18px; color: rgba(226, 232, 240, 0.9); line-height: 1.55; font-size: 0.95rem;
+    }
+    .machine-web-exams-intro__actions {
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    }
+    .machine-web-exams-btn {
+      appearance: none; display: inline-flex; align-items: center; justify-content: center;
+      min-height: 46px; padding: 10px 18px; border-radius: 12px; font-size: 0.95rem; font-weight: 800;
+      cursor: pointer; text-decoration: none; border: 1px solid transparent;
+    }
+    .machine-web-exams-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .machine-web-exams-btn--primary {
+      border-color: rgba(34, 211, 238, 0.55);
+      background: linear-gradient(180deg, rgba(14, 116, 144, 0.65), rgba(8, 47, 73, 0.9));
+      color: #e0f2fe;
+    }
+    .machine-web-exams-btn--secondary {
+      border-color: rgba(148, 163, 184, 0.4);
+      background: rgba(15, 23, 42, 0.75);
+      color: #e2e8f0;
+    }
+    .machine-web-exams-btn--finish {
+      border-color: rgba(251, 191, 36, 0.55);
+      background: linear-gradient(180deg, rgba(180, 130, 20, 0.55), rgba(80, 55, 10, 0.9));
+      color: #fef3c7;
+    }
+    .machine-web-exams-solving__head { margin-bottom: 14px; }
+    .machine-web-exams-solving__head-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+    .machine-web-exams-solving__title { margin: 0; font-size: 1.1rem; font-weight: 800; }
+    .machine-web-exams-timer {
+      font-variant-numeric: tabular-nums; font-weight: 800; color: #fde68a;
+      padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(251, 191, 36, 0.4);
+      background: rgba(69, 45, 8, 0.45);
+    }
+    .machine-web-exams-progress { margin: 8px 0 0; color: #93c5fd; font-weight: 700; font-size: 0.92rem; }
+    .machine-web-exams-question__text {
+      margin: 0 0 14px; font-size: 1.05rem; line-height: 1.55; font-weight: 600;
+    }
+    .machine-web-exams-question__media { margin: 0 0 14px; }
+    .machine-web-exams-question__media img {
+      display: block; max-width: 100%; height: auto; border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+    .machine-web-exams-options { display: flex; flex-direction: column; gap: 10px; }
+    .machine-web-exams-option {
+      appearance: none; width: 100%; display: flex; align-items: flex-start; gap: 12px;
+      text-align: left; min-height: 52px; padding: 12px 14px; border-radius: 14px;
+      border: 1.5px solid rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.72); color: #f8fafc; cursor: pointer;
+      transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+    }
+    .machine-web-exams-option:hover:not(:disabled) {
+      border-color: rgba(56, 189, 248, 0.65);
+      transform: translateY(-1px);
+    }
+    .machine-web-exams-option--selected {
+      border-color: rgba(34, 211, 238, 0.75);
+      background: rgba(8, 47, 73, 0.65);
+    }
+    .machine-web-exams-option--correct {
+      border-color: rgba(52, 211, 153, 0.75);
+      background: rgba(6, 78, 59, 0.45);
+    }
+    .machine-web-exams-option--wrong {
+      border-color: rgba(248, 113, 113, 0.75);
+      background: rgba(127, 29, 29, 0.35);
+    }
+    .machine-web-exams-option--locked { cursor: default; }
+    .machine-web-exams-option--locked:hover { transform: none; }
+    .machine-web-exams-option__key {
+      flex-shrink: 0; width: 28px; height: 28px; border-radius: 999px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(148, 163, 184, 0.35);
+      font-weight: 800; font-size: 0.85rem;
+    }
+    .machine-web-exams-option--correct .machine-web-exams-option__key {
+      background: rgba(6, 95, 70, 0.9); border-color: rgba(52, 211, 153, 0.6); color: #d1fae5;
+    }
+    .machine-web-exams-option--wrong .machine-web-exams-option__key {
+      background: rgba(127, 29, 29, 0.9); border-color: rgba(248, 113, 113, 0.6); color: #fecaca;
+    }
+    .machine-web-exams-option__text { flex: 1; line-height: 1.45; font-size: 0.98rem; padding-top: 2px; }
+    .machine-web-exams-option__media { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .machine-web-exams-option__img {
+      display: block; max-width: min(100%, 280px); height: auto; border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+    .machine-web-exams-answer-badge {
+      margin-top: 14px; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid rgba(52, 211, 153, 0.4); background: rgba(6, 78, 59, 0.35);
+      color: #a7f3d0; font-weight: 700;
+    }
+    .machine-web-exams-explain {
+      margin-top: 10px; padding: 12px; border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.3); background: rgba(15, 23, 42, 0.6);
+    }
+    .machine-web-exams-explain__label {
+      display: block; margin-bottom: 6px; color: #93c5fd; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .machine-web-exams-explain p { margin: 0; line-height: 1.5; color: rgba(226, 232, 240, 0.92); }
+    .machine-web-exams-nav {
+      display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; justify-content: space-between;
+    }
+    .machine-web-exams-result__title { margin: 0 0 14px; font-size: 1.35rem; font-weight: 800; text-align: center; }
+    .machine-web-exams-summary__grid {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px;
+    }
+    .machine-web-exams-stat {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 88px; padding: 12px 8px; border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.3); background: rgba(15, 23, 42, 0.7);
+    }
+    .machine-web-exams-stat__value { font-size: 1.45rem; font-weight: 800; line-height: 1.1; }
+    .machine-web-exams-stat__label { margin-top: 6px; font-size: 0.78rem; color: var(--me-muted); font-weight: 700; }
+    .machine-web-exams-stat--correct { border-color: rgba(52, 211, 153, 0.45); }
+    .machine-web-exams-stat--correct .machine-web-exams-stat__value { color: #6ee7b7; }
+    .machine-web-exams-stat--wrong { border-color: rgba(248, 113, 113, 0.45); }
+    .machine-web-exams-stat--wrong .machine-web-exams-stat__value { color: #fca5a5; }
+    .machine-web-exams-stat--blank { border-color: rgba(148, 163, 184, 0.45); }
+    .machine-web-exams-stat--blank .machine-web-exams-stat__value { color: #cbd5e1; }
+    .machine-web-exams-stat--pct { border-color: rgba(251, 191, 36, 0.5); }
+    .machine-web-exams-stat--pct .machine-web-exams-stat__value { color: #fde68a; }
+    .machine-web-exams-result__note { margin: 0 0 12px; text-align: center; color: var(--me-muted); font-size: 0.92rem; }
+    .machine-web-exams-result__note--ok { color: #6ee7b7; }
+    .machine-web-exams-result__note--error { color: #fca5a5; }
+    .machine-web-exams-review-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .machine-web-exams-review-item {
+      padding: 14px; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.28);
+      background: rgba(15, 23, 42, 0.65);
+    }
+    .machine-web-exams-review-item__head {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px;
+      font-weight: 800; color: #93c5fd; font-size: 0.88rem;
+    }
+    .machine-web-exams-review-badge {
+      padding: 3px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase;
+    }
+    .machine-web-exams-review-badge--correct { background: rgba(6, 78, 59, 0.5); color: #a7f3d0; }
+    .machine-web-exams-review-badge--wrong { background: rgba(127, 29, 29, 0.5); color: #fecaca; }
+    .machine-web-exams-review-badge--blank { background: rgba(51, 65, 85, 0.6); color: #cbd5e1; }
+    .machine-web-exams-review-item__q { margin: 0 0 8px; line-height: 1.45; }
+    .machine-web-exams-review-item__ans { margin: 0; color: rgba(226, 232, 240, 0.9); font-size: 0.92rem; }
+    .machine-web-exams-review-item__explain { margin: 8px 0 0; color: var(--me-muted); font-size: 0.9rem; line-height: 1.45; }
+    .machine-web-exams-result__actions {
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 18px;
+    }
+    .machine-web-exams-finish-gate {
+      position: fixed; inset: 0; z-index: 80;
+      display: flex; align-items: center; justify-content: center; padding: 16px;
+    }
+    .machine-web-exams-finish-gate[hidden] { display: none !important; }
+    .machine-web-exams-finish-gate__backdrop {
+      position: absolute; inset: 0; background: rgba(2, 6, 23, 0.72); backdrop-filter: blur(2px);
+    }
+    .machine-web-exams-finish-gate__dialog {
+      position: relative; z-index: 1; width: min(420px, 100%);
+      padding: 22px 20px; border-radius: 16px;
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      background: linear-gradient(165deg, #0f172a, #0b1224);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+    }
+    .machine-web-exams-finish-gate__title { margin: 0 0 10px; font-size: 1.2rem; font-weight: 800; }
+    .machine-web-exams-finish-gate__message { margin: 0 0 18px; color: var(--me-muted); line-height: 1.5; }
+    .machine-web-exams-finish-gate__actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+    #machine-web-exams-gate {
+      min-height: 40vh; display: flex; align-items: center; justify-content: center; color: var(--me-muted); font-size: 0.95rem;
+    }
+    #machine-web-exams-gate[hidden] { display: none !important; }
+    @media (max-width: 640px) {
+      .machine-web-exams-summary__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .machine-web-exams-nav .machine-web-exams-btn { flex: 1 1 calc(50% - 10px); }
+      .machine-web-exams-btn--finish { flex: 1 1 100%; }
+    }
+  </style>
+</head>
+<body data-me-page="exam">
+  <div id="machine-web-exams" hidden>
+    <header class="machine-web-exams-header">
+      <a class="machine-web-exams-home" id="machine-web-exams-home" href="../">Ana Sayfa</a>
+      <button type="button" class="machine-web-exams-logout" id="machine-web-exams-logout">Çıkış</button>
+    </header>
+    <main class="machine-web-exams-main">
+      <section class="machine-web-exams-hero" aria-label="İş Makineleri program başlığı">
+        <div class="machine-web-exams-logo-wrap">
+          <img id="machine-web-exams-logo" alt="" hidden />
+          <div id="machine-web-exams-monogram" hidden>S</div>
+        </div>
+        <h1 id="machine-web-exams-institution-name" hidden></h1>
+        <p id="machine-web-exams-brand-name">Sürücü Akademisi</p>
+        <p id="machine-web-exams-program-title">İş Makineleri Operatörlük Sınavlarına Hazırlık</p>
+      </section>
+
+      <p id="machine-web-exams-runner-loading" class="machine-web-exams-status" hidden role="status">Sınav yükleniyor…</p>
+      <p id="machine-web-exams-runner-error" class="machine-web-exams-error" hidden role="alert"></p>
+
+      <section id="machine-web-exams-intro" class="machine-web-exams-panel" hidden>
+        <h2 id="machine-web-exams-intro-title" class="machine-web-exams-intro__title">Sınav</h2>
+        <p id="machine-web-exams-intro-category" class="machine-web-exams-intro__category"></p>
+        <ul id="machine-web-exams-intro-meta" class="machine-web-exams-intro__meta"></ul>
+        <p class="machine-web-exams-intro__instruction">
+          Soruları sırayla yanıtlayın. Bitirmeden önce cevaplarınızı değiştirebilirsiniz. Sonuç ekranında doğru cevaplar ve açıklamalar gösterilir.
+        </p>
+        <div class="machine-web-exams-intro__actions">
+          <button type="button" class="machine-web-exams-btn machine-web-exams-btn--primary" id="machine-web-exams-start-btn">Sınava Başla</button>
+          <a class="machine-web-exams-btn machine-web-exams-btn--secondary" id="machine-web-exams-intro-back" href="./">Listeye Dön</a>
+        </div>
+      </section>
+
+      <section id="machine-web-exams-solving" class="machine-web-exams-panel" hidden>
+        <header class="machine-web-exams-solving__head">
+          <div class="machine-web-exams-solving__head-row">
+            <h2 id="machine-web-exams-solving-title" class="machine-web-exams-solving__title"></h2>
+            <span id="machine-web-exams-timer" class="machine-web-exams-timer" hidden aria-live="polite" aria-label="Kalan süre">45:00</span>
+          </div>
+          <p id="machine-web-exams-progress" class="machine-web-exams-progress" aria-live="polite"></p>
+        </header>
+        <article id="machine-web-exams-question"></article>
+        <nav class="machine-web-exams-nav" aria-label="Soru gezinme">
+          <button type="button" class="machine-web-exams-btn machine-web-exams-btn--secondary" id="machine-web-exams-prev-btn">Önceki</button>
+          <button type="button" class="machine-web-exams-btn machine-web-exams-btn--secondary" id="machine-web-exams-next-btn">Sonraki</button>
+          <button type="button" class="machine-web-exams-btn machine-web-exams-btn--finish" id="machine-web-exams-finish-btn" hidden>Bitir</button>
+        </nav>
+      </section>
+
+      <section id="machine-web-exams-result" class="machine-web-exams-panel" hidden>
+        <h2 class="machine-web-exams-result__title">Sınav Sonucu</h2>
+        <div id="machine-web-exams-summary"></div>
+        <div id="machine-web-exams-review"></div>
+        <div class="machine-web-exams-result__actions">
+          <a id="machine-web-exams-back-category" class="machine-web-exams-btn machine-web-exams-btn--primary" href="./">Kategoriye Dön</a>
+          <a class="machine-web-exams-btn machine-web-exams-btn--secondary" href="./">Tüm Kategoriler</a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="machine-web-exams-finish-gate" class="machine-web-exams-finish-gate" hidden aria-hidden="true">
+    <div class="machine-web-exams-finish-gate__backdrop" id="machine-web-exams-finish-backdrop" tabindex="-1" aria-hidden="true"></div>
+    <div class="machine-web-exams-finish-gate__dialog" role="dialog" aria-modal="true" aria-labelledby="machine-web-exams-finish-gate-title">
+      <h2 id="machine-web-exams-finish-gate-title" class="machine-web-exams-finish-gate__title">Sınavı Bitir</h2>
+      <p id="machine-web-exams-finish-gate-message" class="machine-web-exams-finish-gate__message"></p>
+      <div class="machine-web-exams-finish-gate__actions">
+        <button type="button" class="machine-web-exams-btn machine-web-exams-btn--secondary" id="machine-web-exams-finish-dismiss">Vazgeç</button>
+        <button type="button" class="machine-web-exams-btn machine-web-exams-btn--finish" id="machine-web-exams-finish-confirm">Sınavı Bitir</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="machine-web-exams-gate">Oturum doğrulanıyor…</div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
+  <script src="../../assets/js/web-firebase.js"></script>
+  <script src="../../assets/js/machine-web-session.js"></script>
+  <script src="../../assets/js/machine-web-exam-attempts.js"></script>
+  <script src="../../assets/js/machine-web-exams.js"></script>
+</body>
+</html>

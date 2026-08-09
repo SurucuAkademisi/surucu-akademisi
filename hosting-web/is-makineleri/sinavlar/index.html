@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Deneme Sınavları — İş Makineleri | Sürücü Akademisi</title>
+  <style>
+    :root {
+      --me-bg-0: #020617;
+      --me-bg-1: #0b1224;
+      --me-gold: #fbbf24;
+      --me-program-orange: #fb923c;
+      --me-text: #f8fafc;
+      --me-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; min-height: 100%; min-height: 100svh;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      color: var(--me-text);
+      background:
+        radial-gradient(1000px 480px at 50% -8%, rgba(251, 191, 36, 0.12), transparent 55%),
+        radial-gradient(800px 360px at 100% 10%, rgba(56, 189, 248, 0.12), transparent 50%),
+        linear-gradient(165deg, var(--me-bg-0), var(--me-bg-1));
+    }
+    body { overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    #machine-web-exams {
+      width: 100%; min-height: 100svh; min-height: 100dvh;
+      padding: max(12px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    }
+    .machine-web-exams-header {
+      width: 100%; max-width: 960px; margin: 0 auto 14px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .machine-web-exams-home {
+      appearance: none; display: inline-flex; align-items: center; justify-content: center;
+      min-height: 40px; padding: 8px 14px; border-radius: 10px;
+      border: 1px solid rgba(34, 211, 238, 0.45); background: rgba(15, 23, 42, 0.85);
+      color: #e0f2fe; font-size: 0.86rem; font-weight: 700; text-decoration: none; cursor: pointer;
+    }
+    .machine-web-exams-logout {
+      appearance: none; border: 1px solid rgba(251, 191, 36, 0.4); background: rgba(15, 23, 42, 0.85);
+      color: #fef3c7; border-radius: 10px; min-height: 40px; padding: 8px 14px;
+      font-size: 0.86rem; font-weight: 700; cursor: pointer;
+    }
+    .machine-web-exams-main { width: 100%; max-width: 960px; margin: 0 auto; }
+    .machine-web-exams-hero {
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      width: 100%; padding: 4px 8px 12px;
+    }
+    .machine-web-exams-logo-wrap {
+      width: clamp(112px, 18vh, 160px); height: clamp(112px, 18vh, 160px);
+      max-width: min(160px, 56vw); margin: 0 auto 12px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #machine-web-exams-logo { width: 100%; height: 100%; object-fit: contain; display: block; }
+    #machine-web-exams-monogram {
+      width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: clamp(2rem, 7vw, 2.8rem); font-weight: 800; color: #0f172a;
+      background: linear-gradient(145deg, #f5c518, #eab308); border: 1px solid rgba(251, 191, 36, 0.5);
+    }
+    #machine-web-exams-logo[hidden], #machine-web-exams-monogram[hidden] { display: none !important; }
+    #machine-web-exams-institution-name { margin: 0 0 6px; font-size: clamp(1.2rem, 3vw, 1.5rem); font-weight: 800; color: #fbbf24; }
+    #machine-web-exams-brand-name { margin: 0 0 6px; font-size: clamp(1.1rem, 2.6vw, 1.3rem); font-weight: 800; color: #e2e8f0; }
+    #machine-web-exams-program-title { margin: 0; font-size: clamp(0.98rem, 2.3vw, 1.18rem); font-weight: 800; line-height: 1.3; }
+    .machine-web-exams-hero[data-brand-mode="public"] #machine-web-exams-program-title { color: var(--me-gold); }
+    .machine-web-exams-hero[data-brand-mode="institution"] #machine-web-exams-program-title { color: var(--me-program-orange); }
+    .machine-web-exams-page-title { margin: 8px 0 6px; text-align: center; font-size: clamp(1.35rem, 3.2vw, 1.7rem); font-weight: 800; }
+    .machine-web-exams-intro {
+      margin: 0 auto 18px; width: 100%; text-align: center; color: var(--me-muted); font-size: 0.92rem; line-height: 1.5;
+    }
+    .machine-web-exams-status { margin: 0 auto 14px; text-align: center; color: var(--me-muted); font-size: 0.9rem; }
+    .machine-web-exams-category-grid {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 320px)); justify-content: center; gap: 16px; margin-top: 8px; width: 100%;
+    }
+    .machine-web-exams-book-card {
+      --hub-card-accent-rgb: 251, 191, 36;
+      position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column;
+      min-height: 236px; padding: 20px 18px 86px; border-radius: 16px;
+      border: 1.5px solid rgba(var(--hub-card-accent-rgb), 0.55);
+      background:
+        radial-gradient(ellipse 120% 80% at 100% -10%, rgba(var(--hub-card-accent-rgb), 0.22), transparent 52%),
+        linear-gradient(158deg, rgba(12, 24, 46, 0.94) 0%, rgba(8, 16, 32, 0.88) 48%, rgba(5, 10, 22, 0.92) 100%);
+      box-shadow: 0 0 36px rgba(var(--hub-card-accent-rgb), 0.22), 0 10px 32px rgba(2, 8, 23, 0.55);
+      transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+      user-select: none;
+    }
+    .machine-web-exams-book-card--gold { --hub-card-accent-rgb: 251, 191, 36; }
+    .machine-web-exams-book-card--green { --hub-card-accent-rgb: 52, 211, 153; }
+    .machine-web-exams-book-card--clickable { cursor: pointer; }
+    .machine-web-exams-book-card--clickable:hover,
+    .machine-web-exams-book-card--clickable:focus-visible {
+      outline: none; transform: translateY(-4px);
+      border-color: rgba(var(--hub-card-accent-rgb), 0.78);
+      box-shadow: 0 0 52px rgba(var(--hub-card-accent-rgb), 0.42), 0 16px 44px rgba(2, 8, 23, 0.62);
+    }
+    .machine-web-exams-book-card__title { margin: 0 0 10px; font-weight: 800; font-size: 1.16rem; color: #f8fafc; position: relative; z-index: 1; }
+    .machine-web-exams-book-card__desc { flex: 1; margin: 0; font-size: 0.92rem; line-height: 1.55; color: rgba(236, 242, 255, 0.9); position: relative; z-index: 1; }
+    .machine-web-exams-book-card__cta {
+      position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+      width: min(220px, calc(100% - 72px)); min-height: 28px; padding: 5px 12px; border-radius: 999px;
+      display: inline-flex; align-items: center; justify-content: center; z-index: 2;
+      border: 1px solid rgba(var(--hub-card-accent-rgb), 0.52);
+      background: linear-gradient(180deg, rgba(10, 18, 36, 0.88), rgba(6, 12, 26, 0.92));
+      letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.69rem; font-weight: 700; color: #f1f5f9; white-space: nowrap;
+    }
+    #machine-web-exams-gate {
+      min-height: 40vh; display: flex; align-items: center; justify-content: center; color: var(--me-muted); font-size: 0.95rem;
+    }
+    #machine-web-exams-gate[hidden] { display: none !important; }
+    @media (min-width: 721px) { .machine-web-exams-intro { white-space: nowrap; } }
+    @media (max-width: 720px) { .machine-web-exams-intro { white-space: normal; } }
+    @media (max-width: 700px) {
+      .machine-web-exams-category-grid { grid-template-columns: minmax(0, 320px); justify-content: center; }
+    }
+  </style>
+</head>
+<body data-me-page="hub">
+  <div id="machine-web-exams" hidden>
+    <header class="machine-web-exams-header">
+      <a class="machine-web-exams-home" id="machine-web-exams-home" href="../">Ana Sayfa</a>
+      <button type="button" class="machine-web-exams-logout" id="machine-web-exams-logout">Çıkış</button>
+    </header>
+    <main class="machine-web-exams-main">
+      <section class="machine-web-exams-hero" aria-label="İş Makineleri program başlığı">
+        <div class="machine-web-exams-logo-wrap">
+          <img id="machine-web-exams-logo" alt="" hidden />
+          <div id="machine-web-exams-monogram" hidden>S</div>
+        </div>
+        <h1 id="machine-web-exams-institution-name" hidden></h1>
+        <p id="machine-web-exams-brand-name">Sürücü Akademisi</p>
+        <p id="machine-web-exams-program-title">İş Makineleri Operatörlük Sınavlarına Hazırlık</p>
+      </section>
+      <h2 class="machine-web-exams-page-title">Deneme Sınavları</h2>
+      <p class="machine-web-exams-intro">İş Makineleri ve İlk Yardım deneme sınavları. Bir kategori seçerek sınavları görüntüleyin.</p>
+      <p id="machine-web-exams-hub-loading" class="machine-web-exams-status" hidden>Sınavlar hazırlanıyor…</p>
+      <section id="machine-web-exams-category-grid" class="machine-web-exams-category-grid" aria-label="Sınav kategorileri" hidden></section>
+    </main>
+  </div>
+  <div id="machine-web-exams-gate">Oturum doğrulanıyor…</div>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
+  <script src="../../assets/js/web-firebase.js"></script>
+  <script src="../../assets/js/machine-web-session.js"></script>
+  <script src="../../assets/js/machine-web-exam-attempts.js"></script>
+  <script src="../../assets/js/machine-web-exams.js"></script>
+</body>
+</html>

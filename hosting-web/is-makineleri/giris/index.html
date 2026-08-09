@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>İş Makineleri Aday Girişi — Sürücü Akademisi</title>
+  <style>
+    :root {
+      --mw-bg-0: #020617;
+      --mw-bg-1: #0b1224;
+      --mw-bg-2: #111827;
+      --mw-cyan-soft: rgba(56, 189, 248, 0.18);
+      --mw-gold: #fbbf24;
+      --mw-gold-strong: rgba(245, 158, 11, 0.55);
+      --mw-text: #f8fafc;
+      --mw-muted: #94a3b8;
+      --mw-border: rgba(251, 191, 36, 0.38);
+      --mw-radius: 18px;
+      --mw-field-bg: rgba(2, 6, 23, 0.55);
+      --mw-field-border: rgba(148, 163, 184, 0.28);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      min-height: 100svh;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      color: var(--mw-text);
+      background:
+        radial-gradient(1200px 520px at 50% -10%, rgba(251, 191, 36, 0.14), transparent 55%),
+        radial-gradient(900px 420px at 100% 20%, var(--mw-cyan-soft), transparent 50%),
+        radial-gradient(800px 380px at 0% 80%, rgba(34, 211, 238, 0.08), transparent 45%),
+        linear-gradient(165deg, var(--mw-bg-0), var(--mw-bg-1) 48%, var(--mw-bg-2));
+    }
+
+    body {
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    body.machine-web-busy-open { overflow: hidden; }
+
+    #machine-web-login-page {
+      position: relative;
+      width: 100%;
+      min-height: 100svh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding:
+        max(18px, env(safe-area-inset-top, 0px))
+        max(16px, env(safe-area-inset-right, 0px))
+        max(20px, env(safe-area-inset-bottom, 0px))
+        max(16px, env(safe-area-inset-left, 0px));
+    }
+
+    .machine-web-home-nav {
+      position: absolute;
+      top: max(12px, env(safe-area-inset-top, 0px));
+      left: max(12px, env(safe-area-inset-left, 0px));
+      z-index: 5;
+    }
+
+    .machine-web-home-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 38px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(34, 211, 238, 0.48);
+      background: rgba(15, 23, 42, 0.82);
+      color: #e2e8f0;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      text-decoration: none;
+      box-shadow: 0 0 14px rgba(34, 211, 238, 0.14);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .machine-web-home-link:hover,
+    .machine-web-home-link:focus-visible {
+      border-color: rgba(34, 211, 238, 0.72);
+      color: #fff;
+      box-shadow: 0 0 18px rgba(34, 211, 238, 0.22), 0 0 12px rgba(251, 191, 36, 0.08);
+      outline: none;
+    }
+
+    .machine-web-shell {
+      width: 100%;
+      max-width: 440px;
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: clamp(10px, 2.4vh, 32px);
+      padding-bottom: 12px;
+    }
+
+    .machine-web-brand {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .machine-web-logo {
+      width: clamp(160px, 24vh, 220px);
+      height: clamp(160px, 24vh, 220px);
+      max-width: min(220px, 72vw);
+      max-height: min(220px, 36vh);
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 12px;
+    }
+
+    .machine-web-slogan-top {
+      font-size: 0.84rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: rgba(147, 197, 253, 0.92);
+      text-shadow: 0 0 12px rgba(59, 130, 246, 0.28);
+      margin: 0 0 4px;
+    }
+
+    .machine-web-slogan-bottom {
+      width: 100%;
+      max-width: 100%;
+      font-size: clamp(0.95rem, 2.2vw, 1.08rem);
+      font-weight: 700;
+      line-height: 1.25;
+      color: #f3f7ff;
+      text-shadow: 0 0 14px rgba(59, 130, 246, 0.22);
+      margin: 0 0 12px;
+    }
+
+    @media (min-width: 721px) {
+      .machine-web-slogan-bottom { white-space: nowrap; }
+    }
+
+    .machine-web-title {
+      margin: 0 0 14px;
+      font-size: clamp(1.15rem, 2.6vw, 1.35rem);
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      color: #fef3c7;
+      text-shadow: 0 0 18px rgba(251, 191, 36, 0.28);
+    }
+
+    .machine-web-card {
+      width: 100%;
+      background: linear-gradient(158deg, rgba(15, 23, 42, 0.92), rgba(8, 15, 30, 0.88));
+      border: 1px solid var(--mw-border);
+      border-radius: var(--mw-radius);
+      padding: 18px 16px 16px;
+      box-shadow:
+        0 0 0 1px rgba(251, 191, 36, 0.08) inset,
+        0 12px 40px rgba(0, 0, 0, 0.35),
+        0 0 28px rgba(251, 191, 36, 0.1),
+        0 0 24px rgba(34, 211, 238, 0.08);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .machine-web-mode-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .machine-web-mode-btn {
+      appearance: none;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      background: rgba(2, 6, 23, 0.45);
+      color: #cbd5e1;
+      border-radius: 12px;
+      min-height: 44px;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .machine-web-mode-btn.is-active {
+      border-color: var(--mw-gold-strong);
+      background: linear-gradient(145deg, rgba(251, 191, 36, 0.22), rgba(245, 158, 11, 0.12));
+      color: #fef3c7;
+      box-shadow: 0 0 18px rgba(251, 191, 36, 0.18);
+    }
+
+    .machine-web-panel[hidden] { display: none !important; }
+
+    .machine-web-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .machine-web-field label {
+      font-size: 0.86rem;
+      color: var(--mw-muted);
+      font-weight: 600;
+    }
+
+    .machine-web-field input,
+    .machine-web-tenant-trigger {
+      width: 100%;
+      min-height: 46px;
+      padding: 11px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--mw-field-border);
+      background: var(--mw-field-bg);
+      color: var(--mw-text);
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .machine-web-field input:focus {
+      border-color: rgba(251, 191, 36, 0.55);
+      box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.22), 0 0 18px rgba(251, 191, 36, 0.12);
+    }
+
+    .machine-web-tenant-wrap { position: relative; margin-bottom: 12px; }
+
+    .machine-web-tenant-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      text-align: left;
+      cursor: pointer;
+      color: #cbd5e1;
+      border-color: rgba(74, 222, 128, 0.35);
+      box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.12);
+      font: inherit;
+    }
+
+    .machine-web-tenant-trigger span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .machine-web-tenant-chevron { flex: 0 0 auto; opacity: 0.7; font-size: 0.75rem; }
+
+    .machine-web-tenant-status {
+      min-height: 16px;
+      margin: 4px 0 8px;
+      font-size: 0.78rem;
+      color: var(--mw-muted);
+    }
+
+    .machine-web-tenant-popover {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(100% + 6px);
+      z-index: 20;
+      max-height: 240px;
+      overflow-y: auto;
+      border-radius: 12px;
+      border: 1px solid rgba(74, 222, 128, 0.35);
+      background: rgba(8, 15, 30, 0.98);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+    }
+
+    .machine-web-tenant-option {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 12px 14px;
+      border: 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+      background: transparent;
+      color: #e2e8f0;
+      font-size: 0.92rem;
+      cursor: pointer;
+    }
+
+    .machine-web-tenant-option:hover,
+    .machine-web-tenant-option.is-selected {
+      background: rgba(251, 191, 36, 0.12);
+      color: #fef3c7;
+    }
+
+    .machine-web-tenant-empty {
+      padding: 14px;
+      color: var(--mw-muted);
+      font-size: 0.85rem;
+    }
+
+    .machine-web-forgot-wrap {
+      display: flex;
+      justify-content: flex-end;
+      margin: -2px 0 10px;
+    }
+
+    .machine-web-forgot-btn {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: #fde68a;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 4px 2px;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .machine-web-forgot-btn:disabled {
+      opacity: 0.45;
+      cursor: default;
+      text-decoration: none;
+    }
+
+    .machine-web-btn {
+      width: 100%;
+      min-height: 48px;
+      border-radius: 13px;
+      border: 1px solid var(--mw-gold-strong);
+      background: linear-gradient(145deg, #f5c518, #eab308);
+      color: #0f172a;
+      font-size: 0.95rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(251, 191, 36, 0.22);
+    }
+
+    .machine-web-btn:disabled,
+    .machine-web-btn--secondary:disabled,
+    .machine-web-provider:disabled,
+    .machine-web-tenant-trigger:disabled,
+    .machine-web-mode-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .machine-web-btn--secondary {
+      margin-top: 8px;
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85));
+      color: #fef3c7;
+    }
+
+    .machine-web-divider {
+      display: flex;
+      align-items: center;
+      margin: 14px 0 12px;
+      color: #9fb3c8;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+    }
+
+    .machine-web-divider::before,
+    .machine-web-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.35), transparent);
+    }
+
+    .machine-web-divider span { padding: 0 10px; white-space: nowrap; }
+
+    .machine-web-social {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .machine-web-provider {
+      width: 100%;
+      min-height: 44px;
+      border-radius: 12px;
+      border: 1px solid rgba(251, 191, 36, 0.28);
+      background: rgba(15, 23, 42, 0.72);
+      color: #e5edf6;
+      font-size: 0.9rem;
+      font-weight: 650;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .machine-web-gmail-g {
+      color: #ea4335;
+      font-weight: 800;
+      font-size: 1.05rem;
+    }
+
+    .machine-web-message {
+      margin: 12px 0 0;
+      min-height: 18px;
+      text-align: center;
+      font-size: 0.86rem;
+      font-weight: 600;
+      line-height: 1.35;
+      color: transparent;
+    }
+
+    .machine-web-message.is-visible { color: #fecaca; }
+    .machine-web-message--error.is-visible { color: #fecaca; }
+    .machine-web-message--success.is-visible { color: #bbf7d0; }
+
+    /* Busy overlay */
+    #machine-web-auth-busy {
+      position: fixed;
+      inset: 0;
+      z-index: 3000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(2, 6, 23, 0.78);
+      backdrop-filter: blur(10px);
+    }
+
+    #machine-web-auth-busy[hidden] { display: none !important; }
+
+    .machine-web-auth-busy-card {
+      width: min(360px, 100%);
+      text-align: center;
+      padding: 28px 22px;
+      border-radius: 18px;
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      background: linear-gradient(158deg, rgba(15, 23, 42, 0.96), rgba(8, 15, 30, 0.94));
+      box-shadow: 0 0 28px rgba(251, 191, 36, 0.16), 0 0 24px rgba(34, 211, 238, 0.1);
+    }
+
+    .machine-web-auth-busy-brand {
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: #fde68a;
+      margin: 0 0 12px;
+    }
+
+    .machine-web-auth-busy-title {
+      margin: 0 0 8px;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #f8fafc;
+    }
+
+    .machine-web-auth-busy-sub {
+      margin: 0;
+      font-size: 0.88rem;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+
+    .machine-web-auth-busy-spinner {
+      width: 36px;
+      height: 36px;
+      margin: 18px auto 0;
+      border-radius: 50%;
+      border: 3px solid rgba(251, 191, 36, 0.2);
+      border-top-color: #fbbf24;
+      animation: machine-web-spin 0.85s linear infinite;
+    }
+
+    @keyframes machine-web-spin { to { transform: rotate(360deg); } }
+
+    /* Modals */
+    .machine-web-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 2800;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      overflow-y: auto;
+      padding:
+        calc(16px + env(safe-area-inset-top, 0px))
+        calc(16px + env(safe-area-inset-right, 0px))
+        calc(16px + env(safe-area-inset-bottom, 0px))
+        calc(16px + env(safe-area-inset-left, 0px));
+      background: rgba(2, 6, 23, 0.78);
+      backdrop-filter: blur(10px);
+    }
+
+    .machine-web-modal[hidden] { display: none !important; }
+
+    .machine-web-modal-card {
+      width: 100%;
+      max-width: 400px;
+      margin: auto;
+      padding: 22px 18px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(251, 191, 36, 0.38);
+      background: linear-gradient(158deg, rgba(10, 18, 36, 0.96), rgba(8, 14, 28, 0.92));
+      box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.08) inset, 0 16px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .machine-web-modal-card h2 {
+      margin: 0 0 8px;
+      font-size: 1.15rem;
+      color: #fef3c7;
+    }
+
+    .machine-web-modal-help {
+      margin: 0 0 14px;
+      font-size: 0.86rem;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+
+    .machine-web-modal-error {
+      min-height: 18px;
+      margin: 0 0 10px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: #fecaca;
+    }
+
+    .machine-web-modal-error.is-visible { display: block; }
+
+    .machine-web-modal-actions {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .machine-web-reset-success-main {
+      margin: 0 0 6px;
+      color: #bbf7d0;
+      font-weight: 700;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .machine-web-reset-success-note {
+      margin: 0;
+      color: #94a3b8;
+      font-size: 0.78rem;
+      line-height: 1.35;
+    }
+
+    @media (max-width: 720px) {
+      .machine-web-logo {
+        width: clamp(128px, 34vw, 180px);
+        height: clamp(128px, 34vw, 180px);
+        max-width: min(180px, 70vw);
+        max-height: min(180px, 30vh);
+      }
+      .machine-web-slogan-bottom {
+        font-size: clamp(0.9rem, 3.6vw, 1.02rem);
+        white-space: normal;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .machine-web-card { padding: 16px 14px 14px; }
+    }
+
+    @media (max-height: 740px) {
+      .machine-web-logo {
+        width: clamp(120px, 20vh, 168px);
+        height: clamp(120px, 20vh, 168px);
+        max-height: min(168px, 28vh);
+        margin-bottom: 8px;
+      }
+      .machine-web-shell { padding-top: 8px; }
+      .machine-web-title { margin-bottom: 10px; }
+      .machine-web-card { padding: 14px 12px 12px; }
+      .machine-web-field { margin-bottom: 10px; }
+      .machine-web-field input,
+      .machine-web-tenant-trigger { min-height: 42px; padding: 9px 12px; }
+      .machine-web-btn { min-height: 44px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="machine-web-login-page">
+    <nav class="machine-web-home-nav" aria-label="Site navigasyonu">
+      <a class="machine-web-home-link" id="machine-web-ana-sayfa" href="/">Ana Sayfa</a>
+    </nav>
+    <div class="machine-web-shell">
+      <div class="machine-web-brand">
+        <img
+          class="machine-web-logo"
+          src="../../assets/images/logo.png"
+          width="220"
+          height="220"
+          alt="Sürücü Akademisi"
+        />
+        <p class="machine-web-slogan-top">Yapay Zeka Destekli</p>
+        <p class="machine-web-slogan-bottom">Yeni Nesil Sürücü Eğitim Akademisi</p>
+        <h1 class="machine-web-title" id="machine-web-login-title">İş Makineleri Aday Girişi</h1>
+      </div>
+
+      <article class="machine-web-card" aria-labelledby="machine-web-login-title">
+        <div class="machine-web-mode-toggle" role="tablist" aria-label="Aday giriş türü">
+          <button type="button" class="machine-web-mode-btn is-active" id="machine-web-mode-public" role="tab" aria-selected="true" data-mode="public">Bireysel</button>
+          <button type="button" class="machine-web-mode-btn" id="machine-web-mode-institution" role="tab" aria-selected="false" data-mode="institution">Sürücü Kursları</button>
+        </div>
+
+        <div id="machine-web-panel-public" class="machine-web-panel" role="tabpanel" aria-labelledby="machine-web-mode-public">
+          <div class="machine-web-field">
+            <label for="machine-web-email">E-posta</label>
+            <input id="machine-web-email" type="email" autocomplete="email" placeholder="ornek@email.com" />
+          </div>
+          <div class="machine-web-field">
+            <label for="machine-web-public-password">Şifre</label>
+            <input id="machine-web-public-password" type="password" autocomplete="current-password" placeholder="Şifreniz" />
+          </div>
+          <div class="machine-web-forgot-wrap">
+            <button type="button" class="machine-web-forgot-btn" id="machine-web-forgot-password">Şifremi Unuttum</button>
+          </div>
+          <button type="button" class="machine-web-btn" id="machine-web-login-submit">Giriş Yap</button>
+          <button type="button" class="machine-web-btn machine-web-btn--secondary" id="machine-web-signup">Hesap Oluştur</button>
+          <div class="machine-web-divider"><span>veya</span></div>
+          <div class="machine-web-social">
+            <button type="button" class="machine-web-provider" id="machine-web-google">
+              <span><span class="machine-web-gmail-g">G</span>mail ile giriş</span>
+            </button>
+            <button type="button" class="machine-web-provider" id="machine-web-apple" disabled aria-disabled="true">
+              Apple ile giriş (Yakında)
+            </button>
+          </div>
+        </div>
+
+        <div id="machine-web-panel-institution" class="machine-web-panel" role="tabpanel" aria-labelledby="machine-web-mode-institution" hidden>
+          <div class="machine-web-field machine-web-tenant-wrap">
+            <label for="machine-web-tenant">Kurum</label>
+            <button type="button" class="machine-web-tenant-trigger" id="machine-web-tenant" aria-haspopup="listbox" aria-expanded="false">
+              <span id="machine-web-tenant-label">Sürücü Kursunuzu Seçin</span>
+              <span class="machine-web-tenant-chevron" aria-hidden="true">▾</span>
+            </button>
+            <div id="machine-web-tenant-popover" class="machine-web-tenant-popover" hidden>
+              <div id="machine-web-tenant-list" role="listbox" aria-label="Kurum listesi"></div>
+            </div>
+            <p id="machine-web-tenant-status" class="machine-web-tenant-status" aria-live="polite"></p>
+          </div>
+          <div class="machine-web-field">
+            <label for="machine-web-username">Kullanıcı Adı / TC Kimlik No</label>
+            <input id="machine-web-username" type="text" autocomplete="username" placeholder="Kullanıcı Adı / TC Kimlik No" />
+          </div>
+          <div class="machine-web-field">
+            <label for="machine-web-institution-password">Şifre</label>
+            <input id="machine-web-institution-password" type="password" autocomplete="current-password" placeholder="Şifreniz" />
+          </div>
+          <button type="button" class="machine-web-btn" id="machine-web-institution-login-submit">Giriş Yap</button>
+        </div>
+
+        <p id="machine-web-message" class="machine-web-message" role="status" aria-live="polite"></p>
+      </article>
+    </div>
+  </div>
+
+  <div id="machine-web-auth-busy" hidden aria-hidden="true" role="status" aria-live="polite">
+    <div class="machine-web-auth-busy-card">
+      <p class="machine-web-auth-busy-brand">SÜRÜCÜ AKADEMİSİ</p>
+      <h2 class="machine-web-auth-busy-title">Oturumunuz hazırlanıyor</h2>
+      <p class="machine-web-auth-busy-sub">Bilgileriniz güvenli biçimde doğrulanıyor</p>
+      <div class="machine-web-auth-busy-spinner" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <div id="machine-web-signup-modal" class="machine-web-modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="machine-web-signup-title">
+    <div class="machine-web-modal-card" onclick="event.stopPropagation()">
+      <h2 id="machine-web-signup-title">Hesap Oluştur</h2>
+      <p class="machine-web-modal-help">İş Makineleri bireysel aday hesabınızı oluşturun.</p>
+      <div class="machine-web-field">
+        <label for="machine-web-signup-fullname">Ad Soyad</label>
+        <input id="machine-web-signup-fullname" type="text" autocomplete="name" maxlength="200" placeholder="Adınız ve soyadınız" />
+      </div>
+      <div class="machine-web-field">
+        <label for="machine-web-signup-email">E-posta</label>
+        <input id="machine-web-signup-email" type="email" autocomplete="email" placeholder="ornek@email.com" />
+      </div>
+      <div class="machine-web-field">
+        <label for="machine-web-signup-password">Şifre</label>
+        <input id="machine-web-signup-password" type="password" autocomplete="new-password" placeholder="En az 6 karakter" />
+      </div>
+      <div class="machine-web-field">
+        <label for="machine-web-signup-password-confirm">Şifre Tekrar</label>
+        <input id="machine-web-signup-password-confirm" type="password" autocomplete="new-password" placeholder="Şifre tekrar" />
+      </div>
+      <div id="machine-web-signup-error" class="machine-web-modal-error" role="alert"></div>
+      <div class="machine-web-modal-actions">
+        <button type="button" class="machine-web-btn" id="machine-web-signup-submit">Kayıt Ol</button>
+        <button type="button" class="machine-web-btn machine-web-btn--secondary" data-machine-signup-dismiss>Vazgeç</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="machine-web-reset-modal" class="machine-web-modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="machine-web-reset-title">
+    <div class="machine-web-modal-card" onclick="event.stopPropagation()">
+      <h2 id="machine-web-reset-title">Şifre Sıfırlama</h2>
+      <p class="machine-web-modal-help">Şifre sıfırlama bağlantısını gönderebilmemiz için hesabınıza kayıtlı e-posta adresini girin.</p>
+      <div class="machine-web-field">
+        <label for="machine-web-reset-email">E-posta</label>
+        <input id="machine-web-reset-email" type="email" autocomplete="email" placeholder="E-posta adresiniz" />
+      </div>
+      <div id="machine-web-reset-error" class="machine-web-modal-error" role="alert"></div>
+      <div class="machine-web-modal-actions">
+        <button type="button" class="machine-web-btn" id="machine-web-reset-submit">Bağlantıyı Gönder</button>
+        <button type="button" class="machine-web-btn machine-web-btn--secondary" id="machine-web-reset-cancel" data-machine-reset-dismiss>Vazgeç</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
+  <script src="../../assets/js/web-firebase.js"></script>
+  <script src="../../assets/js/machine-web-session.js"></script>
+  <script src="../../assets/js/machine-web-auth.js"></script>
+</body>
+</html>

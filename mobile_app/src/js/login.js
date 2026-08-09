@@ -52,7 +52,18 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
     if (!user || !user.uid) return;
     try {
       const [resolverModule, sessionModule] = await loadTenantBootstrapModules();
-      const tenantId = selectedTenantId || getSelectedTenantIdFromStorage();
+      let tenantId = selectedTenantId || getSelectedTenantIdFromStorage();
+      // Driving bootstrap must not adopt a Machine-only membership as institution context.
+      if (tenantId) {
+        try {
+          const mem = await getActiveMembershipForTenant(user.uid, tenantId);
+          const cls = classifyMembershipForDriving(mem);
+          if (cls.kind === 'NON_DRIVING_MEMBERSHIP') {
+            try { await clearInstitutionTenantState(); } catch (_) {}
+            tenantId = null;
+          }
+        } catch (_) {}
+      }
       const context = await resolverModule.resolveTenantContext(user, tenantId);
       sessionModule.setActiveTenantSession(context);
       if (context && context.tenantId && window.SA_TENANT && typeof window.SA_TENANT.setSelectedTenantId === 'function') {
@@ -470,31 +481,72 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
     const v = String(value == null ? '' : value).trim().toLowerCase();
     if (v === 'machine_operator') return 'machine_operator';
     if (v === 'driving_license') return 'driving_license';
+    // Legacy / missing → Driving (existing convention).
     return 'driving_license';
   }
 
-  function assertDrivingCompatibleMembership(membership) {
+  function isDrivingProgramMembership(membership) {
+    if (!membership || typeof membership !== 'object') return false;
+    return normalizeMembershipProgramType(membership.programType) !== 'machine_operator';
+  }
+
+  /**
+   * Classify membership for Driving entry.
+   * Machine membership is NOT an error and MUST NOT block Driving UID access;
+   * it also MUST NOT be treated as Driving institution context.
+   */
+  function classifyMembershipForDriving(membership) {
     if (!membership || typeof membership !== 'object') {
-      return { ok: true, programType: 'driving_license' };
+      return { ok: true, kind: 'NONE', membership: null, programType: null };
     }
     const programType = normalizeMembershipProgramType(membership.programType);
     if (programType === 'machine_operator') {
-      const err = new Error(MSG_MACHINE_REQUIRES_MACHINE_ENTRY);
-      err.userMessage = MSG_MACHINE_REQUIRES_MACHINE_ENTRY;
-      err.code = 'MACHINE_ACCOUNT_REQUIRES_MACHINE_ENTRY';
-      err.machineCode = 'MACHINE_ACCOUNT_REQUIRES_MACHINE_ENTRY';
-      throw err;
+      return {
+        ok: true,
+        kind: 'NON_DRIVING_MEMBERSHIP',
+        membership: membership,
+        programType: 'machine_operator'
+      };
     }
-    return { ok: true, programType: programType };
+    return {
+      ok: true,
+      kind: 'DRIVING_MEMBERSHIP',
+      membership: membership,
+      programType: programType
+    };
+  }
+
+  /**
+   * Driving-entry classification (no throw for machine_operator).
+   * Callers must not bootstrap NON_DRIVING_MEMBERSHIP as Driving tenant context.
+   */
+  function assertDrivingCompatibleMembership(membership) {
+    const cls = classifyMembershipForDriving(membership);
+    if (cls.kind === 'NONE') {
+      return { ok: true, kind: 'NONE', programType: 'driving_license', membership: null };
+    }
+    return {
+      ok: true,
+      kind: cls.kind,
+      programType: cls.programType,
+      membership: cls.membership
+    };
   }
 
   async function assertDrivingCompatibleTenantMembership(uid, tenantId) {
     const membership = await getActiveMembershipForTenant(uid, tenantId);
-    if (!membership) return { ok: false, membership: null };
-    assertDrivingCompatibleMembership(membership);
-    return { ok: true, membership: membership };
+    if (!membership) return { ok: false, kind: 'NONE', membership: null };
+    const cls = assertDrivingCompatibleMembership(membership);
+    if (cls.kind === 'NON_DRIVING_MEMBERSHIP') {
+      return { ok: false, kind: 'NON_DRIVING_MEMBERSHIP', membership: membership, programType: 'machine_operator' };
+    }
+    return { ok: true, kind: 'DRIVING_MEMBERSHIP', membership: membership, programType: cls.programType };
   }
 
+  /**
+   * Restored Driving session: Machine-only selected tenant is sanitized (ignored),
+   * not a global sign-out / "use Machine module" rejection.
+   */
   async function assertRestoredSessionDrivingCompatible(user) {
     if (!user || !user.uid) return { ok: true };
     const tenantId = (window.SA_TENANT && typeof window.SA_TENANT.getSelectedTenantId === 'function')
@@ -504,14 +556,152 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
     try {
       const membership = await getActiveMembershipForTenant(user.uid, tenantId);
       if (!membership) return { ok: true };
-      assertDrivingCompatibleMembership(membership);
-      return { ok: true };
+      const cls = assertDrivingCompatibleMembership(membership);
+      if (cls.kind === 'NON_DRIVING_MEMBERSHIP') {
+        try { await clearInstitutionTenantState(); } catch (_) {}
+        return { ok: true, sanitized: true, kind: 'NON_DRIVING_MEMBERSHIP' };
+      }
+      return { ok: true, kind: 'DRIVING_MEMBERSHIP' };
     } catch (e) {
       return {
         ok: false,
-        userMessage: MSG_MACHINE_REQUIRES_RELOGIN,
-        code: (e && (e.machineCode || e.code)) ? String(e.machineCode || e.code) : 'MACHINE_ACCOUNT_REQUIRES_MACHINE_ENTRY'
+        userMessage: (e && e.userMessage) ? String(e.userMessage) : 'Giriş başarısız.',
+        code: (e && (e.machineCode || e.code)) ? String(e.machineCode || e.code) : 'restore_failed'
       };
+    }
+  }
+
+  /** Active Driving institution tenantIds only (machine_operator excluded). */
+  async function getActiveDrivingTenantIdsForUser(uid) {
+    if (!uid || typeof firebase === 'undefined' || !firebase.firestore) return [];
+    try {
+      const snap = await firebase.firestore().collection('tenantMemberships').where('uid', '==', uid).get();
+      if (!snap || !snap.docs) return [];
+      return snap.docs
+        .map((d) => {
+          const x = d.data() || {};
+          if ((x.status || '') !== 'active' || !x.tenantId) return null;
+          if (!isDrivingProgramMembership(x)) return null;
+          return x.tenantId;
+        })
+        .filter(Boolean);
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Driving finalize helper: if selected tenant is Machine-only, clear it for Driving
+   * and optionally require kurum when other Driving memberships exist.
+   * Returns { continuePublic: boolean } or throws after signOut when Driving kurum required.
+   */
+  async function resolveDrivingTenantSelectionOrThrow(user) {
+    const selectedTenantId = getSelectedTenantIdFromStorage();
+    if (!selectedTenantId) {
+      const drivingTenantIds = await getActiveDrivingTenantIdsForUser(user.uid);
+      return {
+        selectedTenantId: null,
+        drivingTenantIds: drivingTenantIds,
+        membership: null,
+        kind: 'NONE'
+      };
+    }
+
+    const membership = await getActiveMembershipForTenant(user.uid, selectedTenantId);
+    const cls = assertDrivingCompatibleMembership(membership);
+    if (cls.kind === 'NON_DRIVING_MEMBERSHIP') {
+      try { await clearInstitutionTenantState(); } catch (_) {}
+      const drivingTenantIds = await getActiveDrivingTenantIdsForUser(user.uid);
+      return {
+        selectedTenantId: null,
+        drivingTenantIds: drivingTenantIds,
+        membership: membership,
+        kind: 'NON_DRIVING_MEMBERSHIP',
+        machineIgnored: true
+      };
+    }
+    if (cls.kind === 'DRIVING_MEMBERSHIP') {
+      return {
+        selectedTenantId: selectedTenantId,
+        drivingTenantIds: [selectedTenantId],
+        membership: membership,
+        kind: 'DRIVING_MEMBERSHIP'
+      };
+    }
+    return {
+      selectedTenantId: selectedTenantId,
+      drivingTenantIds: await getActiveDrivingTenantIdsForUser(user.uid),
+      membership: null,
+      kind: 'NONE'
+    };
+  }
+
+  function resolveDrivingEnrollmentSource(kindOrSource) {
+    const v = String(kindOrSource == null ? '' : kindOrSource).trim().toLowerCase();
+    if (v === 'institution' || v === 'driving_membership') return 'institution';
+    return 'public';
+  }
+
+  /**
+   * Persist Driving program participation on users/{uid}.
+   * Writes ONLY nested programEnrollments.driving_license via update() FieldPath.
+   * Also reads legacy literal top-level "programEnrollments.driving_license" for lazy repair.
+   * Fail-soft: never blocks an otherwise successful Driving session.
+   * Does NOT delete the legacy literal field in this patch.
+   */
+  async function ensureDrivingProgramEnrollment(user, options) {
+    if (!user || !user.uid) return;
+    if (typeof firebase === 'undefined' || !firebase || !firebase.firestore) return;
+
+    var requestedSource = resolveDrivingEnrollmentSource(options && options.source);
+    try {
+      var userRef = firebase.firestore().collection('users').doc(String(user.uid));
+      var snap = await userRef.get();
+      var existing = (snap && snap.exists) ? (snap.data() || {}) : {};
+      var pe = (existing.programEnrollments && typeof existing.programEnrollments === 'object')
+        ? existing.programEnrollments
+        : {};
+      var nestedPrev = (pe.driving_license && typeof pe.driving_license === 'object')
+        ? pe.driving_license
+        : null;
+      var literalPrev = (existing['programEnrollments.driving_license'] &&
+        typeof existing['programEnrollments.driving_license'] === 'object')
+        ? existing['programEnrollments.driving_license']
+        : null;
+
+      var resolvedSource = requestedSource;
+      var nestedIsInstitution = !!(nestedPrev &&
+        String(nestedPrev.source || '').trim().toLowerCase() === 'institution');
+      var literalIsInstitution = !!(literalPrev &&
+        String(literalPrev.source || '').trim().toLowerCase() === 'institution');
+      if (nestedIsInstitution || literalIsInstitution) {
+        resolvedSource = 'institution';
+      }
+
+      var payload = {
+        status: 'active',
+        source: resolvedSource,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      if (nestedPrev && nestedPrev.enrolledAt != null) {
+        payload.enrolledAt = nestedPrev.enrolledAt;
+      } else if (literalPrev && literalPrev.enrolledAt != null) {
+        payload.enrolledAt = literalPrev.enrolledAt;
+      } else {
+        payload.enrolledAt = firebase.firestore.FieldValue.serverTimestamp();
+      }
+
+      // Compat update() interprets dotted keys as nested FieldPaths (unlike set/merge).
+      // Does not replace the whole programEnrollments map — sibling keys stay safe.
+      await userRef.update({
+        'programEnrollments.driving_license': payload
+      });
+    } catch (e) {
+      try {
+        console.warn('[DrivingEnrollment] ensureDrivingProgramEnrollment skipped', {
+          code: e && e.code ? String(e.code) : null
+        });
+      } catch (_) {}
     }
   }
 
@@ -581,7 +771,13 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
         return { ok: true, isPublicUser: true, isStudent: false, userDoc: data };
       }
       if (role === 'student') {
-        return { ok: false, isPublicUser: false, isStudent: true, userMessage: MSG_PUBLIC_STUDENT_ACCOUNT };
+        return {
+          ok: false,
+          isPublicUser: false,
+          isStudent: true,
+          userMessage: MSG_PUBLIC_STUDENT_ACCOUNT,
+          isStudentAccount: true
+        };
       }
       return { ok: false, isPublicUser: false, isStudent: false, userMessage: MSG_PUBLIC_UNSUPPORTED };
     } catch (e) {
@@ -625,6 +821,7 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
         }
         const err = new Error(access.userMessage || MSG_PUBLIC_UNSUPPORTED);
         err.userMessage = access.userMessage || MSG_PUBLIC_UNSUPPORTED;
+        if (access.isStudentAccount || access.isStudent) err.isStudentAccount = true;
         throw err;
       }
       await applyPublicUserSession(user, access.userDoc);
@@ -633,6 +830,7 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
       const message = e && e.userMessage ? String(e.userMessage) : mapAuthErrorToMessage(e);
       const err = new Error(message);
       err.userMessage = message;
+      if (e && e.isStudentAccount) err.isStudentAccount = true;
       throw err;
     }
   }
@@ -668,7 +866,18 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
   async function signIn(usernameOrEmail, password, selectedTenantId = null) {
     const rawInput = String(usernameOrEmail || '').trim();
     if (isPublicEmailLoginInput(rawInput)) {
-      return signInAsPublicUser(rawInput.toLowerCase(), password);
+      try {
+        return await signInAsPublicUser(rawInput.toLowerCase(), password);
+      } catch (publicErr) {
+        // Email/password Driving individual accounts are role:student.
+        // Fall through to student Driving sign-in (do not treat as Market public_user).
+        const accessHint = publicErr && publicErr.userMessage
+          ? String(publicErr.userMessage)
+          : '';
+        const isStudentAccount = accessHint === MSG_PUBLIC_STUDENT_ACCOUNT
+          || !!(publicErr && publicErr.isStudentAccount);
+        if (!isStudentAccount) throw publicErr;
+      }
     }
 
     const email = usernameOrEmailToEmail(usernameOrEmail);
@@ -717,6 +926,7 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
         effectiveTenantId: effectiveTenantId || null,
         selectedTenantId: selectedTenantId || null
       });
+      var drivingEnrollmentSource = 'public';
       if (effectiveTenantId) {
         const membership = await getActiveMembershipForTenant(user.uid, effectiveTenantId);
         debugLog('tenant-login-1', 'H3', 'mobile_app/src/js/login.js:signIn', 'tenant membership check completed', {
@@ -729,22 +939,38 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
           err.userMessage = 'Bu kuruma kayıtlı değilsiniz. Kurumunuzla iletişime geçin.';
           throw err;
         }
-        try {
-          assertDrivingCompatibleMembership(membership);
-        } catch (progErr) {
+        const cls = assertDrivingCompatibleMembership(membership);
+        if (cls.kind === 'NON_DRIVING_MEMBERSHIP') {
+          // Machine-only at selected tenant: ignore for Driving; public fallback unless other Driving memberships require kurum.
+          try { await clearInstitutionTenantState(); } catch (_) {}
+          const drivingTenantIds = await getActiveDrivingTenantIdsForUser(user.uid);
+          if (drivingTenantIds.length > 0) {
+            await firebase.auth().signOut();
+            const err = new Error('Lütfen giriş yapmadan önce kurumunuzu seçin.');
+            err.userMessage = 'Lütfen giriş yapmadan önce kurumunuzu seçin.';
+            throw err;
+          }
+          drivingEnrollmentSource = 'public';
+        } else if (cls.kind !== 'DRIVING_MEMBERSHIP') {
           await firebase.auth().signOut();
-          throw progErr;
+          const err = new Error('Bu kuruma kayıtlı değilsiniz. Kurumunuzla iletişime geçin.');
+          err.userMessage = 'Bu kuruma kayıtlı değilsiniz. Kurumunuzla iletişime geçin.';
+          throw err;
+        } else {
+          drivingEnrollmentSource = 'institution';
         }
       } else {
-        const tenantIds = await getActiveTenantIdsForUser(user.uid);
+        const tenantIds = await getActiveDrivingTenantIdsForUser(user.uid);
         if (tenantIds.length > 0) {
           await firebase.auth().signOut();
           const err = new Error('Lütfen giriş yapmadan önce kurumunuzu seçin.');
           err.userMessage = 'Lütfen giriş yapmadan önce kurumunuzu seçin.';
           throw err;
         }
+        drivingEnrollmentSource = 'public';
       }
       await tryBootstrapTenantSessionFromUser(user, selectedTenantId);
+      await ensureDrivingProgramEnrollment(user, { source: drivingEnrollmentSource });
       return true;
     } catch (e) {
       const message = e && e.userMessage ? String(e.userMessage) : mapAuthErrorToMessage(e);
@@ -761,19 +987,91 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
     }
   }
 
-  async function signUp(emailInput, password) {
+  function normalizeIndividualFullName(input) {
+    return String(input == null ? '' : input).trim().replace(/\s+/g, ' ');
+  }
+
+  function isValidIndividualResetEmail(email) {
+    const e = String(email || '').trim().toLowerCase();
+    if (!e || e.indexOf('@') < 0) return false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  }
+
+  /**
+   * Individual email/password Firebase Auth reset.
+   * Does NOT map bare usernames / TC to @surucu.app.
+   */
+  async function sendIndividualPasswordResetEmail(emailInput) {
+    const email = String(emailInput || '').trim().toLowerCase();
+    if (!isValidIndividualResetEmail(email)) {
+      const err = new Error('Şifre sıfırlamak için kayıtlı e-posta adresinizi girin.');
+      err.userMessage = 'Şifre sıfırlamak için kayıtlı e-posta adresinizi girin.';
+      err.code = 'auth/invalid-email';
+      throw err;
+    }
+    if (typeof firebase === 'undefined' || !firebase || !firebase.auth) {
+      const err = new Error('Giriş sistemi yüklenemedi.');
+      err.userMessage = 'Giriş sistemi yüklenemedi.';
+      throw err;
+    }
+    const NEUTRAL_RESET_MSG =
+      'Şifre sıfırlama bağlantısı gönderildiyse e-posta kutunuzu kontrol edin.';
+    try {
+      await firebase.auth().sendPasswordResetEmail(email);
+      return { ok: true, userMessage: NEUTRAL_RESET_MSG };
+    } catch (e) {
+      const code = (e && e.code) ? String(e.code) : '';
+      // Avoid account enumeration for common "missing user" outcomes.
+      if (
+        code === 'auth/user-not-found'
+        || code === 'auth/invalid-email'
+        || code === 'auth/missing-email'
+      ) {
+        return { ok: true, userMessage: NEUTRAL_RESET_MSG };
+      }
+      if (code === 'auth/too-many-requests') {
+        const err = new Error('Çok fazla deneme. Lütfen biraz sonra tekrar deneyin.');
+        err.userMessage = 'Çok fazla deneme. Lütfen biraz sonra tekrar deneyin.';
+        err.code = code;
+        throw err;
+      }
+      if (code === 'auth/network-request-failed') {
+        const err = new Error('Bağlantı sorunu. Lütfen tekrar deneyin.');
+        err.userMessage = 'Bağlantı sorunu. Lütfen tekrar deneyin.';
+        err.code = code;
+        throw err;
+      }
+      const err = new Error(NEUTRAL_RESET_MSG);
+      err.userMessage = NEUTRAL_RESET_MSG;
+      if (code) err.code = code;
+      throw err;
+    }
+  }
+
+  async function signUp(emailInput, password, fullNameInput) {
     const email = String(emailInput || '').trim().toLowerCase();
     const pass = String(password || '');
+    const fullName = normalizeIndividualFullName(fullNameInput);
 
-    if (!email) {
-      const err = new Error('Geçerli bir e-posta veya kullanıcı adı girin.');
-      err.userMessage = 'Geçerli bir e-posta veya kullanıcı adı girin.';
+    if (!fullName) {
+      const err = new Error('Lütfen adınızı ve soyadınızı girin.');
+      err.userMessage = 'Lütfen adınızı ve soyadınızı girin.';
+      throw err;
+    }
+    if (fullName.length < 2) {
+      const err = new Error('Ad Soyad en az 2 karakter olmalıdır.');
+      err.userMessage = 'Ad Soyad en az 2 karakter olmalıdır.';
+      throw err;
+    }
+    if (fullName.length > 200) {
+      const err = new Error('Ad Soyad en fazla 200 karakter olabilir.');
+      err.userMessage = 'Ad Soyad en fazla 200 karakter olabilir.';
       throw err;
     }
 
-    if (email.includes('@') && !email.endsWith('@surucu.app')) {
-      const err = new Error(MSG_PUBLIC_WEB_SIGNUP);
-      err.userMessage = MSG_PUBLIC_WEB_SIGNUP;
+    if (!email || email.indexOf('@') < 0 || !isValidIndividualResetEmail(email)) {
+      const err = new Error('Geçerli bir e-posta adresi girin.');
+      err.userMessage = 'Geçerli bir e-posta adresi girin.';
       throw err;
     }
 
@@ -796,6 +1094,14 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
         throw new Error('Hesap oluşturulamadı.');
       }
 
+      try {
+        if (typeof user.updateProfile === 'function') {
+          await user.updateProfile({ displayName: fullName });
+        }
+      } catch (_) {
+        // Auth displayName is optional; Firestore remains the profile source.
+      }
+
       const username = email.split('@')[0] || '';
       const userRef = firebase.firestore().collection('users').doc(user.uid);
       try {
@@ -803,6 +1109,8 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
           uid: user.uid,
           email,
           username,
+          fullName,
+          displayName: fullName,
           role: 'student',
           isActive: true,
           signupSource: 'email_password',
@@ -875,6 +1183,13 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
         throw err;
       }
 
+      // Presentational only: show after native chooser returns with tokens; never during chooser.
+      try {
+        if (window.SA_AUTH_PREPARING && typeof window.SA_AUTH_PREPARING.show === 'function') {
+          window.SA_AUTH_PREPARING.show(300);
+        }
+      } catch (_) {}
+
       // accessToken opsiyonel: idToken tek başına da credential oluşturmak için yeterlidir.
       const firebaseCredential = firebase.auth.GoogleAuthProvider.credential(idToken, accessToken);
       await firebase.auth().signInWithCredential(firebaseCredential);
@@ -902,28 +1217,21 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
         err.userMessage = access.userMessage || 'Giriş başarısız.';
         throw err;
       }
-      const selectedTenantId = getSelectedTenantIdFromStorage();
-      if (!selectedTenantId) {
-        const tenantIds = await getActiveTenantIdsForUser(user.uid);
-        if (tenantIds.length > 0) {
+      const tenantResolution = await resolveDrivingTenantSelectionOrThrow(user);
+      if (!tenantResolution.selectedTenantId) {
+        if (tenantResolution.drivingTenantIds && tenantResolution.drivingTenantIds.length > 0) {
           await firebase.auth().signOut();
           const err = new Error('Lütfen giriş yapmadan önce kurumunuzu seçin.');
           err.userMessage = 'Lütfen giriş yapmadan önce kurumunuzu seçin.';
           throw err;
         }
-      } else {
-        const membership = await getActiveMembershipForTenant(user.uid, selectedTenantId);
-        if (membership) {
-          try {
-            assertDrivingCompatibleMembership(membership);
-          } catch (progErr) {
-            await firebase.auth().signOut();
-            try { await clearInstitutionTenantState(); } catch (_) {}
-            throw progErr;
-          }
-        }
       }
       await tryBootstrapTenantSessionFromUser(user);
+      await ensureDrivingProgramEnrollment(user, {
+        source: (tenantResolution.kind === 'DRIVING_MEMBERSHIP' && tenantResolution.selectedTenantId)
+          ? 'institution'
+          : 'public'
+      });
       return { ok: true };
     } catch (e) {
       const code = (e && e.code) ? String(e.code) : '';
@@ -1198,8 +1506,9 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
         };
       }
       const selectedTenantId = getSelectedTenantIdFromStorage();
+      var msDrivingEnrollmentSource = 'public';
       if (!selectedTenantId) {
-        const tenantIds = await getActiveTenantIdsForUser(user.uid);
+        const tenantIds = await getActiveDrivingTenantIdsForUser(user.uid);
         if (tenantIds.length > 0) {
           await firebase.auth().signOut();
           clearMicrosoftAuthPending();
@@ -1210,25 +1519,34 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
             message: 'Lütfen giriş yapmadan önce kurumunuzu seçin.'
           };
         }
+        msDrivingEnrollmentSource = 'public';
       } else {
         const membership = await getActiveMembershipForTenant(user.uid, selectedTenantId);
         if (membership) {
-          try {
-            assertDrivingCompatibleMembership(membership);
-          } catch (progErr) {
-            await firebase.auth().signOut();
+          const cls = assertDrivingCompatibleMembership(membership);
+          if (cls.kind === 'NON_DRIVING_MEMBERSHIP') {
             try { await clearInstitutionTenantState(); } catch (_) {}
-            clearMicrosoftAuthPending();
-            clearMicrosoftCallbackPayload();
-            return {
-              ok: false,
-              errorCode: 'MACHINE_ACCOUNT_REQUIRES_MACHINE_ENTRY',
-              message: (progErr && progErr.userMessage) ? String(progErr.userMessage) : MSG_MACHINE_REQUIRES_MACHINE_ENTRY
-            };
+            const drivingTenantIds = await getActiveDrivingTenantIdsForUser(user.uid);
+            if (drivingTenantIds.length > 0) {
+              await firebase.auth().signOut();
+              clearMicrosoftAuthPending();
+              clearMicrosoftCallbackPayload();
+              return {
+                ok: false,
+                errorCode: 'ms_tenant_required',
+                message: 'Lütfen giriş yapmadan önce kurumunuzu seçin.'
+              };
+            }
+            msDrivingEnrollmentSource = 'public';
+          } else if (cls.kind === 'DRIVING_MEMBERSHIP') {
+            msDrivingEnrollmentSource = 'institution';
           }
+        } else {
+          msDrivingEnrollmentSource = 'public';
         }
       }
       await tryBootstrapTenantSessionFromUser(user);
+      await ensureDrivingProgramEnrollment(user, { source: msDrivingEnrollmentSource });
       // #region agent log
       fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a445ba'},body:JSON.stringify({sessionId:'a445ba',runId:'ms-debug-v1',hypothesisId:'H4',location:'mobile_app/src/js/login.js:consumeMicrosoftAuthCallbackPayload',message:'ms_finalize_chain_success',data:{uid:user&&user.uid?String(user.uid):null},timestamp:Date.now()})}).catch(()=>{});
       // #endregion
@@ -1312,6 +1630,7 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
     signIn,
     signInAsPublicUser,
     signUp,
+    sendIndividualPasswordResetEmail,
     signInWithGoogle,
     signInWithMicrosoft,
     exchangeMicrosoftCodeForFirebaseToken,

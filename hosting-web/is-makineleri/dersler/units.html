@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Ders Üniteleri — İş Makineleri | Sürücü Akademisi</title>
+  <style>
+    :root {
+      --ml-bg-0: #020617;
+      --ml-bg-1: #0b1224;
+      --ml-gold: #fbbf24;
+      --ml-program-orange: #fb923c;
+      --ml-text: #f8fafc;
+      --ml-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      min-height: 100svh;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      color: var(--ml-text);
+      background:
+        radial-gradient(1000px 480px at 50% -8%, rgba(251, 191, 36, 0.12), transparent 55%),
+        radial-gradient(800px 360px at 100% 10%, rgba(56, 189, 248, 0.12), transparent 50%),
+        linear-gradient(165deg, var(--ml-bg-0), var(--ml-bg-1));
+    }
+
+    body {
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #machine-web-lessons {
+      width: 100%;
+      min-height: 100svh;
+      min-height: 100dvh;
+      padding:
+        max(12px, env(safe-area-inset-top, 0px))
+        max(16px, env(safe-area-inset-right, 0px))
+        max(20px, env(safe-area-inset-bottom, 0px))
+        max(16px, env(safe-area-inset-left, 0px));
+    }
+
+    .machine-web-lessons-header {
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .machine-web-lessons-home {
+      appearance: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(34, 211, 238, 0.45);
+      background: rgba(15, 23, 42, 0.85);
+      color: #e0f2fe;
+      font-size: 0.86rem;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .machine-web-lessons-logout {
+      appearance: none;
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      background: rgba(15, 23, 42, 0.85);
+      color: #fef3c7;
+      border-radius: 10px;
+      min-height: 40px;
+      padding: 8px 14px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .machine-web-lessons-main {
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .machine-web-lessons-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      width: 100%;
+      padding: 4px 8px 10px;
+    }
+
+    .machine-web-lessons-logo-wrap {
+      width: clamp(96px, 14vh, 140px);
+      height: clamp(96px, 14vh, 140px);
+      max-width: min(140px, 48vw);
+      margin: 0 auto 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #machine-web-lessons-logo {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    #machine-web-lessons-monogram {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1.8rem, 6vw, 2.4rem);
+      font-weight: 800;
+      color: #0f172a;
+      background: linear-gradient(145deg, #f5c518, #eab308);
+      border: 1px solid rgba(251, 191, 36, 0.5);
+    }
+
+    #machine-web-lessons-logo[hidden],
+    #machine-web-lessons-monogram[hidden] {
+      display: none !important;
+    }
+
+    #machine-web-lessons-institution-name {
+      margin: 0 0 6px;
+      font-size: clamp(1.1rem, 2.8vw, 1.4rem);
+      font-weight: 800;
+      color: #fbbf24;
+    }
+
+    #machine-web-lessons-brand-name {
+      margin: 0 0 6px;
+      font-size: clamp(1rem, 2.4vw, 1.25rem);
+      font-weight: 800;
+      color: #e2e8f0;
+    }
+
+    .machine-web-lessons-hero[data-brand-mode="public"] #machine-web-lessons-program-title {
+      color: var(--ml-gold);
+    }
+
+    .machine-web-lessons-hero[data-brand-mode="institution"] #machine-web-lessons-program-title {
+      color: var(--ml-program-orange);
+    }
+
+    #machine-web-lessons-program-title {
+      margin: 0;
+      font-size: clamp(0.92rem, 2.1vw, 1.1rem);
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .machine-web-lessons-nav {
+      margin: 4px 0 12px;
+      font-size: 0.88rem;
+      color: var(--ml-muted);
+    }
+
+    .machine-web-lessons-nav a {
+      color: #7dd3fc;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .machine-web-lessons-nav a:hover {
+      text-decoration: underline;
+    }
+
+    .machine-web-lessons-page-title {
+      margin: 4px 0 8px;
+      font-size: clamp(1.25rem, 3vw, 1.55rem);
+      font-weight: 800;
+      color: #f8fafc;
+    }
+
+    .machine-web-lessons-intro {
+      margin: 0 0 16px;
+      color: var(--ml-muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .machine-web-lessons-status {
+      margin: 0 0 12px;
+      color: var(--ml-muted);
+      font-size: 0.9rem;
+    }
+
+    .machine-web-lessons-status.is-error {
+      color: #fecaca;
+    }
+
+    .machine-web-lessons-unit-grid {
+      display: grid;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .machine-web-lessons-unit-card {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 18px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background: rgba(15, 28, 49, 0.78);
+      cursor: pointer;
+      transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    }
+
+    .machine-web-lessons-unit-card:hover,
+    .machine-web-lessons-unit-card:focus-visible {
+      outline: none;
+      border-color: rgba(34, 211, 238, 0.4);
+      background: rgba(15, 40, 62, 0.85);
+      transform: translateY(-1px);
+    }
+
+    .machine-web-lessons-unit-card__index {
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #a5f3fc;
+      background: rgba(34, 211, 238, 0.12);
+      border: 1px solid rgba(34, 211, 238, 0.25);
+    }
+
+    .machine-web-lessons-unit-card__title {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.4;
+      color: #f1f5f9;
+    }
+
+    .machine-web-lessons-unit-card__actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .machine-web-lessons-unit-card__cta {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #6ee7b7;
+    }
+
+    .machine-web-lessons-unit-card--completed {
+      border-color: rgba(74, 222, 128, 0.45);
+      background: linear-gradient(135deg, rgba(15, 40, 35, 0.88), rgba(15, 28, 49, 0.82));
+      box-shadow: inset 0 0 0 1px rgba(74, 222, 128, 0.12);
+    }
+
+    .machine-web-lessons-unit-card--completed .machine-web-lessons-unit-card__index {
+      color: #bbf7d0;
+      background: rgba(74, 222, 128, 0.14);
+      border-color: rgba(74, 222, 128, 0.35);
+    }
+
+    .machine-web-lessons-unit-status {
+      font-size: 0.78rem;
+      font-weight: 600;
+      white-space: nowrap;
+      color: #4ade80;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(74, 222, 128, 0.12);
+      border: 1px solid rgba(74, 222, 128, 0.35);
+    }
+
+    .machine-web-lessons-back {
+      margin: 22px 0 8px;
+      font-size: 0.9rem;
+    }
+
+    .machine-web-lessons-back a {
+      color: #7dd3fc;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .machine-web-lessons-back a:hover {
+      text-decoration: underline;
+    }
+
+    #machine-web-lessons-gate {
+      min-height: 40vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ml-muted);
+      font-size: 0.95rem;
+    }
+
+    #machine-web-lessons-gate[hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 560px) {
+      .machine-web-lessons-unit-card {
+        grid-template-columns: auto 1fr;
+        grid-template-areas:
+          "index title"
+          "actions actions";
+        row-gap: 10px;
+      }
+
+      .machine-web-lessons-unit-card__index { grid-area: index; }
+      .machine-web-lessons-unit-card__title { grid-area: title; }
+      .machine-web-lessons-unit-card__actions {
+        grid-area: actions;
+        justify-content: space-between;
+      }
+    }
+  </style>
+</head>
+<body data-ml-page="units">
+  <div id="machine-web-lessons" hidden>
+    <header class="machine-web-lessons-header">
+      <a class="machine-web-lessons-home" id="machine-web-lessons-home" href="../">Ana Sayfa</a>
+      <button type="button" class="machine-web-lessons-logout" id="machine-web-lessons-logout">Çıkış</button>
+    </header>
+
+    <main class="machine-web-lessons-main">
+      <section class="machine-web-lessons-hero" aria-label="İş Makineleri program başlığı">
+        <div class="machine-web-lessons-logo-wrap">
+          <img id="machine-web-lessons-logo" alt="" hidden />
+          <div id="machine-web-lessons-monogram" hidden>S</div>
+        </div>
+        <h1 id="machine-web-lessons-institution-name" hidden></h1>
+        <p id="machine-web-lessons-brand-name">Sürücü Akademisi</p>
+        <p id="machine-web-lessons-program-title">İş Makineleri Operatörlük Sınavlarına Hazırlık</p>
+      </section>
+
+      <nav class="machine-web-lessons-nav" aria-label="Sayfa yolu">
+        <a id="machine-web-lessons-back-categories" href="./">Dersler</a>
+      </nav>
+
+      <h2 class="machine-web-lessons-page-title" id="machine-web-lessons-units-title">Ders Üniteleri</h2>
+      <p class="machine-web-lessons-intro">
+        Bu kitaptaki yayınlanmış üniteler aşağıda listelenir. Okumak için bir ünite seçin.
+      </p>
+
+      <p id="machine-web-lessons-units-loading" class="machine-web-lessons-status" hidden>Üniteler yükleniyor…</p>
+      <p id="machine-web-lessons-units-error" class="machine-web-lessons-status is-error" hidden role="alert"></p>
+      <p id="machine-web-lessons-units-empty" class="machine-web-lessons-status" hidden></p>
+
+      <div
+        id="machine-web-lessons-unit-grid"
+        class="machine-web-lessons-unit-grid"
+        aria-label="Ünite listesi"
+        hidden
+      ></div>
+
+      <p class="machine-web-lessons-back">
+        <a href="./">Ders kitaplarına dön</a>
+      </p>
+    </main>
+  </div>
+
+  <div id="machine-web-lessons-gate">Oturum doğrulanıyor…</div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
+  <script src="../../assets/js/web-firebase.js"></script>
+  <script src="../../assets/js/machine-web-session.js"></script>
+  <script src="../../assets/js/machine-web-lessons.js"></script>
+</body>
+</html>

@@ -6,6 +6,210 @@
   <meta name="robots" content="noindex" />
   <title>Üye Girişi — Sürücü Akademisi</title>
   <link rel="stylesheet" href="../assets/css/site.css" />
+  <style>
+    /* Page-scoped forgot-password + premium reset modal (/uye-giris/ only) */
+    .page-public-login .public-login-forgot-wrap {
+      display: flex;
+      justify-content: flex-end;
+      margin: 2px 0 10px;
+    }
+
+    .page-public-login .public-login-forgot-btn {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: #7dd3fc;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 4px 2px;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      opacity: 0.92;
+    }
+
+    .page-public-login .public-login-forgot-btn:hover {
+      opacity: 1;
+      color: #a5f3fc;
+    }
+
+    .page-public-login .public-login-forgot-btn:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    #web-password-reset-modal.web-password-reset-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2400;
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      box-sizing: border-box;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      background: rgba(2, 6, 23, 0.78);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding:
+        calc(16px + env(safe-area-inset-top, 0px))
+        calc(16px + env(safe-area-inset-right, 0px))
+        calc(16px + env(safe-area-inset-bottom, 0px))
+        calc(16px + env(safe-area-inset-left, 0px));
+    }
+
+    #web-password-reset-modal.web-password-reset-overlay.is-visible {
+      display: flex;
+    }
+
+    #web-password-reset-modal .web-password-reset-card {
+      width: 100%;
+      max-width: 400px;
+      max-height: min(90vh, 640px);
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: auto;
+      box-sizing: border-box;
+      padding: 22px 18px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(34, 211, 238, 0.38);
+      background: linear-gradient(158deg, rgba(10, 18, 36, 0.96), rgba(8, 14, 28, 0.92) 52%, rgba(6, 10, 22, 0.96));
+      box-shadow:
+        0 0 0 1px rgba(34, 211, 238, 0.08) inset,
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        0 22px 48px rgba(0, 0, 0, 0.48),
+        0 0 32px rgba(34, 211, 238, 0.14);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    #web-password-reset-modal .web-password-reset-title {
+      margin: 0 0 8px;
+      text-align: center;
+      font-size: 1.12rem;
+      font-weight: 800;
+      color: #f0f9ff;
+      line-height: 1.3;
+    }
+
+    #web-password-reset-modal .web-password-reset-help {
+      margin: 0 0 16px;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.84rem;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+
+    #web-password-reset-modal .web-password-reset-field {
+      margin: 0 0 10px;
+      text-align: left;
+    }
+
+    #web-password-reset-modal .web-password-reset-field label {
+      display: block;
+      margin: 0 0 6px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #cbd5e1;
+    }
+
+    #web-password-reset-modal #web-password-reset-email {
+      width: 100%;
+      min-height: 48px;
+      box-sizing: border-box;
+      border-radius: 12px;
+      border: 1px solid rgba(125, 211, 252, 0.28);
+      background: rgba(2, 6, 23, 0.72);
+      color: #f8fafc;
+      padding: 12px 14px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    #web-password-reset-modal #web-password-reset-email:focus {
+      border-color: rgba(34, 211, 238, 0.7);
+      box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.28), 0 0 16px rgba(34, 211, 238, 0.14);
+    }
+
+    #web-password-reset-modal #web-password-reset-error {
+      min-height: 18px;
+      margin: 6px 0 10px;
+      text-align: center;
+      font-size: 0.84rem;
+      font-weight: 700;
+      line-height: 1.4;
+      color: #fecaca;
+      display: none;
+    }
+
+    #web-password-reset-modal #web-password-reset-error.is-visible {
+      display: block;
+    }
+
+    #web-password-reset-modal #web-password-reset-error .web-password-reset-success-main {
+      margin: 0;
+      color: #86efac;
+      font-size: 0.86rem;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    #web-password-reset-modal #web-password-reset-error .web-password-reset-success-note {
+      margin: 8px 0 0;
+      color: #94a3b8;
+      font-size: 0.72rem;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    #web-password-reset-modal .web-password-reset-actions {
+      display: grid;
+      gap: 8px;
+    }
+
+    #web-password-reset-modal #web-password-reset-submit {
+      width: 100%;
+      min-height: 48px;
+      border: 0;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      cursor: pointer;
+      color: #041016;
+      background: linear-gradient(145deg, #67e8f9, #22d3ee 55%, #06b6d4);
+      box-shadow: 0 0 22px rgba(34, 211, 238, 0.28);
+    }
+
+    #web-password-reset-modal #web-password-reset-submit:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+
+    #web-password-reset-modal #web-password-reset-cancel {
+      width: 100%;
+      min-height: 46px;
+      border-radius: 12px;
+      border: 1px solid rgba(125, 211, 252, 0.32);
+      background: rgba(15, 23, 42, 0.72);
+      color: #e5edf6;
+      font-size: 0.93rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #web-password-reset-modal #web-password-reset-cancel:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+
+    @media (max-height: 640px) {
+      #web-password-reset-modal .web-password-reset-card {
+        padding: 16px 14px;
+      }
+    }
+  </style>
 </head>
 <body class="page-public-auth page-public-login">
   <main class="public-auth-shell public-login-shell">
@@ -33,6 +237,9 @@
             <label class="field-label" for="public-login-password">Şifre</label>
             <input class="field-input public-login-input" type="password" id="public-login-password" name="password" autocomplete="current-password" placeholder="Şifreniz" required minlength="6" />
           </div>
+          <div class="public-login-forgot-wrap">
+            <button type="button" class="public-login-forgot-btn" id="web-password-reset-open" onclick="openWebPasswordResetModal()">Şifremi Unuttum</button>
+          </div>
           <div class="public-auth-actions public-login-actions">
             <button type="submit" class="btn btn-primary btn-block public-login-submit" id="public-login-submit">Giriş Yap</button>
           </div>
@@ -55,11 +262,182 @@
     </div>
   </main>
 
+  <div
+    id="web-password-reset-modal"
+    class="web-password-reset-overlay"
+    style="display:none;"
+    aria-hidden="true"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="web-password-reset-title"
+    onclick="closeWebPasswordResetModal(event)"
+  >
+    <div class="web-password-reset-card" onclick="event.stopPropagation()">
+      <h2 class="web-password-reset-title" id="web-password-reset-title">Şifre Sıfırlama</h2>
+      <p class="web-password-reset-help">Şifre sıfırlama bağlantısını gönderebilmemiz için hesabınıza kayıtlı e-posta adresini girin.</p>
+      <div class="web-password-reset-field">
+        <label for="web-password-reset-email">E-posta</label>
+        <input id="web-password-reset-email" type="email" autocomplete="email" placeholder="E-posta adresiniz" aria-label="E-posta" />
+      </div>
+      <div id="web-password-reset-error" role="alert"></div>
+      <div class="web-password-reset-actions">
+        <button type="button" id="web-password-reset-submit" onclick="submitWebPasswordResetModal()">Bağlantıyı Gönder</button>
+        <button type="button" id="web-password-reset-cancel" onclick="closeWebPasswordResetModal()">Vazgeç</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <script src="../assets/js/web-firebase.js"></script>
   <script src="../assets/js/public-session.js"></script>
   <script src="../assets/js/public-auth.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      var __webPasswordResetBusy = false;
+
+      function isValidResetEmail(email) {
+        var e = String(email || '').trim().toLowerCase();
+        if (!e || e.indexOf('@') < 0) return false;
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+      }
+
+      function clearWebPasswordResetError() {
+        var err = document.getElementById('web-password-reset-error');
+        if (!err) return;
+        err.innerHTML = '';
+        err.classList.remove('is-visible');
+        err.style.color = '#fecaca';
+      }
+
+      function setWebPasswordResetError(message) {
+        var err = document.getElementById('web-password-reset-error');
+        if (!err) return;
+        err.innerHTML = '';
+        var text = String(message || '').trim();
+        if (!text) {
+          err.classList.remove('is-visible');
+          return;
+        }
+        err.textContent = text;
+        err.style.color = '#fecaca';
+        err.classList.add('is-visible');
+      }
+
+      function showWebPasswordResetSuccess() {
+        var err = document.getElementById('web-password-reset-error');
+        if (!err) return;
+        err.innerHTML = '';
+        var main = document.createElement('p');
+        main.className = 'web-password-reset-success-main';
+        main.textContent = 'Şifre sıfırlama bağlantınız gönderilmiştir. E-posta kutunuzu kontrol ediniz.';
+        var note = document.createElement('p');
+        note.className = 'web-password-reset-success-note';
+        note.textContent = 'Mesaj görünmüyorsa Gereksiz/Spam klasörünü de kontrol ediniz.';
+        err.appendChild(main);
+        err.appendChild(note);
+        err.style.color = '';
+        err.classList.add('is-visible');
+      }
+
+      function setWebPasswordResetControlsBusy(isBusy) {
+        var submit = document.getElementById('web-password-reset-submit');
+        var cancel = document.getElementById('web-password-reset-cancel');
+        if (submit) {
+          submit.disabled = !!isBusy;
+          submit.textContent = isBusy ? 'Gönderiliyor…' : 'Bağlantıyı Gönder';
+        }
+        if (cancel) cancel.disabled = !!isBusy;
+      }
+
+      window.closeWebPasswordResetModal = function (event) {
+        if (event && event.target && event.currentTarget && event.target !== event.currentTarget) return;
+        if (__webPasswordResetBusy) return;
+        __webPasswordResetBusy = false;
+        var modal = document.getElementById('web-password-reset-modal');
+        if (modal) {
+          modal.classList.remove('is-visible');
+          modal.style.display = 'none';
+          modal.setAttribute('aria-hidden', 'true');
+        }
+        var emailEl = document.getElementById('web-password-reset-email');
+        if (emailEl) emailEl.value = '';
+        clearWebPasswordResetError();
+        setWebPasswordResetControlsBusy(false);
+      };
+
+      window.openWebPasswordResetModal = function () {
+        __webPasswordResetBusy = false;
+        var loginEmailEl = document.getElementById('public-login-email');
+        var raw = loginEmailEl ? String(loginEmailEl.value || '').trim() : '';
+        var emailEl = document.getElementById('web-password-reset-email');
+        if (emailEl) emailEl.value = isValidResetEmail(raw) ? raw.toLowerCase() : '';
+        clearWebPasswordResetError();
+        setWebPasswordResetControlsBusy(false);
+        var modal = document.getElementById('web-password-reset-modal');
+        if (modal) {
+          modal.style.display = 'flex';
+          modal.classList.add('is-visible');
+          modal.setAttribute('aria-hidden', 'false');
+        }
+        if (emailEl) {
+          try { emailEl.focus(); } catch (_) {}
+        }
+      };
+
+      window.submitWebPasswordResetModal = async function () {
+        if (__webPasswordResetBusy) return;
+
+        var emailEl = document.getElementById('web-password-reset-email');
+        var email = emailEl ? String(emailEl.value || '').trim().toLowerCase() : '';
+
+        if (!email) {
+          setWebPasswordResetError('E-posta adresi gereklidir.');
+          return;
+        }
+        if (!isValidResetEmail(email)) {
+          setWebPasswordResetError('Geçerli bir e-posta adresi girin.');
+          return;
+        }
+
+        var fb = window.SA_WEB_FIREBASE;
+        if (!fb || !fb.ready || !fb.auth || typeof fb.auth.sendPasswordResetEmail !== 'function') {
+          setWebPasswordResetError('Giriş sistemi yüklenemedi. Sayfayı yenileyin.');
+          return;
+        }
+
+        __webPasswordResetBusy = true;
+        setWebPasswordResetControlsBusy(true);
+        clearWebPasswordResetError();
+
+        try {
+          await fb.auth.sendPasswordResetEmail(email);
+          showWebPasswordResetSuccess();
+        } catch (e) {
+          var code = (e && e.code) ? String(e.code) : '';
+          // Enumeration-safe: unknown accounts get the same success presentation.
+          if (
+            code === 'auth/user-not-found'
+            || code === 'auth/invalid-email'
+            || code === 'auth/missing-email'
+          ) {
+            showWebPasswordResetSuccess();
+          } else if (code === 'auth/too-many-requests') {
+            setWebPasswordResetError('Çok fazla deneme. Lütfen biraz sonra tekrar deneyin.');
+          } else if (code === 'auth/network-request-failed') {
+            setWebPasswordResetError('Bağlantı sorunu oluştu. Lütfen tekrar deneyin.');
+          } else {
+            setWebPasswordResetError('Şifre sıfırlama isteği tamamlanamadı. Lütfen tekrar deneyin.');
+          }
+        } finally {
+          __webPasswordResetBusy = false;
+          setWebPasswordResetControlsBusy(false);
+        }
+      };
+    })();
+  </script>
 </body>
 </html>

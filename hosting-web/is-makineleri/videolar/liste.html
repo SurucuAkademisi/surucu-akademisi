@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Video Listesi — İş Makineleri | Sürücü Akademisi</title>
+  <style>
+    :root {
+      --mv-bg-0: #020617;
+      --mv-bg-1: #0b1224;
+      --mv-gold: #fbbf24;
+      --mv-program-orange: #fb923c;
+      --mv-text: #f8fafc;
+      --mv-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      min-height: 100svh;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      color: var(--mv-text);
+      background:
+        radial-gradient(1000px 480px at 50% -8%, rgba(251, 191, 36, 0.12), transparent 55%),
+        radial-gradient(800px 360px at 100% 10%, rgba(56, 189, 248, 0.12), transparent 50%),
+        linear-gradient(165deg, var(--mv-bg-0), var(--mv-bg-1));
+    }
+
+    body {
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    body.machine-web-videos-modal-open,
+    body.machine-web-videos-upsell-open,
+    body.machine-web-videos-institution-lock-open {
+      overflow: hidden;
+    }
+
+    #machine-web-videos {
+      width: 100%;
+      min-height: 100svh;
+      min-height: 100dvh;
+      padding:
+        max(12px, env(safe-area-inset-top, 0px))
+        max(16px, env(safe-area-inset-right, 0px))
+        max(20px, env(safe-area-inset-bottom, 0px))
+        max(16px, env(safe-area-inset-left, 0px));
+    }
+
+    .machine-web-videos-header {
+      width: 100%;
+      max-width: 52rem;
+      margin: 0 auto 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .machine-web-videos-home {
+      appearance: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(34, 211, 238, 0.45);
+      background: rgba(15, 23, 42, 0.85);
+      color: #e0f2fe;
+      font-size: 0.86rem;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .machine-web-videos-logout {
+      appearance: none;
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      background: rgba(15, 23, 42, 0.85);
+      color: #fef3c7;
+      border-radius: 10px;
+      min-height: 40px;
+      padding: 8px 14px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .machine-web-videos-main {
+      width: 100%;
+      max-width: 52rem;
+      margin: 0 auto;
+    }
+
+    .machine-web-videos-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 2px 8px 8px;
+    }
+
+    .machine-web-videos-logo-wrap {
+      width: clamp(80px, 12vh, 120px);
+      height: clamp(80px, 12vh, 120px);
+      margin: 0 auto 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #machine-web-videos-logo {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    #machine-web-videos-monogram {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1.6rem, 5vw, 2.2rem);
+      font-weight: 800;
+      color: #0f172a;
+      background: linear-gradient(145deg, #f5c518, #eab308);
+      border: 1px solid rgba(251, 191, 36, 0.5);
+    }
+
+    #machine-web-videos-logo[hidden],
+    #machine-web-videos-monogram[hidden] {
+      display: none !important;
+    }
+
+    #machine-web-videos-institution-name {
+      margin: 0 0 4px;
+      font-size: clamp(1.05rem, 2.6vw, 1.3rem);
+      font-weight: 800;
+      color: #fbbf24;
+    }
+
+    #machine-web-videos-brand-name {
+      margin: 0 0 4px;
+      font-size: clamp(0.95rem, 2.2vw, 1.15rem);
+      font-weight: 800;
+      color: #e2e8f0;
+    }
+
+    #machine-web-videos-program-title {
+      margin: 0;
+      font-size: clamp(0.88rem, 2vw, 1.05rem);
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .machine-web-videos-hero[data-brand-mode="public"] #machine-web-videos-program-title {
+      color: var(--mv-gold);
+    }
+
+    .machine-web-videos-hero[data-brand-mode="institution"] #machine-web-videos-program-title {
+      color: var(--mv-program-orange);
+    }
+
+    .machine-web-videos-nav {
+      margin: 4px 0 12px;
+      font-size: 0.88rem;
+      color: var(--mv-muted);
+    }
+
+    .machine-web-videos-nav a {
+      color: #7dd3fc;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .machine-web-videos-nav a:hover { text-decoration: underline; }
+
+    .machine-web-videos-page-title {
+      margin: 4px 0 8px;
+      font-size: clamp(1.2rem, 3vw, 1.5rem);
+      font-weight: 800;
+    }
+
+    .machine-web-videos-intro {
+      margin: 0 0 16px;
+      color: var(--mv-muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .machine-web-videos-status {
+      margin: 0 0 12px;
+      color: var(--mv-muted);
+      font-size: 0.9rem;
+    }
+
+    .machine-web-videos-status.is-error { color: #fecaca; }
+
+    .machine-web-videos-lock {
+      margin: 0 0 14px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      background: rgba(69, 45, 8, 0.35);
+    }
+
+    .machine-web-videos-lock__title {
+      margin: 0 0 8px;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #fde68a;
+    }
+
+    .machine-web-videos-lock__text {
+      margin: 0;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: rgba(254, 243, 199, 0.92);
+    }
+
+    .machine-web-videos-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .machine-web-videos-card {
+      display: grid;
+      grid-template-columns: 10.5rem minmax(0, 1fr) auto;
+      grid-template-areas:
+        "thumb lesson play"
+        "thumb title play"
+        "thumb desc play"
+        "thumb hint play"
+        "thumb warn play";
+      column-gap: 0.85rem;
+      row-gap: 0.2rem;
+      align-items: start;
+      padding: 0.75rem 0.85rem;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.88), rgba(30, 41, 59, 0.72));
+      box-shadow: 0 4px 16px rgba(2, 6, 23, 0.3);
+    }
+
+    .machine-web-videos-thumb {
+      position: relative;
+      grid-area: thumb;
+      align-self: center;
+      width: 10.5rem;
+      aspect-ratio: 16 / 9;
+      min-height: 5.9rem;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      background: rgba(15, 23, 42, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .machine-web-videos-thumb__img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .machine-web-videos-thumb__placeholder {
+      font-size: 1.5rem;
+      color: rgba(125, 211, 252, 0.65);
+    }
+
+    .machine-web-videos-thumb__lock-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(2, 6, 23, 0.55);
+    }
+
+    .machine-web-videos-card__body,
+    .machine-web-videos-card__footer {
+      display: contents;
+    }
+
+    .machine-web-videos-card__lesson {
+      grid-area: lesson;
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #7dd3fc;
+      margin: 0;
+    }
+
+    .machine-web-videos-card__lesson-label--mobile,
+    .machine-web-videos-card__play-label--mobile {
+      display: none;
+    }
+
+    .machine-web-videos-card__title {
+      grid-area: title;
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #f8fafc;
+      line-height: 1.35;
+    }
+
+    .machine-web-videos-card__desc {
+      grid-area: desc;
+      margin: 0;
+      font-size: 0.8rem;
+      line-height: 1.45;
+      color: rgba(148, 163, 184, 0.92);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .machine-web-videos-card__premium-hint {
+      grid-area: hint;
+      margin: 0;
+      font-size: 0.75rem;
+      color: #fbbf24;
+      font-weight: 600;
+    }
+
+    .machine-web-videos-card__warn {
+      grid-area: warn;
+      margin: 0;
+      font-size: 0.75rem;
+      color: #fca5a5;
+    }
+
+    .machine-web-videos-card__play {
+      grid-area: play;
+      align-self: center;
+      justify-self: end;
+      min-height: 2.25rem;
+      padding: 0.4rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid rgba(251, 191, 36, 0.45);
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.55), rgba(234, 179, 8, 0.45));
+      color: #0f172a;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .machine-web-videos-card__play:hover,
+    .machine-web-videos-card__play:focus-visible {
+      background: linear-gradient(135deg, rgba(253, 224, 71, 0.85), rgba(251, 191, 36, 0.65));
+      outline: none;
+    }
+
+    .machine-web-videos-card__play--premium {
+      border-color: rgba(251, 191, 36, 0.65);
+      background: linear-gradient(135deg, rgba(120, 53, 15, 0.9), rgba(69, 26, 3, 0.95));
+      color: #fde68a;
+    }
+
+    .machine-web-videos-card__play--disabled,
+    .machine-web-videos-card__play--unplayable {
+      opacity: 0.75;
+      cursor: default;
+    }
+
+    .machine-web-videos-card--locked {
+      border-color: rgba(251, 191, 36, 0.35);
+      cursor: pointer;
+    }
+
+    .machine-web-videos-card__badge-premium {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #0f172a;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    }
+
+    .machine-web-videos-back {
+      margin: 22px 0 8px;
+      font-size: 0.9rem;
+    }
+
+    .machine-web-videos-back a {
+      color: #7dd3fc;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .machine-web-videos-back a:hover { text-decoration: underline; }
+
+    /* Modals */
+    .machine-web-videos-upsell-modal,
+    .machine-web-videos-player-modal,
+    .machine-web-videos-institution-lock-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .machine-web-videos-upsell-modal[hidden],
+    .machine-web-videos-player-modal[hidden],
+    .machine-web-videos-institution-lock-modal[hidden] {
+      display: none !important;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .machine-web-videos-upsell-modal__backdrop,
+    .machine-web-videos-player-modal__backdrop,
+    .machine-web-videos-institution-lock-modal__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.78);
+      backdrop-filter: blur(4px);
+    }
+
+    .machine-web-videos-upsell-modal__dialog,
+    .machine-web-videos-institution-lock-modal__dialog {
+      position: relative;
+      z-index: 1;
+      width: min(520px, 100%);
+      max-height: calc(100vh - 2rem);
+      overflow: auto;
+      border-radius: 16px;
+      border: 1px solid rgba(251, 191, 36, 0.35);
+      background: linear-gradient(165deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.94));
+      box-shadow: 0 20px 50px rgba(2, 6, 23, 0.55);
+      padding: 0;
+    }
+
+    .machine-web-videos-upsell-modal__head,
+    .machine-web-videos-player-modal__head,
+    .machine-web-videos-institution-lock-modal__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .machine-web-videos-upsell-modal__title,
+    .machine-web-videos-institution-lock-modal__title {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #fde68a;
+      letter-spacing: 0.02em;
+    }
+
+    .machine-web-videos-upsell-modal__close,
+    .machine-web-videos-player-modal__close,
+    .machine-web-videos-institution-lock-modal__close {
+      flex: 0 0 auto;
+      width: 2.25rem;
+      height: 2.25rem;
+      border: none;
+      border-radius: 8px;
+      background: rgba(51, 65, 85, 0.65);
+      color: #e2e8f0;
+      font-size: 1.35rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .machine-web-videos-upsell-modal__body,
+    .machine-web-videos-institution-lock-modal__body {
+      padding: 1rem 1.1rem;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: rgba(226, 232, 240, 0.92);
+    }
+
+    .machine-web-videos-upsell-modal__body p,
+    .machine-web-videos-institution-lock-modal__body p {
+      margin: 0 0 0.75rem;
+    }
+
+    .machine-web-videos-upsell-modal__video-title {
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .machine-web-videos-upsell-modal__benefits {
+      margin: 0 0 0.85rem;
+      padding-left: 1.1rem;
+    }
+
+    .machine-web-videos-upsell-modal__benefits li {
+      margin-bottom: 0.35rem;
+    }
+
+    .machine-web-videos-upsell-modal__price {
+      font-weight: 800;
+      color: #fbbf24;
+    }
+
+    .machine-web-videos-upsell-modal__notice {
+      margin-top: 0.75rem;
+      padding: 0.65rem 0.75rem;
+      border-radius: 10px;
+      border: 1px solid rgba(251, 191, 36, 0.35);
+      background: rgba(69, 45, 8, 0.4);
+      color: #fde68a;
+      font-size: 0.85rem;
+    }
+
+    .machine-web-videos-upsell-modal__notice[hidden] {
+      display: none !important;
+    }
+
+    .machine-web-videos-upsell-modal__foot,
+    .machine-web-videos-institution-lock-modal__foot {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      justify-content: flex-end;
+      padding: 0.85rem 1rem 1rem;
+      border-top: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .machine-web-videos-upsell-modal__btn,
+    .machine-web-videos-institution-lock-modal__btn {
+      appearance: none;
+      min-height: 42px;
+      padding: 0.55rem 1rem;
+      border-radius: 10px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .machine-web-videos-upsell-modal__btn--secondary,
+    .machine-web-videos-institution-lock-modal__btn--secondary {
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.85);
+      color: #e2e8f0;
+    }
+
+    .machine-web-videos-upsell-modal__btn--primary {
+      border: 1px solid rgba(251, 191, 36, 0.55);
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.9), rgba(234, 179, 8, 0.85));
+      color: #0f172a;
+    }
+
+    .machine-web-videos-player-modal__dialog {
+      position: relative;
+      z-index: 1;
+      width: min(920px, 100%);
+      max-height: calc(100vh - 2rem);
+      border-radius: 16px;
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      background: linear-gradient(165deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.92));
+      box-shadow: 0 20px 50px rgba(2, 6, 23, 0.55);
+      overflow: hidden;
+    }
+
+    .machine-web-videos-player-modal__title {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #f8fafc;
+      line-height: 1.35;
+    }
+
+    .machine-web-videos-player-frame {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      background: #000;
+    }
+
+    .machine-web-videos-player-frame__iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .machine-web-videos-player-frame[hidden] {
+      display: none !important;
+    }
+
+    .machine-web-videos-player-modal__error {
+      margin: 0;
+      padding: 1rem;
+      color: #fecaca;
+      font-size: 0.9rem;
+    }
+
+    .machine-web-videos-player-modal__error[hidden] {
+      display: none !important;
+    }
+
+    #machine-web-videos-gate {
+      min-height: 40vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--mv-muted);
+      font-size: 0.95rem;
+    }
+
+    #machine-web-videos-gate[hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 720px) {
+      .machine-web-videos-card {
+        grid-template-columns: 7.5rem minmax(0, 1fr);
+        grid-template-areas:
+          "thumb lesson"
+          "thumb title"
+          "thumb desc"
+          "thumb hint"
+          "thumb warn"
+          "play play";
+      }
+
+      .machine-web-videos-thumb {
+        width: 7.5rem;
+        min-height: 4.2rem;
+      }
+
+      .machine-web-videos-card__play {
+        justify-self: stretch;
+        width: 100%;
+        margin-top: 0.35rem;
+      }
+
+      .machine-web-videos-card__lesson-label--desktop,
+      .machine-web-videos-card__play-label--desktop {
+        display: none;
+      }
+
+      .machine-web-videos-card__lesson-label--mobile,
+      .machine-web-videos-card__play-label--mobile {
+        display: inline;
+      }
+
+      .machine-web-videos-upsell-modal__foot {
+        flex-direction: column;
+      }
+
+      .machine-web-videos-upsell-modal__btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body data-mv-page="list">
+  <div id="machine-web-videos" hidden>
+    <header class="machine-web-videos-header">
+      <a class="machine-web-videos-home" id="machine-web-videos-home" href="../">Ana Sayfa</a>
+      <button type="button" class="machine-web-videos-logout" id="machine-web-videos-logout">Çıkış</button>
+    </header>
+
+    <main class="machine-web-videos-main">
+      <section class="machine-web-videos-hero" aria-label="İş Makineleri program başlığı">
+        <div class="machine-web-videos-logo-wrap">
+          <img id="machine-web-videos-logo" alt="" hidden />
+          <div id="machine-web-videos-monogram" hidden>S</div>
+        </div>
+        <h1 id="machine-web-videos-institution-name" hidden></h1>
+        <p id="machine-web-videos-brand-name">Sürücü Akademisi</p>
+        <p id="machine-web-videos-program-title">İş Makineleri Operatörlük Sınavlarına Hazırlık</p>
+      </section>
+
+      <nav class="machine-web-videos-nav" aria-label="Sayfa yolu">
+        <a id="machine-web-videos-back-hub" href="./">Video Dersler</a>
+      </nav>
+
+      <h2 class="machine-web-videos-page-title" id="machine-web-videos-list-title">Video Listesi</h2>
+      <p class="machine-web-videos-intro">
+        Bu kategorideki yayınlanmış öğretmen video dersleri aşağıda listelenir.
+      </p>
+
+      <aside id="machine-web-videos-lock" class="machine-web-videos-lock" hidden>
+        <h3 class="machine-web-videos-lock__title">Premium erişim gerekli</h3>
+        <p class="machine-web-videos-lock__text">
+          Bu video dersler premium erişime kapalıdır. Premium erişim için kurumunuz veya Sürücü Akademisi yönetimiyle iletişime geçebilirsiniz.
+        </p>
+      </aside>
+
+      <p id="machine-web-videos-list-loading" class="machine-web-videos-status" hidden>Videolar yükleniyor…</p>
+      <p id="machine-web-videos-list-error" class="machine-web-videos-status is-error" hidden role="alert"></p>
+      <p id="machine-web-videos-list-empty" class="machine-web-videos-status" hidden>Bu kategoride henüz yayında video yok.</p>
+
+      <div id="machine-web-videos-list" class="machine-web-videos-list" hidden aria-label="Video listesi"></div>
+
+      <p class="machine-web-videos-back">
+        <a href="./">Video derslere dön</a>
+      </p>
+    </main>
+  </div>
+
+  <div id="machine-web-videos-gate">Oturum doğrulanıyor…</div>
+
+  <div id="machine-web-videos-upsell-modal" class="machine-web-videos-upsell-modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="machine-web-videos-upsell-title">
+    <div class="machine-web-videos-upsell-modal__backdrop" tabindex="-1"></div>
+    <div class="machine-web-videos-upsell-modal__dialog">
+      <header class="machine-web-videos-upsell-modal__head">
+        <h2 id="machine-web-videos-upsell-title" class="machine-web-videos-upsell-modal__title">SINAVA PREMIUM HAZIRLAN</h2>
+        <button type="button" id="machine-web-videos-upsell-close" class="machine-web-videos-upsell-modal__close" aria-label="Kapat">×</button>
+      </header>
+      <div class="machine-web-videos-upsell-modal__body">
+        <p id="machine-web-videos-upsell-video-title" class="machine-web-videos-upsell-modal__video-title" hidden></p>
+        <p>Bu video ders Premium içeriğe dahildir.</p>
+        <p>Premium erişimle öğretmen anlatımlı dersleri izleyebilir, ünite ünite hazırlanmış sınav tüyolarından faydalanabilir ve ehliyet sınavına daha planlı çalışabilirsin.</p>
+        <p>Sadece soru çözmek yetmez. Konuyu anlayan, sınav mantığını kavrayan ve kritik detayları bilen aday daha avantajlıdır.</p>
+        <ul class="machine-web-videos-upsell-modal__benefits">
+          <li>Öğretmen anlatımlı video dersler</li>
+          <li>Sınavda çıkabilecek önemli noktalar</li>
+          <li>Ünite ünite hazırlanmış çalışma desteği</li>
+          <li>180 gün boyunca erişim</li>
+          <li>Tek seferlik ödeme, abonelik yok</li>
+        </ul>
+        <p class="machine-web-videos-upsell-modal__price">Premium Video Ders Paketi — 249 TL / 180 gün</p>
+        <p id="machine-web-videos-upsell-notice" class="machine-web-videos-upsell-modal__notice" hidden role="status"></p>
+      </div>
+      <footer class="machine-web-videos-upsell-modal__foot">
+        <button type="button" id="machine-web-videos-upsell-dismiss" class="machine-web-videos-upsell-modal__btn machine-web-videos-upsell-modal__btn--secondary">Daha Sonra</button>
+        <button type="button" id="machine-web-videos-upsell-cta" class="machine-web-videos-upsell-modal__btn machine-web-videos-upsell-modal__btn--primary">Satın Alma Talebi Oluştur</button>
+      </footer>
+    </div>
+  </div>
+
+  <div id="machine-web-videos-institution-lock-modal" class="machine-web-videos-institution-lock-modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="machine-web-videos-institution-lock-title">
+    <div class="machine-web-videos-institution-lock-modal__backdrop" tabindex="-1"></div>
+    <div class="machine-web-videos-institution-lock-modal__dialog">
+      <header class="machine-web-videos-institution-lock-modal__head">
+        <h2 id="machine-web-videos-institution-lock-title" class="machine-web-videos-institution-lock-modal__title">Premium erişim gerekli</h2>
+        <button type="button" id="machine-web-videos-institution-lock-close" class="machine-web-videos-institution-lock-modal__close" aria-label="Kapat">×</button>
+      </header>
+      <div class="machine-web-videos-institution-lock-modal__body">
+        <p id="machine-web-videos-institution-lock-text"></p>
+      </div>
+      <footer class="machine-web-videos-institution-lock-modal__foot">
+        <button type="button" id="machine-web-videos-institution-lock-dismiss" class="machine-web-videos-institution-lock-modal__btn machine-web-videos-institution-lock-modal__btn--secondary">Tamam</button>
+      </footer>
+    </div>
+  </div>
+
+  <div id="machine-web-videos-player-modal" class="machine-web-videos-player-modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="machine-web-videos-player-title">
+    <div class="machine-web-videos-player-modal__backdrop" tabindex="-1"></div>
+    <div class="machine-web-videos-player-modal__dialog">
+      <header class="machine-web-videos-player-modal__head">
+        <h2 id="machine-web-videos-player-title" class="machine-web-videos-player-modal__title">Video</h2>
+        <button type="button" id="machine-web-videos-player-close" class="machine-web-videos-player-modal__close" aria-label="Kapat">×</button>
+      </header>
+      <div id="machine-web-videos-player-frame-wrap" class="machine-web-videos-player-frame">
+        <iframe id="machine-web-videos-player-iframe" class="machine-web-videos-player-frame__iframe" title="YouTube video oynatıcı" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+      </div>
+      <p id="machine-web-videos-player-error" class="machine-web-videos-player-modal__error" hidden role="alert"></p>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
+  <script src="../../assets/js/web-firebase.js"></script>
+  <script src="../../assets/js/machine-web-session.js"></script>
+  <script src="../../assets/js/machine-web-videos.js"></script>
+</body>
+</html>
