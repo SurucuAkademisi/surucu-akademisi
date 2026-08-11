@@ -10,6 +10,17 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
   const DEBUG_ENDPOINT = 'http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094';
   const DEBUG_SESSION_ID = '2a11cc';
 
+  /**
+   * AUTH CORRECTIVE — mark controlled institution-login validation signOut so
+   * onAuthStateChanged(null) stays on Driving login instead of program select.
+   * In-memory one-shot only; never persisted.
+   */
+  function markDrivingInstitutionLoginAuthNullRoute() {
+    try {
+      window.__saAuthNullRouteIntent = 'driving_institution_login';
+    } catch (_) {}
+  }
+
   const DEBUG_STORAGE_KEY = 'debug_log_2a11cc';
   const DEBUG_LOG_MAX = 50;
   function debugLog(runId, hypothesisId, location, message, data) {
@@ -429,37 +440,162 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
     }
   }
 
+  function normalizeMembershipRole(value) {
+    return String(value == null ? '' : value).trim().toLowerCase();
+  }
+
+  function isInstructorMembership(membership) {
+    return normalizeMembershipRole(membership && membership.role) === 'instructor';
+  }
+
+  function isStudentMembershipRole(membership) {
+    return normalizeMembershipRole(membership && membership.role) === 'student';
+  }
+
   /**
-   * Kurum (institution) girişi için: seçilen tenant'ta kullanıcının active membership dokümanını döner.
-   * Sadece e-posta/şifre kurum girişinde / driving guard yollarında kullanılır.
+   * Membership for tenant regardless of status (active/suspended).
    */
-  async function getActiveMembershipForTenant(uid, tenantId) {
+  async function getMembershipForTenant(uid, tenantId) {
     if (!uid || !tenantId || typeof firebase === 'undefined' || !firebase.firestore) return null;
     const tid = String(tenantId).trim();
     const db = firebase.firestore();
     try {
       const snap = await db.collection('tenantMemberships').where('uid', '==', uid).get();
       if (!snap || !snap.docs) return null;
-      debugLog('tenant-login-1', 'H3', 'mobile_app/src/js/login.js:getActiveMembershipForTenant', 'membership query returned', {
-        uidPresent: Boolean(uid),
-        tenantId: tid,
-        docsCount: snap.docs.length
-      });
       for (var i = 0; i < snap.docs.length; i++) {
         const d2 = snap.docs[i].data() || {};
-        if ((d2.tenantId || '').trim() === tid && (d2.status || '') === 'active') {
+        if ((d2.tenantId || '').trim() === tid) {
           return Object.assign({ id: snap.docs[i].id }, d2);
         }
       }
       return null;
     } catch (e) {
-      debugLog('tenant-login-1', 'H3', 'mobile_app/src/js/login.js:getActiveMembershipForTenant', 'membership query failed', {
-        tenantId: tid,
-        errorCode: e && e.code ? String(e.code) : null,
-        errorMessage: e && e.message ? String(e.message) : null
-      });
       return null;
     }
+  }
+
+  async function getUserDocData(uid) {
+    if (!uid || typeof firebase === 'undefined' || !firebase.firestore) return null;
+    try {
+      const snap = await firebase.firestore().collection('users').doc(uid).get();
+      if (!snap || !snap.exists) return null;
+      return snap.data() || {};
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /**
+   * Canonical institution persona after Auth + selected tenant.
+   * Role check BEFORE student Driving programType assumptions.
+   */
+  async function resolveInstitutionSessionPersona(user, tenantId) {
+    const uid = user && user.uid ? String(user.uid) : '';
+    const tid = String(tenantId || '').trim();
+    if (!uid || !tid) {
+      return {
+        ok: false,
+        persona: null,
+        userMessage: 'Lütfen giriş yapmadan önce kurumunuzu seçin.',
+        code: 'tenant_required'
+      };
+    }
+
+    const membership = await getMembershipForTenant(uid, tid);
+    if (!membership) {
+      return {
+        ok: false,
+        persona: null,
+        userMessage: 'Bu kuruma kayıtlı değilsiniz. Kurumunuzla iletişime geçin.',
+        code: 'membership_missing'
+      };
+    }
+
+    if (String(membership.tenantId || '').trim() !== tid) {
+      return {
+        ok: false,
+        persona: null,
+        userMessage: 'Bu kuruma kayıtlı değilsiniz. Kurumunuzla iletişime geçin.',
+        code: 'tenant_mismatch'
+      };
+    }
+
+    const memRole = normalizeMembershipRole(membership.role);
+    const memStatus = String(membership.status || '').trim().toLowerCase();
+    const userData = await getUserDocData(uid);
+    const userRole = normalizeMembershipRole(userData && userData.role);
+
+    if (memStatus !== 'active') {
+      if (memRole === 'instructor') {
+        return {
+          ok: false,
+          persona: 'instructor',
+          membership: membership,
+          userData: userData,
+          userMessage: 'Direksiyon Usta Öğretici hesabınız aktif değil. Lütfen kurum yöneticinizle iletişime geçin.',
+          code: 'inactive_instructor'
+        };
+      }
+      return {
+        ok: false,
+        persona: memRole || null,
+        membership: membership,
+        userData: userData,
+        userMessage: 'Hesabınız aktif değil. Lütfen kurum yöneticinizle iletişime geçin.',
+        code: 'inactive_membership'
+      };
+    }
+
+    if (!memRole || !userRole || memRole !== userRole) {
+      return {
+        ok: false,
+        persona: null,
+        membership: membership,
+        userData: userData,
+        userMessage: 'Hesap rolü doğrulanamadı. Lütfen kurum yöneticinizle iletişime geçin.',
+        code: 'role_mismatch'
+      };
+    }
+
+    if (memRole === 'instructor') {
+      return {
+        ok: true,
+        persona: 'instructor',
+        membership: membership,
+        userData: userData,
+        code: 'instructor'
+      };
+    }
+
+    if (memRole === 'student') {
+      return {
+        ok: true,
+        persona: 'student',
+        membership: membership,
+        userData: userData,
+        code: 'student'
+      };
+    }
+
+    return {
+      ok: false,
+      persona: null,
+      membership: membership,
+      userData: userData,
+      userMessage: 'Hesap rolü doğrulanamadı. Lütfen kurum yöneticinizle iletişime geçin.',
+      code: 'unsupported_role'
+    };
+  }
+
+  /**
+   * Kurum (institution) girişi için: seçilen tenant'ta kullanıcının active membership dokümanını döner.
+   * Sadece e-posta/şifre kurum girişinde / driving guard yollarında kullanılır.
+   */
+  async function getActiveMembershipForTenant(uid, tenantId) {
+    const membership = await getMembershipForTenant(uid, tenantId);
+    if (!membership) return null;
+    if (String(membership.status || '').trim().toLowerCase() !== 'active') return null;
+    return membership;
   }
 
   async function checkTenantMembership(uid, tenantId) {
@@ -487,6 +623,9 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
 
   function isDrivingProgramMembership(membership) {
     if (!membership || typeof membership !== 'object') return false;
+    // Instructor memberships must never be treated as student Driving context
+    // (missing programType must NOT normalize into Driving student behavior).
+    if (isInstructorMembership(membership)) return false;
     return normalizeMembershipProgramType(membership.programType) !== 'machine_operator';
   }
 
@@ -494,10 +633,19 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
    * Classify membership for Driving entry.
    * Machine membership is NOT an error and MUST NOT block Driving UID access;
    * it also MUST NOT be treated as Driving institution context.
+   * Instructor membership is NOT Driving student context.
    */
   function classifyMembershipForDriving(membership) {
     if (!membership || typeof membership !== 'object') {
       return { ok: true, kind: 'NONE', membership: null, programType: null };
+    }
+    if (isInstructorMembership(membership)) {
+      return {
+        ok: true,
+        kind: 'INSTRUCTOR_MEMBERSHIP',
+        membership: membership,
+        programType: null
+      };
     }
     const programType = normalizeMembershipProgramType(membership.programType);
     if (programType === 'machine_operator') {
@@ -540,6 +688,9 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
     if (cls.kind === 'NON_DRIVING_MEMBERSHIP') {
       return { ok: false, kind: 'NON_DRIVING_MEMBERSHIP', membership: membership, programType: 'machine_operator' };
     }
+    if (cls.kind === 'INSTRUCTOR_MEMBERSHIP') {
+      return { ok: false, kind: 'INSTRUCTOR_MEMBERSHIP', membership: membership, programType: null };
+    }
     return { ok: true, kind: 'DRIVING_MEMBERSHIP', membership: membership, programType: cls.programType };
   }
 
@@ -557,6 +708,10 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
       const membership = await getActiveMembershipForTenant(user.uid, tenantId);
       if (!membership) return { ok: true };
       const cls = assertDrivingCompatibleMembership(membership);
+      if (cls.kind === 'INSTRUCTOR_MEMBERSHIP') {
+        // Instructor restore is handled by persona branch; do not sanitize or force student path.
+        return { ok: true, kind: 'INSTRUCTOR_MEMBERSHIP' };
+      }
       if (cls.kind === 'NON_DRIVING_MEMBERSHIP') {
         try { await clearInstitutionTenantState(); } catch (_) {}
         return { ok: true, sanitized: true, kind: 'NON_DRIVING_MEMBERSHIP' };
@@ -571,7 +726,7 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
     }
   }
 
-  /** Active Driving institution tenantIds only (machine_operator excluded). */
+  /** Active Driving institution tenantIds only (machine_operator + instructor excluded). */
   async function getActiveDrivingTenantIdsForUser(uid) {
     if (!uid || typeof firebase === 'undefined' || !firebase.firestore) return [];
     try {
@@ -581,7 +736,27 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
         .map((d) => {
           const x = d.data() || {};
           if ((x.status || '') !== 'active' || !x.tenantId) return null;
+          if (isInstructorMembership(x)) return null;
           if (!isDrivingProgramMembership(x)) return null;
+          return x.tenantId;
+        })
+        .filter(Boolean);
+    } catch {
+      return [];
+    }
+  }
+
+  /** Active instructor institution tenantIds only. */
+  async function getActiveInstructorTenantIdsForUser(uid) {
+    if (!uid || typeof firebase === 'undefined' || !firebase.firestore) return [];
+    try {
+      const snap = await firebase.firestore().collection('tenantMemberships').where('uid', '==', uid).get();
+      if (!snap || !snap.docs) return [];
+      return snap.docs
+        .map((d) => {
+          const x = d.data() || {};
+          if ((x.status || '') !== 'active' || !x.tenantId) return null;
+          if (!isInstructorMembership(x)) return null;
           return x.tenantId;
         })
         .filter(Boolean);
@@ -779,6 +954,14 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
           isStudentAccount: true
         };
       }
+      if (role === 'instructor') {
+        return {
+          ok: false,
+          isPublicUser: false,
+          isStudent: false,
+          userMessage: MSG_PUBLIC_UNSUPPORTED
+        };
+      }
       return { ok: false, isPublicUser: false, isStudent: false, userMessage: MSG_PUBLIC_UNSUPPORTED };
     } catch (e) {
       console.warn('[PublicAuth] validatePublicUserAccess failed', e);
@@ -926,52 +1109,71 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
         effectiveTenantId: effectiveTenantId || null,
         selectedTenantId: selectedTenantId || null
       });
-      var drivingEnrollmentSource = 'public';
+
+      // Role resolution BEFORE student-only Driving programType assumptions.
       if (effectiveTenantId) {
-        const membership = await getActiveMembershipForTenant(user.uid, effectiveTenantId);
-        debugLog('tenant-login-1', 'H3', 'mobile_app/src/js/login.js:signIn', 'tenant membership check completed', {
+        const resolved = await resolveInstitutionSessionPersona(user, effectiveTenantId);
+        debugLog('tenant-login-1', 'H3', 'mobile_app/src/js/login.js:signIn', 'persona resolved', {
           tenantId: effectiveTenantId,
-          hasMembership: !!membership
+          ok: Boolean(resolved && resolved.ok),
+          persona: resolved && resolved.persona ? String(resolved.persona) : null,
+          code: resolved && resolved.code ? String(resolved.code) : null
         });
-        if (!membership) {
+        if (!resolved.ok) {
+          markDrivingInstitutionLoginAuthNullRoute();
           await firebase.auth().signOut();
-          const err = new Error('Bu kuruma kayıtlı değilsiniz. Kurumunuzla iletişime geçin.');
-          err.userMessage = 'Bu kuruma kayıtlı değilsiniz. Kurumunuzla iletişime geçin.';
+          const err = new Error(resolved.userMessage || 'Giriş başarısız.');
+          err.userMessage = resolved.userMessage || 'Giriş başarısız.';
+          if (resolved.code) err.code = String(resolved.code);
           throw err;
         }
+
+        if (resolved.persona === 'instructor') {
+          await tryBootstrapTenantSessionFromUser(user, selectedTenantId || effectiveTenantId);
+          return { ok: true, persona: 'instructor' };
+        }
+
+        // Student branch only: existing Driving-compatible program checks.
+        const membership = resolved.membership;
         const cls = assertDrivingCompatibleMembership(membership);
         if (cls.kind === 'NON_DRIVING_MEMBERSHIP') {
-          // Machine-only at selected tenant: ignore for Driving; public fallback unless other Driving memberships require kurum.
           try { await clearInstitutionTenantState(); } catch (_) {}
           const drivingTenantIds = await getActiveDrivingTenantIdsForUser(user.uid);
           if (drivingTenantIds.length > 0) {
+            markDrivingInstitutionLoginAuthNullRoute();
             await firebase.auth().signOut();
             const err = new Error('Lütfen giriş yapmadan önce kurumunuzu seçin.');
             err.userMessage = 'Lütfen giriş yapmadan önce kurumunuzu seçin.';
             throw err;
           }
-          drivingEnrollmentSource = 'public';
-        } else if (cls.kind !== 'DRIVING_MEMBERSHIP') {
+          await tryBootstrapTenantSessionFromUser(user, null);
+          await ensureDrivingProgramEnrollment(user, { source: 'public' });
+          return { ok: true, persona: 'student' };
+        }
+        if (cls.kind !== 'DRIVING_MEMBERSHIP') {
+          markDrivingInstitutionLoginAuthNullRoute();
           await firebase.auth().signOut();
           const err = new Error('Bu kuruma kayıtlı değilsiniz. Kurumunuzla iletişime geçin.');
           err.userMessage = 'Bu kuruma kayıtlı değilsiniz. Kurumunuzla iletişime geçin.';
           throw err;
-        } else {
-          drivingEnrollmentSource = 'institution';
         }
-      } else {
-        const tenantIds = await getActiveDrivingTenantIdsForUser(user.uid);
-        if (tenantIds.length > 0) {
-          await firebase.auth().signOut();
-          const err = new Error('Lütfen giriş yapmadan önce kurumunuzu seçin.');
-          err.userMessage = 'Lütfen giriş yapmadan önce kurumunuzu seçin.';
-          throw err;
-        }
-        drivingEnrollmentSource = 'public';
+        await tryBootstrapTenantSessionFromUser(user, selectedTenantId || effectiveTenantId);
+        await ensureDrivingProgramEnrollment(user, { source: 'institution' });
+        return { ok: true, persona: 'student' };
+      }
+
+      const drivingTenantIds = await getActiveDrivingTenantIdsForUser(user.uid);
+      const instructorTenantIds = await getActiveInstructorTenantIdsForUser(user.uid);
+      if (drivingTenantIds.length > 0 || instructorTenantIds.length > 0) {
+        markDrivingInstitutionLoginAuthNullRoute();
+        await firebase.auth().signOut();
+        const err = new Error('Lütfen giriş yapmadan önce kurumunuzu seçin.');
+        err.userMessage = 'Lütfen giriş yapmadan önce kurumunuzu seçin.';
+        throw err;
       }
       await tryBootstrapTenantSessionFromUser(user, selectedTenantId);
-      await ensureDrivingProgramEnrollment(user, { source: drivingEnrollmentSource });
-      return true;
+      await ensureDrivingProgramEnrollment(user, { source: 'public' });
+      return { ok: true, persona: 'student' };
     } catch (e) {
       const message = e && e.userMessage ? String(e.userMessage) : mapAuthErrorToMessage(e);
       debugLog('tenant-login-1', 'H4', 'mobile_app/src/js/login.js:signIn', 'signIn failed', {
@@ -1220,6 +1422,7 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
       const tenantResolution = await resolveDrivingTenantSelectionOrThrow(user);
       if (!tenantResolution.selectedTenantId) {
         if (tenantResolution.drivingTenantIds && tenantResolution.drivingTenantIds.length > 0) {
+          markDrivingInstitutionLoginAuthNullRoute();
           await firebase.auth().signOut();
           const err = new Error('Lütfen giriş yapmadan önce kurumunuzu seçin.');
           err.userMessage = 'Lütfen giriş yapmadan önce kurumunuzu seçin.';
@@ -1510,6 +1713,7 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
       if (!selectedTenantId) {
         const tenantIds = await getActiveDrivingTenantIdsForUser(user.uid);
         if (tenantIds.length > 0) {
+          markDrivingInstitutionLoginAuthNullRoute();
           await firebase.auth().signOut();
           clearMicrosoftAuthPending();
           clearMicrosoftCallbackPayload();
@@ -1528,6 +1732,7 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
             try { await clearInstitutionTenantState(); } catch (_) {}
             const drivingTenantIds = await getActiveDrivingTenantIdsForUser(user.uid);
             if (drivingTenantIds.length > 0) {
+              markDrivingInstitutionLoginAuthNullRoute();
               await firebase.auth().signOut();
               clearMicrosoftAuthPending();
               clearMicrosoftCallbackPayload();
@@ -1596,6 +1801,43 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
     if (!studentAccess.ok) {
       return studentAccess;
     }
+
+    const selectedTenantId = getSelectedTenantIdFromStorage();
+    if (selectedTenantId) {
+      const resolved = await resolveInstitutionSessionPersona(user, selectedTenantId);
+      if (resolved.ok && resolved.persona === 'instructor') {
+        return { ok: true, mode: 'instructor' };
+      }
+      if (!resolved.ok) {
+        const rejectCodes = {
+          inactive_instructor: true,
+          role_mismatch: true,
+          unsupported_role: true
+        };
+        if (resolved.code && rejectCodes[resolved.code]) {
+          markDrivingInstitutionLoginAuthNullRoute();
+          try { await firebase.auth().signOut(); } catch (_) {}
+          return {
+            ok: false,
+            userMessage: resolved.userMessage || 'Giriş başarısız.',
+            code: resolved.code
+          };
+        }
+      }
+      if (resolved.ok && resolved.persona === 'student') {
+        return { ok: true, mode: 'institution' };
+      }
+    }
+
+    // Cold restore may lack sessionStorage tenant; detect instructor-only memberships.
+    try {
+      const instructorTenantIds = await getActiveInstructorTenantIdsForUser(user.uid);
+      const drivingTenantIds = await getActiveDrivingTenantIdsForUser(user.uid);
+      if (instructorTenantIds.length > 0 && drivingTenantIds.length === 0) {
+        return { ok: true, mode: 'instructor_pending_tenant' };
+      }
+    } catch (_) {}
+
     return { ok: true, mode: 'institution' };
   }
 
@@ -1644,6 +1886,8 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
     assertDrivingCompatibleMembership: assertDrivingCompatibleMembership,
     assertRestoredSessionDrivingCompatible: assertRestoredSessionDrivingCompatible,
     getActiveMembershipForTenant: getActiveMembershipForTenant,
+    resolveInstitutionSessionPersona: resolveInstitutionSessionPersona,
+    markDrivingInstitutionLoginAuthNullRoute: markDrivingInstitutionLoginAuthNullRoute,
     MSG_MACHINE_REQUIRES_MACHINE_ENTRY: MSG_MACHINE_REQUIRES_MACHINE_ENTRY,
     MSG_MACHINE_REQUIRES_RELOGIN: MSG_MACHINE_REQUIRES_RELOGIN
   };

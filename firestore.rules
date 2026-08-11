@@ -42,6 +42,28 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') == 'institution_admin';
     }
 
+    // CORRECTIVE-2 — elevated position only (manager | business_owner). Does not apply to super_admin.
+    function isElevatedInstitutionAdminPosition() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('adminPosition', '') in ['manager', 'business_owner'];
+    }
+
+    function isElevatedInstitutionAdminRole() {
+      return isInstitutionAdminRole() && isElevatedInstitutionAdminPosition();
+    }
+
+    function isElevatedInstitutionAdminForTenant(tenantId) {
+      return isInstitutionAdminForTenant(tenantId)
+        && isInstitutionAdminRole()
+        && isElevatedInstitutionAdminPosition();
+    }
+
+    // Forum writes: institution_admin requires elevated position; all other roles unchanged.
+    function forumCallerMayMutate() {
+      return !isInstitutionAdminRole() || isElevatedInstitutionAdminPosition();
+    }
+
     function canInstitutionAdminMarkTenantMailboxRead(tenantId) {
       return request.auth != null
         && isInstitutionAdminForTenant(tenantId)
@@ -63,6 +85,20 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/tenantMemberships/$(request.auth.uid + '_' + tenantId))
         && get(/databases/$(database)/documents/tenantMemberships/$(request.auth.uid + '_' + tenantId)).data.get('role', '') == 'student'
         && get(/databases/$(database)/documents/tenantMemberships/$(request.auth.uid + '_' + tenantId)).data.get('status', '') == 'active';
+    }
+
+    // ROOM-B1: Usta Öğreticiler İletişim Odası — active same-tenant institution_admin OR instructor
+    function isActiveInstructorRoomParticipant(tenantId) {
+      return request.auth != null
+        && tenantId != null
+        && tenantId is string
+        && tenantId != ''
+        && exists(/databases/$(database)/documents/tenantMemberships/$(request.auth.uid + '_' + tenantId))
+        && get(/databases/$(database)/documents/tenantMemberships/$(request.auth.uid + '_' + tenantId)).data.get('status', '') == 'active'
+        && get(/databases/$(database)/documents/tenantMemberships/$(request.auth.uid + '_' + tenantId)).data.get('role', '') in ['institution_admin', 'instructor']
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '')
+          == get(/databases/$(database)/documents/tenantMemberships/$(request.auth.uid + '_' + tenantId)).data.get('role', '');
     }
 
     // Patch B3: scoped tenantMailbox read (no public_user, no blanket isAuthenticated)
@@ -613,12 +649,12 @@ service cloud.firestore {
 
     // Kurumlar-İletişim oda metadata
     match /institutionProvinceRooms/{provinceId} {
-      allow read: if isSuperAdmin() || isInstitutionAdminRole();
+      allow read: if isSuperAdmin() || isElevatedInstitutionAdminRole();
       allow create, update, delete: if false;
 
       // Kurumlar-İletişim oda mesajları
       match /messages/{messageId} {
-        allow read: if isSuperAdmin() || isInstitutionAdminRole();
+        allow read: if isSuperAdmin() || isElevatedInstitutionAdminRole();
         allow create, update, delete: if false;
       }
     }
@@ -632,11 +668,11 @@ service cloud.firestore {
         && request.resource.data.updatedAt is timestamp
         && request.resource.data.readStateVersion == 2
         && request.resource.data.readReason == 'room_open'
-        && (isSuperAdmin() || isInstitutionAdminForTenant(tenantId));
+        && (isSuperAdmin() || isElevatedInstitutionAdminForTenant(tenantId));
     }
 
     match /institutionChatReadStates/{tenantId}/rooms/{roomId} {
-      allow read: if isSuperAdmin() || isInstitutionAdminForTenant(tenantId);
+      allow read: if isSuperAdmin() || isElevatedInstitutionAdminForTenant(tenantId);
       allow create: if canWriteInstitutionChatReadState(tenantId, roomId)
         && request.resource.data.keys().hasOnly([
           'lastReadAt', 'updatedAt', 'updatedByUid', 'readStateVersion', 'readReason'
@@ -646,6 +682,23 @@ service cloud.firestore {
           'lastReadAt', 'updatedAt', 'updatedByUid', 'readStateVersion', 'readReason'
         ]);
       allow delete: if false;
+    }
+
+    // ROOM-B1: Usta Öğreticiler İletişim Odası (tenant-scoped; client writes denied)
+    match /tenantInstructorRooms/{tenantId} {
+      allow read: if isActiveInstructorRoomParticipant(tenantId);
+      allow create, update, delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if isActiveInstructorRoomParticipant(tenantId);
+        allow create, update, delete: if false;
+
+        // ROOM-B1.6-B — liked-by-me reads only; all writes via Admin SDK callable
+        match /likes/{likeUid} {
+          allow read: if isActiveInstructorRoomParticipant(tenantId);
+          allow create, update, delete: if false;
+        }
+      }
     }
 
     // Tenant panel bölüm okundu durumu (Patch 1A: yalnızca mevzuat)
@@ -704,6 +757,7 @@ service cloud.firestore {
 
     function canCreateForumPost() {
       return isAuthenticated()
+        && forumCallerMayMutate()
         && request.resource.data.userId == request.auth.uid
         && forumCreateStatusOk()
         && forumCreateUserNameOk()
@@ -718,6 +772,7 @@ service cloud.firestore {
 
     function canCreateForumComment(postId) {
       return isAuthenticated()
+        && forumCallerMayMutate()
         && request.resource.data.userId == request.auth.uid
         && forumCreateUserNameOk()
         && exists(/databases/$(database)/documents/forum_posts/$(postId))
@@ -738,34 +793,35 @@ service cloud.firestore {
         );
     }
 
-    // Forum paylaşımları: author 30 dk düzenle/sil; super_admin her zaman; institution_admin kendi kurumuna ait gönderilerde; count güncellemeleri serbest
+    // Forum paylaşımları: author 30 dk düzenle/sil; super_admin her zaman;
+    // elevated institution_admin kendi kurumuna ait gönderilerde; count güncellemeleri (IA elevated veya non-IA)
     match /forum_posts/{postId} {
       allow read: if isAuthenticated();
       allow create: if canCreateForumPost();
-      allow update: if isAuthenticated() && (
+      allow update: if isAuthenticated() && forumCallerMayMutate() && (
         isSuperAdmin()
         || (resource.data.userId == request.auth.uid
             && 'createdAt' in resource.data
             && request.time <= resource.data.createdAt + duration.value(30, 'm'))
         || (resource.data.get('tenantId', null) != null
-            && isInstitutionAdminForTenant(resource.data.get('tenantId', '')))
+            && isElevatedInstitutionAdminForTenant(resource.data.get('tenantId', '')))
         || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
         || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount'])
         || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount', 'commentCount'])
       );
-      allow delete: if isAuthenticated() && (
+      allow delete: if isAuthenticated() && forumCallerMayMutate() && (
         isSuperAdmin()
         || (resource.data.userId == request.auth.uid
             && 'createdAt' in resource.data
             && request.time <= resource.data.createdAt + duration.value(30, 'm'))
         || (resource.data.get('tenantId', null) != null
-            && isInstitutionAdminForTenant(resource.data.get('tenantId', '')))
+            && isElevatedInstitutionAdminForTenant(resource.data.get('tenantId', '')))
       );
     }
     match /forum_posts/{postId}/comments/{commentId} {
       allow read: if isAuthenticated();
       allow create: if canCreateForumComment(postId);
-      allow update: if isAuthenticated() && (
+      allow update: if isAuthenticated() && forumCallerMayMutate() && (
         isSuperAdmin()
         || resource.data.userId == request.auth.uid
         || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
@@ -776,32 +832,40 @@ service cloud.firestore {
         || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['dislikeCount', 'replyCount'])
         || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount', 'dislikeCount', 'replyCount'])
       );
-      allow delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isSuperAdmin());
+      allow delete: if isAuthenticated() && forumCallerMayMutate() && (resource.data.userId == request.auth.uid || isSuperAdmin());
 
       match /reactions/{userId} {
         allow read: if isAuthenticated();
         allow create: if isAuthenticated()
+          && forumCallerMayMutate()
           && request.auth.uid == userId
           && request.resource.data.type in ['like', 'dislike'];
         allow update: if isAuthenticated()
+          && forumCallerMayMutate()
           && request.auth.uid == userId
           && request.resource.data.type in ['like', 'dislike'];
-        allow delete: if isAuthenticated() && request.auth.uid == userId;
+        allow delete: if isAuthenticated()
+          && forumCallerMayMutate()
+          && request.auth.uid == userId;
       }
 
       match /replies/{replyId} {
         allow read: if isAuthenticated();
         allow create: if isAuthenticated()
+          && forumCallerMayMutate()
           && request.resource.data.userId == request.auth.uid
           && request.resource.data.content is string
           && request.resource.data.userName is string;
-        allow update, delete: if isAuthenticated() && (
+        allow update, delete: if isAuthenticated() && forumCallerMayMutate() && (
           resource.data.userId == request.auth.uid || isSuperAdmin()
         );
       }
     }
     match /forum_posts/{postId}/likes/{userId} {
-      allow read, create, delete: if isAuthenticated() && request.auth.uid == userId;
+      allow read: if isAuthenticated();
+      allow create, delete: if isAuthenticated()
+        && forumCallerMayMutate()
+        && request.auth.uid == userId;
     }
 
     function canStudentSoftDeleteOwnTenantMailboxMessage(tenantId) {

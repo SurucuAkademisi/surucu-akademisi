@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <script src="../assets/js/canonical-host.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Sürücü Akademisi iletişim: bilgi, destek ve kurum hizmetleri için bizimle iletişime geçin." />
+  <link rel="canonical" href="https://surucuakademisi.com/iletisim/" />
+  <title>İletişim | Sürücü Akademisi</title>
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem('sa_public_session_v1');
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || typeof s !== 'object') return;
+        var uid = String(s.uid || '').trim();
+        var role = String(s.role || '').trim();
+        if (!uid || role !== 'public_user') return;
+        document.documentElement.classList.add('page-public-header-pending');
+        setTimeout(function () {
+          document.documentElement.classList.remove('page-public-header-pending');
+        }, 8000);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="../assets/css/site.css?v=20260728-landing-navband-boundary-fix-1" />
+  <link rel="stylesheet" href="./contact-forms.css?v=20260809-contact-cta-1" />
+</head>
+<body class="page-landing page-contact" data-site-page="contact">
+  <header class="site-header site-header--landing">
+    <div class="container header-inner header-inner--landing header-inner--public">
+      <div class="header-landing-brand">
+        <a class="brand brand--lockup" href="../" aria-label="Sürücü Akademisi ana sayfa">
+          <img class="brand-logo-img" src="../assets/images/logo.png" width="110" height="110" alt="" />
+          <span class="brand-text">
+            <span class="brand-name"><span class="brand-name__surucu">Sürücü</span> <span class="brand-name__akademisi">Akademisi</span></span>
+            <span class="brand-tagline">Ehliyet Eğitim Portalı</span>
+          </span>
+        </a>
+      </div>
+
+      <div class="header-landing-navband">
+        <nav class="header-landing-infonav" aria-label="Ana menü">
+          <a class="header-landing-infonav__link" href="../">Ana Sayfa</a>
+          <a class="header-landing-infonav__link" href="../hakkimizda/">Hakkımızda</a>
+          <a class="header-landing-infonav__link" href="../hizmetlerimiz/">Hizmetlerimiz</a>
+          <a class="header-landing-infonav__link" href="./" aria-current="page">İletişim</a>
+        </nav>
+
+        <div class="header-public-actions header-public-actions--account" data-public-header="guest">
+          <a class="btn btn-public-course" href="../panel/" aria-label="Sürücü Kursu Öğrenci / Yönetici Girişi">
+            <span class="btn-public-course__text">
+              Sürücü Kursu
+              <span class="btn-public-course__accent btn-public-course__accent--student">Öğrenci</span>
+              <span class="btn-public-course__sep" aria-hidden="true">/</span>
+              <span class="btn-public-course__accent btn-public-course__accent--org">Yönetici</span>
+              Girişi
+            </span>
+          </a>
+          <a class="btn btn-public-login" href="../uye-giris/">Üye Girişi</a>
+          <a class="btn btn-public-register" href="../kayit/">Kayıt Ol</a>
+        </div>
+
+        <div class="header-public-actions header-public-actions--account header-public-actions--user" data-public-header="user" hidden aria-hidden="true">
+          <span class="btn btn-public-greeting" id="public-header-greeting" aria-live="polite">Merhaba, <span id="public-header-name">Üye</span></span>
+          <button type="button" class="btn btn-public-register btn-public-logout" id="public-header-logout">Çıkış</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <button
+    type="button"
+    id="public-mobile-menu-button"
+    class="public-mobile-menu-button"
+    aria-label="Menüyü aç"
+    aria-expanded="false"
+    aria-controls="public-mobile-menu-panel"
+  >
+    <span class="public-mobile-menu-button__face" aria-hidden="true">
+      <svg
+        class="public-mobile-menu-button__icon"
+        viewBox="0 0 24 24"
+        width="22"
+        height="22"
+        focusable="false"
+      >
+        <path class="public-mobile-menu-button__line public-mobile-menu-button__line--top" d="M4 6h16"></path>
+        <path class="public-mobile-menu-button__line public-mobile-menu-button__line--middle" d="M4 12h16"></path>
+        <path class="public-mobile-menu-button__line public-mobile-menu-button__line--bottom" d="M4 18h16"></path>
+      </svg>
+    </span>
+  </button>
+
+  <div
+    id="public-mobile-menu-panel"
+    class="public-mobile-menu-panel"
+    aria-label="Sayfa menüsü"
+    hidden
+  >
+    <a class="public-mobile-menu-panel__item" href="../hizmetlerimiz/">Hizmetlerimiz</a>
+    <a class="public-mobile-menu-panel__item" href="../hakkimizda/">Hakkımızda</a>
+    <a class="public-mobile-menu-panel__item" href="./" aria-current="page">İletişim</a>
+  </div>
+
+  <main class="contact-main">
+    <div class="container contact-shell">
+      <div class="contact-hero-row">
+        <h1 class="contact-title">İletişim</h1>
+        <a class="contact-institution-cta" href="../kurumsal-basvuru/" aria-label="Akademiye Katılım Formu — kurumsal katılım talebi oluştur">
+          <span class="contact-institution-cta__title">Akademiye Katılım Formu</span>
+          <span class="contact-institution-cta__text">Sürücü kursunuz veya eğitim kurumunuz için kurumsal katılım talebi oluşturun.</span>
+        </a>
+      </div>
+      <p class="contact-lead">
+        Sürücü Akademisi hakkında bilgi, destek ve kurum hizmetleri için bizimle iletişime geçebilirsiniz.
+      </p>
+
+      <div class="contact-channels" aria-label="İletişim kanalları">
+        <div class="contact-channel">
+          <span class="contact-channel__label">E-posta</span>
+          <p class="contact-channel__value"><a href="mailto:info@surucuakademisi.com">info@surucuakademisi.com</a></p>
+        </div>
+        <div class="contact-channel">
+          <span class="contact-channel__label">Telefon</span>
+          <p class="contact-channel__value"><a href="tel:+905320588846">+90 532 058 88 46</a></p>
+        </div>
+        <div class="contact-channel">
+          <span class="contact-channel__label">Adres</span>
+          <p class="contact-channel__value">Sarımeşe Mah. Sade Sk. No: 29 C İç Kapı No: 10<br />Kartepe / Kocaeli</p>
+        </div>
+        <div class="contact-channel">
+          <span class="contact-channel__label">İşletme</span>
+          <p class="contact-channel__value">Bilal Aksoy – Sürücü Akademisi</p>
+        </div>
+      </div>
+
+      <section class="contact-form-card" aria-labelledby="contact-form-heading">
+        <h2 id="contact-form-heading" class="contact-form-heading">Mesaj gönderin</h2>
+        <form id="sa-general-contact-form" novalidate>
+          <div class="contact-form-grid">
+            <div class="contact-field">
+              <label for="contact-fullName">Ad Soyad <span class="req" aria-hidden="true">*</span></label>
+              <input id="contact-fullName" name="fullName" type="text" autocomplete="name" maxlength="100" required />
+            </div>
+            <div class="contact-field">
+              <label for="contact-email">E-posta <span class="req" aria-hidden="true">*</span></label>
+              <input id="contact-email" name="email" type="email" autocomplete="email" maxlength="160" required />
+            </div>
+            <div class="contact-field">
+              <label for="contact-phone">Telefon</label>
+              <input id="contact-phone" name="phone" type="tel" autocomplete="tel" maxlength="30" />
+            </div>
+            <div class="contact-field">
+              <label for="contact-requestType">Talep Konusu <span class="req" aria-hidden="true">*</span></label>
+              <select id="contact-requestType" name="requestType" required>
+                <option value="">Seçiniz</option>
+                <option value="premium_access">Bireysel Premium Hakkında Bilgi</option>
+                <option value="institution_student_support">Mevcut Kurum Öğrencisi Desteği</option>
+                <option value="technical_support">Teknik Destek</option>
+                <option value="education_content">Eğitim İçerikleri Hakkında</option>
+                <option value="partnership">İş Birliği / Diğer Kurumsal Konular</option>
+                <option value="other">Diğer</option>
+              </select>
+            </div>
+            <div class="contact-field contact-field--full" data-contact-institution-wrap hidden>
+              <label for="contact-institutionName">Kurum Adı <span class="req" aria-hidden="true">*</span></label>
+              <input id="contact-institutionName" name="institutionName" type="text" maxlength="160" autocomplete="organization" />
+            </div>
+            <div class="contact-field contact-field--full">
+              <label for="contact-message">Mesajınız <span class="req" aria-hidden="true">*</span></label>
+              <textarea id="contact-message" name="message" maxlength="5000" required></textarea>
+            </div>
+          </div>
+
+          <div class="contact-hp" aria-hidden="true">
+            <label for="contact-website">Website</label>
+            <input id="contact-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+
+          <label class="contact-notice">
+            <input id="contact-notice" name="noticeAcknowledged" type="checkbox" value="1" required />
+            <span>
+              <a href="/iletisim-formu-aydinlatma/" target="_blank" rel="noopener noreferrer">İletişim Formu Aydınlatma Metnini</a> okudum ve bilgi edindim.
+            </span>
+          </label>
+
+          <div class="contact-actions">
+            <button type="submit" class="contact-submit">Gönder</button>
+          </div>
+          <p id="contact-form-status" class="contact-form-status" role="status" aria-live="polite" hidden></p>
+        </form>
+        <p class="contact-aside-note">
+          Kurumunuz için Sürücü Akademisi katılım başvurusu oluşturmak istiyorsanız
+          <a href="../kurumsal-basvuru/">kurumsal başvuru sayfasını</a> kullanın.
+        </p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p class="footer-brand">Sürücü Akademisi</p>
+      <p class="footer-copy">© 2026 Sürücü Akademisi</p>
+      <p class="footer-secondary">
+        <a href="mailto:info@surucuakademisi.com">İletişim: info@surucuakademisi.com</a>
+      </p>
+      <nav class="footer-links" aria-label="Yasal belgeler">
+        <a href="../kvkk-aydinlatma/">KVKK Aydınlatma</a>
+        <a href="../gizlilik-politikasi/">Gizlilik</a>
+        <a href="../cerez-politikasi/">Çerez Politikası</a>
+        <a href="../kullanim-kosullari/">Kullanım Koşulları</a>
+        <a href="../ilgili-kisi-basvurusu/">İlgili Kişi Başvurusu</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
+  <script src="../assets/js/web-firebase.js"></script>
+  <script src="../assets/js/public-session.js"></script>
+  <script src="../assets/js/public-auth.js"></script>
+  <script src="../assets/js/public-landing-auth.js?v=20260728-public-header-fouc-1"></script>
+  <script src="../assets/js/public-landing-mobile-menu.js?v=20260728-mobile-menu-final-2"></script>
+  <script src="../assets/js/public-contact-forms.js?v=20260809-contact-1"></script>
+</body>
+</html>

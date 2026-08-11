@@ -4,8 +4,13 @@ const admin = require('firebase-admin');
 const { dispatchNotificationPush } = require('./push_dispatch');
 const {
   submitContactRequest,
-  updateContactRequest
+  updateContactRequest,
+  softDeleteContactRequest
 } = require('./contact_requests');
+const {
+  createInstitutionOnboardingDraft,
+  getInstitutionOnboardingLogoAccess
+} = require('./institution_onboarding');
 
 admin.initializeApp();
 
@@ -13,6 +18,12 @@ admin.initializeApp();
 exports.submitContactRequest = submitContactRequest;
 /** Super Admin contact request status / adminNote update. */
 exports.updateContactRequest = updateContactRequest;
+/** Super Admin contact request soft-delete (CRM hide only; no hard delete / onboarding cascade). */
+exports.softDeleteContactRequest = softDeleteContactRequest;
+/** Institution onboarding draft create (Admin SDK Storage staging logo; no payment/tenant). */
+exports.createInstitutionOnboardingDraft = createInstitutionOnboardingDraft;
+/** Super Admin only — signed view/download URLs for onboarding staging logos. */
+exports.getInstitutionOnboardingLogoAccess = getInstitutionOnboardingLogoAccess;
 
 const db = admin.firestore();
 const messaging = admin.messaging();
@@ -201,57 +212,13 @@ async function evaluateStudentBulkMailboxNotifyEligibility(args) {
 
 /**
  * Bridge: tenantMailbox/{tenantId}/messages/{messageId} onCreate
- * When a mailbox message is created for a student (recipientType=student, recipientId set),
- * create a notifications doc to trigger push via existing onNotificationCreate.
- * D1A2: bulk messages require audience program (+ optional period) match vs membership.
+ * Product rule: mailbox message delivery must NOT auto-create a notifications
+ * document (no "Yeni Mesaj" / type:mailbox side effect). Push for mailbox is
+ * intentionally not triggered here; manual type:tenant / system notifications
+ * continue via onNotificationCreate.
+ * Kept as a no-op trigger for safe deploy compatibility.
  */
 exports.onMailboxMessageCreate = onDocumentCreated('tenantMailbox/{tenantId}/messages/{messageId}', async (event) => {
-  const tenantId = event.params.tenantId;
-  const messageId = event.params.messageId;
-  const snap = event.data;
-  if (!snap) return null;
-  const data = snap.data() || {};
-  const recipientType = String(data.recipientType || '').trim().toLowerCase();
-  const recipientId = (data.recipientId || '').toString().trim();
-  if (recipientType !== 'student' || !recipientId) return null;
-
-  if (isMailboxBulkMessage(data)) {
-    const eligibility = await evaluateStudentBulkMailboxNotifyEligibility({
-      tenantId,
-      messageId,
-      recipientId,
-      data
-    });
-    if (!eligibility.ok) {
-      console.log('[onMailboxMessageCreate] bulk_notification_skipped', {
-        messageId,
-        tenantId,
-        reason: eligibility.reason || 'bulk_skip',
-        audienceProgramType: eligibility.audienceProgramType || null,
-        audiencePeriodGroup: eligibility.audiencePeriodGroup || null,
-        membershipProgramType: eligibility.membershipProgramType || null,
-        membershipPeriodGroup: eligibility.membershipPeriodGroup || null
-      });
-      return null;
-    }
-  }
-
-  try {
-    await db.collection('notifications').add({
-      tenantId: tenantId,
-      status: 'active',
-      title: 'Yeni Mesaj',
-      message: '1 yeni mesajÄ±nÄ±z var',
-      audienceScope: 'specific_tenant',
-      targetType: 'single_student',
-      targetId: recipientId,
-      type: 'mailbox',
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      readBy: []
-    });
-  } catch (e) {
-    console.error('[onMailboxMessageCreate] Notification yazÄ±lamadÄ±:', e && e.message ? e.message : e);
-  }
   return null;
 });
 

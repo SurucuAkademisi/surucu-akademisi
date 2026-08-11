@@ -53,6 +53,7 @@ export function selectDefaultTenant(memberships) {
   const allowedTenantRoles = [
     TENANT_ROLES.INSTITUTION_ADMIN,
     TENANT_ROLES.STUDENT,
+    TENANT_ROLES.INSTRUCTOR,
   ];
 
   const activeMemberships = list.filter((item) => {

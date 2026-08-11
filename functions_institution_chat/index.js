@@ -188,6 +188,30 @@ async function getCallerUserOrThrow(uid) {
   return snap.data() || {};
 }
 
+function normalizeAdminPosition(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function isElevatedInstitutionAdminPosition(position) {
+  const p = normalizeAdminPosition(position);
+  return p === 'manager' || p === 'business_owner';
+}
+
+/**
+ * CORRECTIVE-2 — Tenant institution_admin may use Kurumlar-İletişim only when elevated.
+ * Super Admin paths must not call this.
+ */
+function assertElevatedInstitutionAdminPositionForChat(userData) {
+  const position = normalizeAdminPosition(userData && userData.adminPosition);
+  if (!isElevatedInstitutionAdminPosition(position)) {
+    throw new HttpsError(
+      'permission-denied',
+      'Bu işlem yalnız Yönetici veya İşletme Sahibi statüsündeki kurum yöneticileri tarafından yapılabilir.'
+    );
+  }
+  return position;
+}
+
 async function getActiveInstitutionAdminMemberships(uid) {
   const memSnap = await db.collection('tenantMemberships')
     .where('uid', '==', uid)
@@ -280,6 +304,7 @@ exports.createInstitutionProvinceMessage = onCall(async (request) => {
       senderTenantId = null;
       senderTenantName = 'Sürücü Akademisi';
     } else if (callerRole === 'institution_admin') {
+      assertElevatedInstitutionAdminPositionForChat(callerUser);
       const memberships = await getActiveInstitutionAdminMemberships(callerUid);
       if (!memberships.length) {
         throw new HttpsError('permission-denied', 'Active institution_admin membership is required.');
@@ -434,7 +459,11 @@ exports.updateInstitutionProvinceMessage = onCall(async (request) => {
   }
 
   try {
-    await getCallerUserOrThrow(callerUid);
+    const callerUser = await getCallerUserOrThrow(callerUid);
+    const callerRole = normalizeRole(callerUser.role);
+    if (callerRole === 'institution_admin') {
+      assertElevatedInstitutionAdminPositionForChat(callerUser);
+    }
 
     const msgRef = db.collection('institutionProvinceRooms').doc(provinceId).collection('messages').doc(messageId);
     const msgSnap = await msgRef.get();
@@ -485,7 +514,11 @@ exports.deleteInstitutionProvinceMessage = onCall(async (request) => {
   }
 
   try {
-    await getCallerUserOrThrow(callerUid);
+    const callerUser = await getCallerUserOrThrow(callerUid);
+    const callerRole = normalizeRole(callerUser.role);
+    if (callerRole === 'institution_admin') {
+      assertElevatedInstitutionAdminPositionForChat(callerUser);
+    }
 
     const msgRef = db.collection('institutionProvinceRooms').doc(provinceId).collection('messages').doc(messageId);
     const msgSnap = await msgRef.get();

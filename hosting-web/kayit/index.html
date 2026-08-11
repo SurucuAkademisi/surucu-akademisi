@@ -1,58 +1,270 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+  <script src="../assets/js/canonical-host.js"></script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex" />
   <title>Kayıt Ol — Sürücü Akademisi</title>
   <link rel="stylesheet" href="../assets/css/site.css" />
+  <style>
+    /* Page-scoped premium register shell — aligned with /uye-giris/ visual family */
+    .page-public-auth.page-public-register .public-register-wrap {
+      width: min(540px, calc(100% - (2 * var(--page-pad, 16px))));
+      position: relative;
+      z-index: 1;
+    }
+
+    .page-public-auth.page-public-register .public-register-brand {
+      margin-bottom: 28px;
+      gap: 16px;
+    }
+
+    .page-public-auth.page-public-register .public-register-logo {
+      width: 168px;
+      height: 168px;
+      max-width: min(168px, 42vw);
+      max-height: min(168px, 42vw);
+      object-fit: contain;
+      border-radius: 20px;
+      filter: drop-shadow(0 8px 32px rgba(34, 211, 238, 0.35));
+    }
+
+    .page-public-auth.page-public-register .public-register-brand .brand-name {
+      font-size: clamp(1.25rem, 3.5vw, 1.65rem);
+    }
+
+    .page-public-auth.page-public-register .public-register-brand .brand-tagline {
+      font-size: 0.9rem;
+      color: rgba(148, 163, 184, 0.95);
+    }
+
+    .page-public-auth.page-public-register .public-register-card {
+      width: 100%;
+      padding: 32px 28px 28px;
+      border-radius: 20px;
+      border: 1px solid rgba(34, 211, 238, 0.22);
+      background: linear-gradient(
+        155deg,
+        rgba(15, 28, 49, 0.75) 0%,
+        rgba(8, 16, 30, 0.6) 100%
+      );
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow:
+        0 24px 64px rgba(2, 8, 23, 0.55),
+        0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+        0 0 48px rgba(34, 211, 238, 0.08);
+      box-sizing: border-box;
+    }
+
+    .page-public-auth.page-public-register .public-register-card__hero {
+      margin-bottom: 22px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .page-public-auth.page-public-register .public-register-card h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.5rem, 4vw, 1.85rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: #f8fafc;
+    }
+
+    .page-public-auth.page-public-register .public-register-sub {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.55;
+      color: rgba(203, 213, 225, 0.9);
+    }
+
+    .page-public-auth.page-public-register .public-register-field {
+      margin-bottom: 16px;
+    }
+
+    .page-public-auth.page-public-register .public-register-field .field-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: rgba(203, 213, 225, 0.92);
+    }
+
+    .page-public-auth.page-public-register .public-register-input {
+      width: 100%;
+      min-height: 48px;
+      padding: 13px 15px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background: rgba(6, 13, 24, 0.75);
+      color: #f1f5f9;
+      font-size: 1rem;
+      box-sizing: border-box;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .page-public-auth.page-public-register .public-register-input::placeholder {
+      color: rgba(148, 163, 184, 0.65);
+    }
+
+    .page-public-auth.page-public-register .public-register-input:focus {
+      outline: none;
+      border-color: rgba(34, 211, 238, 0.55);
+      box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.12);
+    }
+
+    .page-public-auth.page-public-register .public-register-actions {
+      margin-top: 10px;
+    }
+
+    .page-public-auth.page-public-register .public-register-submit {
+      width: 100%;
+      min-height: 50px;
+      padding: 13px 22px;
+      border-radius: 12px;
+      border: 1px solid rgba(251, 191, 36, 0.65);
+      font-size: 1.02rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      color: #0f172a;
+      cursor: pointer;
+      background: linear-gradient(145deg, #fcd34d 0%, #fbbf24 48%, #f59e0b 100%);
+      box-shadow:
+        0 0 22px rgba(251, 191, 36, 0.32),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    }
+
+    .page-public-auth.page-public-register .public-register-submit:hover,
+    .page-public-auth.page-public-register .public-register-submit:focus-visible {
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+      box-shadow:
+        0 0 28px rgba(251, 191, 36, 0.42),
+        inset 0 1px 0 rgba(255, 255, 255, 0.42);
+    }
+
+    .page-public-auth.page-public-register .public-register-submit:focus-visible {
+      outline: 2px solid rgba(252, 211, 77, 0.9);
+      outline-offset: 2px;
+    }
+
+    .page-public-auth.page-public-register .public-register-submit:disabled {
+      opacity: 0.6;
+      cursor: wait;
+      transform: none;
+    }
+
+    .page-public-auth.page-public-register .public-register-msg {
+      min-height: 1.25rem;
+      margin: 12px 0 0;
+      font-size: 0.9rem;
+      font-weight: 650;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    .page-public-auth.page-public-register .public-register-msg[data-state='error'] {
+      color: #fca5a5;
+    }
+
+    .page-public-auth.page-public-register .public-register-msg[data-state='success'] {
+      color: #86efac;
+    }
+
+    .page-public-auth.page-public-register .public-register-links {
+      margin: 14px 0 0;
+      text-align: center;
+    }
+
+    .page-public-auth.page-public-register .public-register-links a {
+      color: #7dd3fc;
+      font-size: 0.9rem;
+      font-weight: 650;
+      text-decoration: none;
+    }
+
+    .page-public-auth.page-public-register .public-register-links a:hover,
+    .page-public-auth.page-public-register .public-register-links a:focus-visible {
+      color: #a5f3fc;
+      text-decoration: underline;
+    }
+
+    .page-public-auth.page-public-register .public-register-links--muted a {
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .page-public-auth.page-public-register .public-register-note {
+      margin: 16px 0 0;
+      padding-top: 14px;
+      border-top: 1px solid rgba(148, 163, 184, 0.12);
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: #94a3b8;
+      text-align: center;
+    }
+
+    @media (max-width: 720px) {
+      .page-public-auth.page-public-register .public-register-card {
+        padding: 26px 18px 22px;
+      }
+    }
+  </style>
 </head>
-<body class="page-public-auth">
-  <main class="public-auth-shell">
-    <div class="public-auth-wrap">
-      <a class="brand brand--lockup public-auth-brand" href="../" aria-label="Sürücü Akademisi ana sayfa">
-        <img class="brand-logo-img" src="../assets/images/logo.png" width="72" height="72" alt="" />
+<body class="page-public-auth page-public-register">
+  <main class="public-auth-shell public-register-shell">
+    <div class="public-auth-wrap public-register-wrap">
+      <a class="brand brand--lockup public-auth-brand public-register-brand" href="../" aria-label="Sürücü Akademisi ana sayfa">
+        <img class="brand-logo-img public-register-logo" src="../assets/images/logo.png" width="168" height="168" alt="" />
         <span class="brand-text">
           <span class="brand-name">Sürücü Akademisi</span>
           <span class="brand-tagline">Ehliyet Eğitim Portalı</span>
         </span>
       </a>
 
-      <article class="public-auth-card">
-        <h1>Kayıt Ol</h1>
-        <p class="public-auth-sub">Ücretsiz public portal hesabınızı oluşturun.</p>
+      <article class="public-auth-card public-register-card">
+        <div class="public-register-card__hero">
+          <h1>Kayıt Ol</h1>
+          <p class="public-auth-sub public-register-sub">Ücretsiz Sürücü Akademisi kaydınızı yapın.</p>
+        </div>
 
-        <form class="public-auth-form" id="public-register-form" novalidate>
-          <div class="public-auth-field">
+        <form class="public-auth-form public-register-form" id="public-register-form" novalidate>
+          <div class="public-auth-field public-register-field">
             <label class="field-label" for="public-register-firstName">İsim</label>
-            <input class="field-input" type="text" id="public-register-firstName" name="firstName" autocomplete="given-name" placeholder="Adınız" required />
+            <input class="field-input public-register-input" type="text" id="public-register-firstName" name="firstName" autocomplete="given-name" placeholder="Adınız" required />
           </div>
-          <div class="public-auth-field">
+          <div class="public-auth-field public-register-field">
             <label class="field-label" for="public-register-lastName">Soyisim</label>
-            <input class="field-input" type="text" id="public-register-lastName" name="lastName" autocomplete="family-name" placeholder="Soyadınız" required />
+            <input class="field-input public-register-input" type="text" id="public-register-lastName" name="lastName" autocomplete="family-name" placeholder="Soyadınız" required />
           </div>
-          <div class="public-auth-field">
+          <div class="public-auth-field public-register-field">
             <label class="field-label" for="public-register-email">E-posta</label>
-            <input class="field-input" type="email" id="public-register-email" name="email" autocomplete="email" placeholder="ornek@email.com" required />
+            <input class="field-input public-register-input" type="email" id="public-register-email" name="email" autocomplete="email" placeholder="ornek@email.com" required />
           </div>
-          <div class="public-auth-field">
+          <div class="public-auth-field public-register-field">
             <label class="field-label" for="public-register-password">Şifre</label>
-            <input class="field-input" type="password" id="public-register-password" name="password" autocomplete="new-password" placeholder="En az 6 karakter" required minlength="6" />
+            <input class="field-input public-register-input" type="password" id="public-register-password" name="password" autocomplete="new-password" placeholder="En az 6 karakter" required minlength="6" />
           </div>
-          <div class="public-auth-actions">
-            <button type="submit" class="btn btn-gold btn-block" id="public-register-submit">Kayıt Ol</button>
+          <div class="public-auth-field public-register-field">
+            <label class="field-label" for="public-register-passwordConfirm">Şifre Tekrar</label>
+            <input class="field-input public-register-input" type="password" id="public-register-passwordConfirm" name="passwordConfirm" autocomplete="new-password" placeholder="Şifrenizi tekrar girin" required minlength="6" />
           </div>
-          <p class="public-auth-msg" id="public-register-message" role="status" aria-live="polite"></p>
+          <div class="public-auth-actions public-register-actions">
+            <button type="submit" class="btn btn-gold btn-block public-register-submit" id="public-register-submit">Kayıt Ol</button>
+          </div>
+          <p class="public-auth-msg public-register-msg" id="public-register-message" role="status" aria-live="polite"></p>
         </form>
 
-        <p class="public-auth-links">
+        <p class="public-auth-links public-register-links">
           <a href="../uye-giris/">Zaten hesabınız var mı? Üye Girişi</a>
         </p>
-        <p class="public-auth-links">
+        <p class="public-auth-links public-register-links public-register-links--muted">
           <a href="../">Ana sayfaya dön</a>
         </p>
 
-        <p class="public-auth-note">Bu kayıt public portal içindir. Kurum öğrencileri kullanıcı bilgilerini kurumlarından alır.</p>
+        <p class="public-auth-note public-register-note">Bu kayıt bireysel Sürücü Akademisi üyeliği içindir. Kurum öğrencileri kullanıcı bilgilerini kurumlarından alır.</p>
       </article>
     </div>
   </main>
@@ -63,5 +275,34 @@
   <script src="../assets/js/web-firebase.js"></script>
   <script src="../assets/js/public-session.js"></script>
   <script src="../assets/js/public-auth.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      var form = document.getElementById('public-register-form');
+      if (!form) return;
+
+      form.addEventListener(
+        'submit',
+        function (e) {
+          var passEl = document.getElementById('public-register-password');
+          var confirmEl = document.getElementById('public-register-passwordConfirm');
+          var msgEl = document.getElementById('public-register-message');
+          var password = passEl ? String(passEl.value || '') : '';
+          var confirm = confirmEl ? String(confirmEl.value || '') : '';
+
+          if (password !== confirm) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            if (msgEl) {
+              msgEl.textContent = 'Şifreler eşleşmiyor.';
+              msgEl.setAttribute('data-state', 'error');
+            }
+          }
+        },
+        true
+      );
+    })();
+  </script>
 </body>
 </html>

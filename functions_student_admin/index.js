@@ -1,12 +1,20 @@
 const { onCall, HttpsError } =
   require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
+const crypto = require('crypto');
 
 if (!admin.apps.length) {
   admin.initializeApp();
 }
 
 const db = admin.firestore();
+
+const INSTRUCTOR_PHOTO_MAX_BYTES = 2 * 1024 * 1024;
+const INSTRUCTOR_PHOTO_ALLOWED = {
+  'image/png': { ext: 'png' },
+  'image/jpeg': { ext: 'jpg' },
+  'image/webp': { ext: 'webp' }
+};
 
 const INSTITUTION_ACCESS_DURATION_DAYS = 90;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -1466,3 +1474,3176 @@ exports.revokeUserVideoLessonsPremiumForSuperAdmin = onCall(
     videoLessonsExpiresAt: null
   };
 });
+
+/**
+ * Phase 1 — Direksiyon Usta Öğretici create (institution_admin only).
+ * Auth email is always {username}@surucu.app. Optional contactEmail is profile-only.
+ */
+exports.createTenantInstructorForInstitutionAdmin = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const data = request.data;
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    const usernameRaw = (data && data.username ? String(data.username) : '');
+    const password = (data && data.password ? String(data.password) : '');
+    const fullNameRaw = (data && data.fullName ? String(data.fullName) : '');
+    const phoneRaw = (data && data.phone ? String(data.phone) : '');
+    const contactEmailRaw = (data && data.contactEmail ? String(data.contactEmail) : '');
+
+    const username = usernameRaw.trim().toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9._-]/g, '');
+    const authEmail = username ? username + '@surucu.app' : '';
+    const fullName = fullNameRaw.trim().replace(/\s+/g, ' ');
+    const phone = phoneRaw.trim();
+    const contactEmail = contactEmailRaw.trim().toLowerCase();
+
+    if (!tenantId) {
+      throw new HttpsError('invalid-argument', 'tenantId is required.');
+    }
+    if (!fullName || fullName.length < 2) {
+      throw new HttpsError('invalid-argument', 'Ad Soyad gereklidir.');
+    }
+    if (fullName.length > 200) {
+      throw new HttpsError('invalid-argument', 'Ad Soyad en fazla 200 karakter olabilir.');
+    }
+    if (!username) {
+      throw new HttpsError('invalid-argument', 'username is required.');
+    }
+    if (!password || password.length < 6) {
+      throw new HttpsError('invalid-argument', 'Şifre en az 6 karakter olmalı.');
+    }
+    if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+      throw new HttpsError('invalid-argument', 'İletişim e-postası geçersiz.');
+    }
+    if (phone && phone.length > 40) {
+      throw new HttpsError('invalid-argument', 'Telefon en fazla 40 karakter olabilir.');
+    }
+
+    const callerMembershipId = callerUid + '_' + tenantId;
+    const callerMembershipSnap = await db.collection('tenantMemberships').doc(callerMembershipId).get();
+    const callerMembership = callerMembershipSnap.exists ? (callerMembershipSnap.data() || {}) : {};
+    const callerRole = normalizeRole(callerMembership.role);
+    const callerStatus = normalizeRole(callerMembership.status);
+    if (!callerMembershipSnap.exists || callerRole !== 'institution_admin' || callerStatus !== 'active') {
+      throw new HttpsError('permission-denied', 'Not an active institution_admin for this tenant.');
+    }
+
+    const existingUsernameSnap = await db.collection('users').where('username', '==', username).limit(1).get();
+    if (existingUsernameSnap && !existingUsernameSnap.empty) {
+      throw new HttpsError('already-exists', 'Bu kullanıcı adı zaten kullanılıyor.');
+    }
+
+    let newUid = '';
+    try {
+      const userRecord = await admin.auth().createUser({
+        email: authEmail,
+        password: password
+      });
+      newUid = userRecord && userRecord.uid ? String(userRecord.uid) : '';
+      if (!newUid) {
+        throw new HttpsError('internal', 'Kullanıcı oluşturulamadı.');
+      }
+
+      const now = admin.firestore.FieldValue.serverTimestamp();
+      const userPayload = {
+        username: username,
+        email: authEmail,
+        fullName: fullName,
+        role: 'instructor',
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+        createdBy: callerUid
+      };
+      if (phone) userPayload.phone = phone;
+      if (contactEmail) userPayload.contactEmail = contactEmail;
+
+      const membershipId = newUid + '_' + tenantId;
+      const memPayload = {
+        uid: newUid,
+        tenantId: tenantId,
+        role: 'instructor',
+        status: 'active',
+        createdAt: now,
+        updatedAt: now,
+        createdBy: callerUid
+      };
+
+      await db.collection('users').doc(newUid).set(userPayload, { merge: true });
+      await db.collection('tenantMemberships').doc(membershipId).set(memPayload, { merge: true });
+
+      return {
+        ok: true,
+        uid: newUid,
+        username: username,
+        tenantId: tenantId,
+        membershipId: membershipId,
+        role: 'instructor'
+      };
+    } catch (e) {
+      if (newUid) {
+        try {
+          await admin.auth().deleteUser(newUid);
+        } catch (_) {}
+      }
+      if (e instanceof HttpsError) throw e;
+      const code = String((e && e.code) || '');
+      if (code === 'auth/email-already-exists') {
+        throw new HttpsError('already-exists', 'Bu kullanıcı adı zaten kullanılıyor.');
+      }
+      if (code === 'auth/invalid-password') {
+        throw new HttpsError('invalid-argument', 'Şifre en az 6 karakter olmalı.');
+      }
+      throw new HttpsError(
+        'internal',
+        (e && e.message) ? e.message : 'Failed to create tenant instructor.'
+      );
+    }
+  }
+);
+
+/**
+ * Phase 1 — List Direksiyon Usta Öğreticiler for caller's tenant (institution_admin only).
+ */
+exports.listTenantInstructorsForInstitutionAdmin = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const data = request && request.data ? request.data : {};
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    if (!tenantId) {
+      throw new HttpsError('invalid-argument', 'tenantId is required.');
+    }
+
+    const callerMembershipId = callerUid + '_' + tenantId;
+    const callerMembershipSnap = await db.collection('tenantMemberships').doc(callerMembershipId).get();
+    const callerMembership = callerMembershipSnap.exists ? (callerMembershipSnap.data() || {}) : {};
+    if (
+      !callerMembershipSnap.exists ||
+      normalizeRole(callerMembership.role) !== 'institution_admin' ||
+      normalizeRole(callerMembership.status) !== 'active'
+    ) {
+      throw new HttpsError('permission-denied', 'Not an active institution_admin for this tenant.');
+    }
+
+    const memSnap = await db.collection('tenantMemberships')
+      .where('tenantId', '==', tenantId)
+      .where('role', '==', 'instructor')
+      .get();
+
+    const memberships = (memSnap.docs || []).map((d) => ({ id: d.id, ...(d.data() || {}) }));
+    const uids = [...new Set(memberships.map((m) => String(m.uid || '').trim()).filter(Boolean))];
+    const usersMap = {};
+    for (const uid of uids) {
+      const userSnap = await db.collection('users').doc(uid).get();
+      if (userSnap.exists) usersMap[uid] = userSnap.data() || {};
+    }
+
+    function formatCreatedAt(ts) {
+      try {
+        if (!ts) return '—';
+        const d = ts && typeof ts.toDate === 'function'
+          ? ts.toDate()
+          : (ts && ts._seconds ? new Date(ts._seconds * 1000) : null);
+        return d ? d.toLocaleString('tr-TR') : '—';
+      } catch (_) {
+        return '—';
+      }
+    }
+
+    const instructors = memberships.map((m) => {
+      const uid = String(m.uid || '').trim();
+      const user = usersMap[uid] || {};
+      const status = String(m.status || '').trim().toLowerCase();
+      const statusLabel = status === 'active' ? 'Aktif' : (status === 'suspended' ? 'Pasif' : (status || '—'));
+      return {
+        uid: uid,
+        membershipId: m.id,
+        username: user.username || (user.email ? String(user.email).split('@')[0] : '') || '—',
+        fullName: (user.fullName && String(user.fullName).trim()) ? String(user.fullName).trim() : '—',
+        phone: user.phone ? String(user.phone).trim() : '',
+        contactEmail: user.contactEmail ? String(user.contactEmail).trim() : '',
+        photoUrl: user.photoUrl ? String(user.photoUrl).trim() : (user.photoURL ? String(user.photoURL).trim() : ''),
+        status: status,
+        statusLabel: statusLabel,
+        isActive: user.isActive !== false && status === 'active',
+        createdAt: formatCreatedAt(user.createdAt) !== '—' ? formatCreatedAt(user.createdAt) : formatCreatedAt(m.createdAt)
+      };
+    });
+
+    instructors.sort((a, b) => String(a.fullName || '').localeCompare(String(b.fullName || ''), 'tr'));
+
+    return {
+      ok: true,
+      tenantId: tenantId,
+      total: instructors.length,
+      active: instructors.filter((i) => i.status === 'active').length,
+      instructors: instructors
+    };
+  }
+);
+
+/**
+ * ADMIN-MGMT-A — Create additional institution_admin in caller's tenant.
+ * Auth email is always {username}@surucu.app. adminPosition is title-only (not Auth role).
+ */
+exports.createTenantInstitutionAdminForInstitutionAdmin = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const data = request && request.data ? request.data : {};
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    const usernameRaw = (data && data.username ? String(data.username) : '');
+    const password = (data && data.password ? String(data.password) : '');
+    const fullNameRaw = (data && data.fullName ? String(data.fullName) : '');
+
+    const authCtx = await assertActiveInstitutionAdminForTenant(callerUid, tenantId);
+    assertElevatedInstitutionAdminPosition(authCtx && authCtx.userData);
+
+    const username = usernameRaw.trim().toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9._-]/g, '');
+    const authEmail = username ? username + '@surucu.app' : '';
+    const fullName = fullNameRaw.trim().replace(/\s+/g, ' ');
+    const adminPosition = parseRequiredAdminPosition(data && data.adminPosition);
+
+    if (!fullName || fullName.length < 2) {
+      throw new HttpsError('invalid-argument', 'Ad Soyad gereklidir.');
+    }
+    if (fullName.length > 200) {
+      throw new HttpsError('invalid-argument', 'Ad Soyad en fazla 200 karakter olabilir.');
+    }
+    if (!username) {
+      throw new HttpsError('invalid-argument', 'username is required.');
+    }
+    if (!password || password.length < 6) {
+      throw new HttpsError('invalid-argument', 'Şifre en az 6 karakter olmalı.');
+    }
+
+    const existingUsernameSnap = await db.collection('users').where('username', '==', username).limit(1).get();
+    if (existingUsernameSnap && !existingUsernameSnap.empty) {
+      throw new HttpsError('already-exists', 'Bu kullanıcı adı zaten kullanılıyor.');
+    }
+
+    let newUid = '';
+    try {
+      const userRecord = await admin.auth().createUser({
+        email: authEmail,
+        password: password
+      });
+      newUid = userRecord && userRecord.uid ? String(userRecord.uid) : '';
+      if (!newUid) {
+        throw new HttpsError('internal', 'Kullanıcı oluşturulamadı.');
+      }
+
+      const now = admin.firestore.FieldValue.serverTimestamp();
+      const userPayload = {
+        username: username,
+        email: authEmail,
+        fullName: fullName,
+        adminPosition: adminPosition,
+        role: 'institution_admin',
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+        createdBy: callerUid
+      };
+
+      const membershipId = newUid + '_' + tenantId;
+      const memPayload = {
+        uid: newUid,
+        tenantId: tenantId,
+        role: 'institution_admin',
+        status: 'active',
+        createdAt: now,
+        updatedAt: now,
+        createdBy: callerUid
+      };
+
+      await db.collection('users').doc(newUid).set(userPayload, { merge: true });
+      await db.collection('tenantMemberships').doc(membershipId).set(memPayload, { merge: true });
+
+      return {
+        ok: true,
+        uid: newUid,
+        username: username,
+        tenantId: tenantId,
+        membershipId: membershipId,
+        role: 'institution_admin',
+        adminPosition: adminPosition
+      };
+    } catch (e) {
+      if (newUid) {
+        try {
+          await admin.auth().deleteUser(newUid);
+        } catch (_) {}
+      }
+      if (e instanceof HttpsError) throw e;
+      const code = String((e && e.code) || '');
+      if (code === 'auth/email-already-exists') {
+        throw new HttpsError('already-exists', 'Bu kullanıcı adı zaten kullanılıyor.');
+      }
+      if (code === 'auth/invalid-password') {
+        throw new HttpsError('invalid-argument', 'Şifre en az 6 karakter olmalı.');
+      }
+      throw new HttpsError(
+        'internal',
+        (e && e.message) ? e.message : 'Failed to create tenant institution admin.'
+      );
+    }
+  }
+);
+
+/**
+ * ADMIN-MGMT-A — List institution_admin accounts for caller's tenant.
+ */
+exports.listTenantInstitutionAdminsForInstitutionAdmin = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const data = request && request.data ? request.data : {};
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    const authCtx = await assertActiveInstitutionAdminForTenant(callerUid, tenantId);
+    assertElevatedInstitutionAdminPosition(authCtx && authCtx.userData);
+
+    const memSnap = await db.collection('tenantMemberships')
+      .where('tenantId', '==', tenantId)
+      .where('role', '==', 'institution_admin')
+      .get();
+
+    const memberships = (memSnap.docs || []).map((d) => ({ id: d.id, ...(d.data() || {}) }));
+    const uids = [...new Set(memberships.map((m) => String(m.uid || '').trim()).filter(Boolean))];
+    const usersMap = {};
+    for (const uid of uids) {
+      const userSnap = await db.collection('users').doc(uid).get();
+      if (userSnap.exists) usersMap[uid] = userSnap.data() || {};
+    }
+
+    function formatCreatedAt(ts) {
+      try {
+        if (!ts) return '—';
+        const d = ts && typeof ts.toDate === 'function'
+          ? ts.toDate()
+          : (ts && ts._seconds ? new Date(ts._seconds * 1000) : null);
+        return d ? d.toLocaleString('tr-TR') : '—';
+      } catch (_) {
+        return '—';
+      }
+    }
+
+    const admins = memberships.map((m) => {
+      const uid = String(m.uid || '').trim();
+      const user = usersMap[uid] || {};
+      const status = String(m.status || '').trim().toLowerCase();
+      const statusLabel = status === 'active' ? 'Aktif' : (status === 'suspended' ? 'Pasif' : (status || '—'));
+      const adminPosition = normalizeAdminPosition(user.adminPosition);
+      return {
+        uid: uid,
+        membershipId: m.id,
+        username: user.username || (user.email ? String(user.email).split('@')[0] : '') || '—',
+        email: user.email ? String(user.email).trim() : '',
+        fullName: (user.fullName && String(user.fullName).trim()) ? String(user.fullName).trim() : '',
+        adminPosition: ADMIN_POSITION_VALUES[adminPosition] ? adminPosition : '',
+        adminPositionLabel: adminPositionLabel(adminPosition) || '',
+        status: status,
+        statusLabel: statusLabel,
+        createdBy: m.createdBy ? String(m.createdBy).trim() : (user.createdBy ? String(user.createdBy).trim() : ''),
+        createdAt: formatCreatedAt(user.createdAt) !== '—' ? formatCreatedAt(user.createdAt) : formatCreatedAt(m.createdAt)
+      };
+    });
+
+    admins.sort((a, b) => String(a.fullName || a.username || '').localeCompare(String(b.fullName || b.username || ''), 'tr'));
+
+    return {
+      ok: true,
+      tenantId: tenantId,
+      total: admins.length,
+      admins: admins
+    };
+  }
+);
+
+/**
+ * POSITION-A — Own profile: fullName always (when authorized);
+ * adminPosition only via one-time legacy bootstrap (missing position + missing createdBy).
+ */
+exports.updateOwnInstitutionAdminProfile = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const data = request && request.data ? request.data : {};
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    const authCtx = await assertActiveInstitutionAdminForTenant(callerUid, tenantId);
+    const userData = (authCtx && authCtx.userData) || {};
+
+    const fullName = String((data && data.fullName) || '').trim().replace(/\s+/g, ' ');
+    if (!fullName || fullName.length < 2) {
+      throw new HttpsError('invalid-argument', 'Ad Soyad gereklidir.');
+    }
+    if (fullName.length > 200) {
+      throw new HttpsError('invalid-argument', 'Ad Soyad en fazla 200 karakter olabilir.');
+    }
+
+    const existingPos = normalizeAdminPosition(userData.adminPosition);
+    const hasValidExisting = !!ADMIN_POSITION_VALUES[existingPos];
+    const clientPosRaw = data && data.adminPosition != null ? String(data.adminPosition) : '';
+    const clientPosProvided = String(clientPosRaw || '').trim() !== '';
+
+    if (hasValidExisting) {
+      if (clientPosProvided) {
+        const requestedPos = normalizeAdminPosition(clientPosRaw);
+        if (requestedPos && requestedPos !== existingPos) {
+          throw new HttpsError(
+            'permission-denied',
+            'Statü bilginiz güncellenemez. Yalnızca ad soyad değiştirilebilir.'
+          );
+        }
+      }
+      await db.collection('users').doc(callerUid).set({
+        fullName: fullName,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      return {
+        ok: true,
+        uid: callerUid,
+        fullName: fullName,
+        adminPosition: existingPos,
+        bootstrap: false
+      };
+    }
+
+    if (isLegacyInstitutionAdminBootstrapEligible(userData)) {
+      const adminPosition = parseRequiredAdminPosition(data && data.adminPosition);
+      await db.collection('users').doc(callerUid).set({
+        fullName: fullName,
+        adminPosition: adminPosition,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      return {
+        ok: true,
+        uid: callerUid,
+        fullName: fullName,
+        adminPosition: adminPosition,
+        bootstrap: true
+      };
+    }
+
+    if (clientPosProvided) {
+      throw new HttpsError(
+        'permission-denied',
+        'Statü bilginiz güncellenemez. Yalnızca ad soyad değiştirilebilir.'
+      );
+    }
+
+    await db.collection('users').doc(callerUid).set({
+      fullName: fullName,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    return {
+      ok: true,
+      uid: callerUid,
+      fullName: fullName,
+      adminPosition: '',
+      bootstrap: false
+    };
+  }
+);
+
+/**
+ * ROOM-B1.6-A — Elevated admin updates own OR another same-tenant institution_admin adminPosition.
+ * Self-demotion to professional_staff denied when caller is the last elevated admin.
+ * updateOwnInstitutionAdminProfile remains position-immutable after set.
+ */
+exports.updateTenantInstitutionAdminPositionForInstitutionAdmin = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const data = request && request.data ? request.data : {};
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    const targetUid = (data && data.targetUid ? String(data.targetUid) : '').trim();
+    const authCtx = await assertActiveInstitutionAdminForTenant(callerUid, tenantId);
+    assertElevatedInstitutionAdminPosition(authCtx && authCtx.userData);
+
+    if (!targetUid) {
+      throw new HttpsError('invalid-argument', 'targetUid is required.');
+    }
+
+    const adminPosition = parseRequiredAdminPosition(data && data.adminPosition);
+
+    const targetUserSnap = await db.collection('users').doc(targetUid).get();
+    if (!targetUserSnap.exists) {
+      throw new HttpsError('not-found', 'Kurum yöneticisi kaydı bulunamadı.');
+    }
+    const targetUser = targetUserSnap.data() || {};
+    if (normalizeRole(targetUser.role) !== 'institution_admin') {
+      throw new HttpsError('permission-denied', 'Hedef hesap kurum yöneticisi değil.');
+    }
+
+    const targetMembershipId = targetUid + '_' + tenantId;
+    const targetMembershipSnap = await db.collection('tenantMemberships').doc(targetMembershipId).get();
+    if (!targetMembershipSnap.exists) {
+      throw new HttpsError('not-found', 'Kurum yöneticisi kaydı bulunamadı.');
+    }
+    const targetMembership = targetMembershipSnap.data() || {};
+    const memTenantId = String(targetMembership.tenantId || '').trim();
+    if (memTenantId && memTenantId !== tenantId) {
+      throw new HttpsError('permission-denied', 'Cross-tenant target is not allowed.');
+    }
+    if (normalizeRole(targetMembership.role) !== 'institution_admin') {
+      throw new HttpsError('permission-denied', 'Hedef hesap kurum yöneticisi değil.');
+    }
+
+    if (targetUid === callerUid && adminPosition === 'professional_staff') {
+      const hasOtherElevated = await hasOtherElevatedInstitutionAdminInTenant(tenantId, callerUid);
+      if (!hasOtherElevated) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Son yetkili kurum yöneticisi olarak kendinizi Mesleki Personel statüsüne alamazsınız.'
+        );
+      }
+    }
+
+    try {
+      await db.collection('users').doc(targetUid).set({
+        adminPosition: adminPosition,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      console.error('[InstitutionAdminPosition] update failed', {
+        code: e && e.code ? String(e.code) : null,
+        message: e && e.message ? String(e.message) : String(e)
+      });
+      throw new HttpsError('internal', 'Statü güncellenemedi. Lütfen tekrar deneyin.');
+    }
+
+    return {
+      ok: true,
+      tenantId: tenantId,
+      targetUid: targetUid,
+      adminPosition: adminPosition
+    };
+  }
+);
+
+/**
+ * Phase 1 — Aktif / Pasif for Direksiyon Usta Öğretici (institution_admin only).
+ * status: 'active' | 'suspended'
+ */
+exports.updateTenantInstructorStatusForInstitutionAdmin = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const data = request && request.data ? request.data : {};
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    if (!tenantId) {
+      throw new HttpsError('invalid-argument', 'tenantId is required.');
+    }
+
+    const nextStatusRaw = (data && data.status ? String(data.status) : '').trim().toLowerCase();
+    if (nextStatusRaw !== 'active' && nextStatusRaw !== 'suspended') {
+      throw new HttpsError('invalid-argument', 'status must be active or suspended.');
+    }
+
+    const membershipId = resolveMembershipId(data, tenantId);
+
+    const callerMembershipId = callerUid + '_' + tenantId;
+    const callerMembershipSnap = await db.collection('tenantMemberships').doc(callerMembershipId).get();
+    const callerMembership = callerMembershipSnap.exists ? (callerMembershipSnap.data() || {}) : {};
+    if (
+      !callerMembershipSnap.exists ||
+      normalizeRole(callerMembership.role) !== 'institution_admin' ||
+      normalizeRole(callerMembership.status) !== 'active'
+    ) {
+      throw new HttpsError('permission-denied', 'Not an active institution_admin for this tenant.');
+    }
+
+    const membershipRef = db.collection('tenantMemberships').doc(membershipId);
+    const membershipSnap = await membershipRef.get();
+    if (!membershipSnap.exists) {
+      throw new HttpsError('not-found', 'Membership not found.');
+    }
+
+    const membershipData = membershipSnap.data() || {};
+    const targetTenantId = String(membershipData.tenantId || '').trim();
+    const targetRole = normalizeRole(membershipData.role);
+    const targetUid = String(membershipData.uid || '').trim();
+    if (!targetUid) {
+      throw new HttpsError('failed-precondition', 'Target uid is missing in membership.');
+    }
+    if (targetTenantId !== tenantId) {
+      throw new HttpsError('permission-denied', 'Target membership does not belong to this tenant.');
+    }
+    if (targetRole !== 'instructor') {
+      throw new HttpsError('invalid-argument', 'Only instructor memberships can be updated.');
+    }
+
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    const memPatch = {
+      status: nextStatusRaw,
+      updatedAt: now
+    };
+    if (nextStatusRaw === 'suspended') {
+      memPatch.suspendedAt = now;
+      memPatch.suspendedBy = callerUid;
+    } else {
+      memPatch.reactivatedAt = now;
+      memPatch.reactivatedBy = callerUid;
+    }
+
+    await membershipRef.set(memPatch, { merge: true });
+    await db.collection('users').doc(targetUid).set({
+      isActive: nextStatusRaw === 'active',
+      updatedAt: now
+    }, { merge: true });
+
+    let authDisabled = false;
+    let authEnabled = false;
+    if (nextStatusRaw === 'suspended') {
+      const activeOther = await db.collection('tenantMemberships')
+        .where('uid', '==', targetUid)
+        .where('status', '==', 'active')
+        .limit(1)
+        .get();
+      if (!activeOther || activeOther.empty) {
+        try {
+          await admin.auth().updateUser(targetUid, { disabled: true });
+          authDisabled = true;
+        } catch (e) {
+          const code = String((e && e.code) || '');
+          if (code !== 'auth/user-not-found') throw e;
+        }
+      }
+    } else {
+      try {
+        await admin.auth().updateUser(targetUid, { disabled: false });
+        authEnabled = true;
+      } catch (e) {
+        const code = String((e && e.code) || '');
+        if (code !== 'auth/user-not-found') throw e;
+      }
+    }
+
+    return {
+      ok: true,
+      uid: targetUid,
+      tenantId: tenantId,
+      membershipId: membershipId,
+      status: nextStatusRaw,
+      authDisabled: authDisabled,
+      authEnabled: authEnabled
+    };
+  }
+);
+
+/**
+ * Detect image content type from magic bytes (PNG / JPEG / WEBP).
+ * @param {Buffer} buffer
+ * @returns {string|null}
+ */
+function detectInstructorPhotoContentType(buffer) {
+  if (!Buffer.isBuffer(buffer) || buffer.length < 12) return null;
+  if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) {
+    return 'image/png';
+  }
+  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+    return 'image/jpeg';
+  }
+  if (
+    buffer.toString('ascii', 0, 4) === 'RIFF' &&
+    buffer.toString('ascii', 8, 12) === 'WEBP'
+  ) {
+    return 'image/webp';
+  }
+  return null;
+}
+
+/**
+ * @param {*} raw
+ * @returns {string}
+ */
+function sanitizeInstructorPhotoOriginalName(raw) {
+  var s = String(raw == null ? '' : raw)
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .replace(/[/\\]/g, '')
+    .trim();
+  if (!s) s = 'profile';
+  if (s.length > 180) s = s.slice(0, 180);
+  return s;
+}
+
+/**
+ * Parse + validate instructor profile photo from callable payload.
+ * Prefers magic-byte detection over client MIME claim.
+ * @param {*} data
+ * @returns {{ buffer: Buffer, contentType: string, ext: string, originalName: string, byteLength: number }}
+ */
+function parseAndValidateInstructorPhoto(data) {
+  var claimedType =
+    typeof data.photoContentType === 'string' ? data.photoContentType.trim().toLowerCase() : '';
+  if (!INSTRUCTOR_PHOTO_ALLOWED[claimedType]) {
+    throw new HttpsError(
+      'invalid-argument',
+      'Lütfen PNG, JPG veya WEBP formatında bir fotoğraf seçin.'
+    );
+  }
+
+  var base64Raw = typeof data.photoBase64 === 'string' ? data.photoBase64.trim() : '';
+  if (!base64Raw) {
+    throw new HttpsError('invalid-argument', 'Lütfen bir profil fotoğrafı seçin.');
+  }
+  if (base64Raw.indexOf('base64,') !== -1) {
+    base64Raw = base64Raw.split('base64,').pop() || '';
+  }
+  base64Raw = base64Raw.replace(/\s+/g, '');
+
+  var buffer;
+  try {
+    buffer = Buffer.from(base64Raw, 'base64');
+  } catch (e) {
+    throw new HttpsError(
+      'invalid-argument',
+      'Lütfen PNG, JPG veya WEBP formatında bir fotoğraf seçin.'
+    );
+  }
+
+  if (!buffer || !buffer.length) {
+    throw new HttpsError('invalid-argument', 'Lütfen bir profil fotoğrafı seçin.');
+  }
+  if (buffer.length > INSTRUCTOR_PHOTO_MAX_BYTES) {
+    throw new HttpsError('invalid-argument', 'Profil fotoğrafı en fazla 2 MB olabilir.');
+  }
+
+  var detected = detectInstructorPhotoContentType(buffer);
+  if (!detected || !INSTRUCTOR_PHOTO_ALLOWED[detected]) {
+    throw new HttpsError(
+      'invalid-argument',
+      'Lütfen PNG, JPG veya WEBP formatında bir fotoğraf seçin.'
+    );
+  }
+  if (detected !== claimedType) {
+    claimedType = detected;
+  }
+
+  return {
+    buffer: buffer,
+    contentType: claimedType,
+    ext: INSTRUCTOR_PHOTO_ALLOWED[claimedType].ext,
+    originalName: sanitizeInstructorPhotoOriginalName(data.photoOriginalName),
+    byteLength: buffer.length
+  };
+}
+
+/**
+ * Build a persistent Firebase Storage download URL (token metadata; not a short-lived signed URL).
+ * @param {string} bucketName
+ * @param {string} storagePath
+ * @param {string} downloadToken
+ * @returns {string}
+ */
+function buildPersistentStorageDownloadUrl(bucketName, storagePath, downloadToken) {
+  var encoded = encodeURIComponent(storagePath);
+  return (
+    'https://firebasestorage.googleapis.com/v0/b/' +
+    bucketName +
+    '/o/' +
+    encoded +
+    '?alt=media&token=' +
+    downloadToken
+  );
+}
+
+/**
+ * Phase 1B — Upload / replace Direksiyon Usta Öğretici profile photo (institution_admin only).
+ * Admin SDK write to user-profiles/{uid}/… — no client Storage path, no storage.rules change.
+ */
+exports.uploadTenantInstructorPhotoForInstitutionAdmin = onCall(
+  { region: 'us-central1', memory: '512MiB' },
+  async (request) => {
+    const data = request && request.data ? request.data : {};
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    const instructorUid = (data && data.instructorUid ? String(data.instructorUid) : '').trim();
+    if (!tenantId) {
+      throw new HttpsError('invalid-argument', 'tenantId is required.');
+    }
+    if (!instructorUid) {
+      throw new HttpsError('invalid-argument', 'instructorUid is required.');
+    }
+
+    const callerMembershipId = callerUid + '_' + tenantId;
+    const callerMembershipSnap = await db.collection('tenantMemberships').doc(callerMembershipId).get();
+    const callerMembership = callerMembershipSnap.exists ? (callerMembershipSnap.data() || {}) : {};
+    if (
+      !callerMembershipSnap.exists ||
+      normalizeRole(callerMembership.role) !== 'institution_admin' ||
+      normalizeRole(callerMembership.status) !== 'active'
+    ) {
+      throw new HttpsError('permission-denied', 'Not an active institution_admin for this tenant.');
+    }
+
+    const targetMembershipId = instructorUid + '_' + tenantId;
+    const targetMembershipSnap = await db.collection('tenantMemberships').doc(targetMembershipId).get();
+    if (!targetMembershipSnap.exists) {
+      throw new HttpsError('not-found', 'Instructor membership not found.');
+    }
+    const targetMembership = targetMembershipSnap.data() || {};
+    if (String(targetMembership.tenantId || '').trim() !== tenantId) {
+      throw new HttpsError('permission-denied', 'Target membership does not belong to this tenant.');
+    }
+    if (normalizeRole(targetMembership.role) !== 'instructor') {
+      throw new HttpsError('permission-denied', 'Target is not a Direksiyon Usta Öğretici.');
+    }
+    if (String(targetMembership.uid || '').trim() !== instructorUid) {
+      throw new HttpsError('failed-precondition', 'Membership uid mismatch.');
+    }
+
+    const targetUserSnap = await db.collection('users').doc(instructorUid).get();
+    if (!targetUserSnap.exists) {
+      throw new HttpsError('not-found', 'Instructor user not found.');
+    }
+    const targetUser = targetUserSnap.data() || {};
+    if (normalizeRole(targetUser.role) !== 'instructor') {
+      throw new HttpsError('permission-denied', 'Target user is not an instructor.');
+    }
+
+    const photo = parseAndValidateInstructorPhoto(data);
+    const previousPath = targetUser.photoStoragePath
+      ? String(targetUser.photoStoragePath).trim()
+      : '';
+
+    const downloadToken = crypto.randomUUID();
+    const storagePath =
+      'user-profiles/' + instructorUid + '/profile_' + Date.now() + '.' + photo.ext;
+    const bucket = admin.storage().bucket();
+    const file = bucket.file(storagePath);
+    let uploaded = false;
+
+    try {
+      await file.save(photo.buffer, {
+        resumable: false,
+        metadata: {
+          contentType: photo.contentType,
+          metadata: {
+            firebaseStorageDownloadTokens: downloadToken,
+            purpose: 'instructor_profile_photo',
+            tenantId: tenantId,
+            instructorUid: instructorUid,
+            uploadedBy: callerUid,
+            originalName: photo.originalName
+          }
+        }
+      });
+      uploaded = true;
+
+      const photoUrl = buildPersistentStorageDownloadUrl(bucket.name, storagePath, downloadToken);
+      const now = admin.firestore.FieldValue.serverTimestamp();
+      await db.collection('users').doc(instructorUid).set({
+        photoUrl: photoUrl,
+        photoStoragePath: storagePath,
+        photoUpdatedAt: now,
+        updatedAt: now
+      }, { merge: true });
+
+      if (previousPath && previousPath !== storagePath) {
+        try {
+          await bucket.file(previousPath).delete({ ignoreNotFound: true });
+        } catch (cleanupErr) {
+          console.warn(
+            '[uploadTenantInstructorPhotoForInstitutionAdmin] previous photo cleanup failed:',
+            cleanupErr && cleanupErr.message ? cleanupErr.message : cleanupErr
+          );
+        }
+      }
+
+      return {
+        ok: true,
+        uid: instructorUid,
+        photoUrl: photoUrl,
+        photoUpdatedAt: new Date().toISOString()
+      };
+    } catch (e) {
+      if (uploaded) {
+        try {
+          await file.delete({ ignoreNotFound: true });
+        } catch (_) {}
+      }
+      if (e instanceof HttpsError) throw e;
+      throw new HttpsError(
+        'internal',
+        (e && e.message) ? e.message : 'Failed to upload instructor photo.'
+      );
+    }
+  }
+);
+
+/**
+ * Phase 1B — Hard-delete Direksiyon Usta Öğretici (institution_admin only).
+ * Mirrors deleteTenantStudentForInstitutionAdmin guards where compatible.
+ *
+ * NOTE (future): When instructor-linked scheduling records become active
+ * (drivingLessons / availability / lesson requests / staff chat), hard delete
+ * must be blocked or converted to archival behavior. Do not hard-delete
+ * instructors that are still referenced by live scheduling data.
+ */
+exports.deleteTenantInstructorForInstitutionAdmin = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const data = request && request.data ? request.data : {};
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    if (!tenantId) {
+      throw new HttpsError('invalid-argument', 'tenantId is required.');
+    }
+
+    const instructorUidRaw = (data && data.instructorUid ? String(data.instructorUid) : '').trim();
+    const membershipId = instructorUidRaw
+      ? (instructorUidRaw + '_' + tenantId)
+      : resolveMembershipId(data, tenantId);
+
+    const callerMembershipId = callerUid + '_' + tenantId;
+    const callerMembershipSnap = await db.collection('tenantMemberships').doc(callerMembershipId).get();
+    const callerMembership = callerMembershipSnap.exists ? (callerMembershipSnap.data() || {}) : {};
+    if (
+      !callerMembershipSnap.exists ||
+      normalizeRole(callerMembership.role) !== 'institution_admin' ||
+      normalizeRole(callerMembership.status) !== 'active'
+    ) {
+      throw new HttpsError('permission-denied', 'Not an active institution_admin for this tenant.');
+    }
+
+    const membershipRef = db.collection('tenantMemberships').doc(membershipId);
+    const membershipSnap = await membershipRef.get();
+    if (!membershipSnap.exists) {
+      throw new HttpsError('not-found', 'Instructor membership not found.');
+    }
+
+    const membershipData = membershipSnap.data() || {};
+    const targetTenantId = String(membershipData.tenantId || '').trim();
+    const targetRole = normalizeRole(membershipData.role);
+    const targetUid = String(membershipData.uid || '').trim();
+    if (!targetUid) {
+      throw new HttpsError('failed-precondition', 'Target uid is missing in membership.');
+    }
+    if (targetTenantId !== tenantId) {
+      throw new HttpsError('permission-denied', 'Target membership does not belong to this tenant.');
+    }
+    if (targetRole !== 'instructor') {
+      throw new HttpsError('invalid-argument', 'Only instructor memberships can be deleted.');
+    }
+
+    const targetUserSnap = await db.collection('users').doc(targetUid).get();
+    if (!targetUserSnap.exists) {
+      throw new HttpsError('not-found', 'Instructor user not found.');
+    }
+    const targetUser = targetUserSnap.data() || {};
+    if (normalizeRole(targetUser.role) !== 'instructor') {
+      throw new HttpsError('permission-denied', 'Target user is not an instructor.');
+    }
+
+    const targetMembershipsSnap = await db.collection('tenantMemberships')
+      .where('uid', '==', targetUid)
+      .get();
+    if (targetMembershipsSnap.size > 1) {
+      throw new HttpsError(
+        'failed-precondition',
+        'Bu direksiyon usta öğreticinin birden fazla kurum üyeliği var. Kalıcı silme için Super Admin özel temizlik akışı gerekir.'
+      );
+    }
+
+    const photoStoragePath = targetUser.photoStoragePath
+      ? String(targetUser.photoStoragePath).trim()
+      : '';
+
+    await membershipRef.delete();
+    const membershipDeleted = true;
+
+    const userRef = db.collection('users').doc(targetUid);
+    await userRef.delete();
+    const userDocDeleted = true;
+
+    let authDeleted = false;
+    try {
+      await admin.auth().deleteUser(targetUid);
+      authDeleted = true;
+    } catch (e) {
+      const code = String((e && e.code) || '');
+      if (code !== 'auth/user-not-found') {
+        throw e;
+      }
+    }
+
+    let photoCleanupAttempted = false;
+    let photoCleanupOk = false;
+    try {
+      photoCleanupAttempted = true;
+      const bucket = admin.storage().bucket();
+      if (photoStoragePath) {
+        try {
+          await bucket.file(photoStoragePath).delete({ ignoreNotFound: true });
+        } catch (pathErr) {
+          console.warn(
+            '[deleteTenantInstructorForInstitutionAdmin] photoStoragePath cleanup failed',
+            {
+              uid: targetUid,
+              tenantId: tenantId,
+              error: pathErr && pathErr.message ? pathErr.message : String(pathErr)
+            }
+          );
+        }
+      }
+      try {
+        await bucket.deleteFiles({
+          prefix: 'user-profiles/' + targetUid + '/',
+          force: true
+        });
+        photoCleanupOk = true;
+      } catch (prefixErr) {
+        console.warn(
+          '[deleteTenantInstructorForInstitutionAdmin] user-profiles prefix cleanup failed',
+          {
+            uid: targetUid,
+            tenantId: tenantId,
+            error: prefixErr && prefixErr.message ? prefixErr.message : String(prefixErr)
+          }
+        );
+      }
+    } catch (cleanupErr) {
+      console.warn(
+        '[deleteTenantInstructorForInstitutionAdmin] photo cleanup failed',
+        {
+          uid: targetUid,
+          tenantId: tenantId,
+          error: cleanupErr && cleanupErr.message ? cleanupErr.message : String(cleanupErr)
+        }
+      );
+    }
+
+    return {
+      ok: true,
+      uid: targetUid,
+      tenantId: tenantId,
+      membershipId: membershipId,
+      authDeleted: authDeleted,
+      userDocDeleted: userDocDeleted,
+      membershipDeleted: membershipDeleted,
+      photoCleanupAttempted: photoCleanupAttempted,
+      photoCleanupOk: photoCleanupOk
+    };
+  }
+);
+
+/* -------------------------------------------------------------------------- */
+/* Phase 2B — Canonical drivingLessons (Institution Admin assignment)         */
+/* -------------------------------------------------------------------------- */
+
+const DRIVING_LESSON_STATUSES_BLOCKING = {
+  pending_instructor: true,
+  confirmed: true,
+  consultation_requested: true,
+  completed: true
+};
+
+const DRIVING_LESSON_DURATION_MINUTES_V1 = 120;
+const DRIVING_LESSON_ALLOWED_START_HOURS_V1 = {
+  8: true,
+  10: true,
+  12: true,
+  14: true,
+  16: true,
+  18: true,
+  20: true
+};
+const DRIVING_LESSON_EDITABLE_STATUSES = {
+  pending_instructor: true,
+  confirmed: true,
+  consultation_requested: true
+};
+const DRIVING_LESSON_CANCELLABLE_STATUSES = {
+  pending_instructor: true,
+  confirmed: true,
+  consultation_requested: true
+};
+const DRIVING_LESSON_ADDRESS_MAX = 500;
+const DRIVING_LESSON_OVERLAP_LOOKBACK_MS = 24 * 60 * 60 * 1000;
+
+function assertActiveInstitutionAdminForTenant(callerUid, tenantId) {
+  // Intentionally institution_admin-only (matches instructor module; not super_admin).
+  // Also verifies users.role === institution_admin (ADMIN-MGMT-A).
+  const tid = String(tenantId || '').trim();
+  if (!tid) {
+    return Promise.reject(new HttpsError('invalid-argument', 'tenantId is required.'));
+  }
+  return Promise.all([
+    db.collection('tenantMemberships').doc(callerUid + '_' + tid).get(),
+    db.collection('users').doc(callerUid).get()
+  ]).then(([callerMembershipSnap, userSnap]) => {
+    if (!userSnap.exists) {
+      throw new HttpsError('permission-denied', 'User profile could not be verified.');
+    }
+    const userData = userSnap.data() || {};
+    if (normalizeRole(userData.role) !== 'institution_admin') {
+      throw new HttpsError('permission-denied', 'Not an active institution_admin for this tenant.');
+    }
+    const callerMembership = callerMembershipSnap.exists ? (callerMembershipSnap.data() || {}) : {};
+    const membershipTenantId = String(callerMembership.tenantId || '').trim();
+    if (
+      !callerMembershipSnap.exists ||
+      (membershipTenantId && membershipTenantId !== tid) ||
+      normalizeRole(callerMembership.role) !== 'institution_admin' ||
+      normalizeRole(callerMembership.status) !== 'active'
+    ) {
+      throw new HttpsError('permission-denied', 'Not an active institution_admin for this tenant.');
+    }
+    return { membership: callerMembership, userData: userData };
+  });
+}
+
+function parseTurkeySlotStartIso(raw) {
+  const iso = String(raw || '').trim();
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\+03:00$/);
+  if (!m) {
+    throw new HttpsError(
+      'invalid-argument',
+      'slotStart must be YYYY-MM-DDTHH:mm:ss+03:00.'
+    );
+  }
+  const hour = parseInt(m[4], 10);
+  const minute = parseInt(m[5], 10);
+  const second = parseInt(m[6], 10);
+  if (second !== 0) {
+    throw new HttpsError('invalid-argument', 'slotStart seconds must be 00.');
+  }
+  if (minute !== 0) {
+    throw new HttpsError('invalid-argument', 'slotStart minutes must be 00.');
+  }
+  if (!DRIVING_LESSON_ALLOWED_START_HOURS_V1[hour]) {
+    throw new HttpsError(
+      'invalid-argument',
+      'slotStart hour must be one of 08:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00.'
+    );
+  }
+  const startMs = Date.parse(iso);
+  if (!Number.isFinite(startMs)) {
+    throw new HttpsError('invalid-argument', 'slotStart could not be parsed.');
+  }
+  const endMs = startMs + (DRIVING_LESSON_DURATION_MINUTES_V1 * 60 * 1000);
+  // Standard 120-minute slots must end by 22:00 Europe/Istanbul (20:00 start → 22:00 end).
+  if (hour + (DRIVING_LESSON_DURATION_MINUTES_V1 / 60) > 22) {
+    throw new HttpsError('invalid-argument', 'Lesson must end by 22:00.');
+  }
+  return {
+    iso: iso,
+    hour: hour,
+    startMs: startMs,
+    endMs: endMs,
+    startTs: admin.firestore.Timestamp.fromMillis(startMs),
+    endTs: admin.firestore.Timestamp.fromMillis(endMs)
+  };
+}
+
+function parseTurkeyDateStartIso(dateYmd) {
+  const raw = String(dateYmd || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    throw new HttpsError('invalid-argument', 'Date must be YYYY-MM-DD.');
+  }
+  const ms = Date.parse(raw + 'T00:00:00+03:00');
+  if (!Number.isFinite(ms)) {
+    throw new HttpsError('invalid-argument', 'Date could not be parsed.');
+  }
+  return ms;
+}
+
+function intervalsOverlap(aStartMs, aEndMs, bStartMs, bEndMs) {
+  return aStartMs < bEndMs && aEndMs > bStartMs;
+}
+
+function lessonBlocksOverlap(status) {
+  return !!DRIVING_LESSON_STATUSES_BLOCKING[normalizeRole(status)];
+}
+
+function serializeDrivingLessonDoc(id, data) {
+  const d = data || {};
+  function tsToIso(ts) {
+    try {
+      if (!ts) return null;
+      const date = typeof ts.toDate === 'function'
+        ? ts.toDate()
+        : (ts && typeof ts._seconds === 'number' ? new Date(ts._seconds * 1000) : null);
+      if (!(date instanceof Date) || !Number.isFinite(date.getTime())) return null;
+      return date.toISOString();
+    } catch (_) {
+      return null;
+    }
+  }
+  function tsToMillis(ts) {
+    try {
+      if (!ts) return null;
+      if (typeof ts.toMillis === 'function') return ts.toMillis();
+      if (typeof ts.toDate === 'function') return ts.toDate().getTime();
+      if (typeof ts._seconds === 'number') return ts._seconds * 1000;
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+  return {
+    id: id,
+    tenantId: String(d.tenantId || '').trim(),
+    instructorUid: String(d.instructorUid || '').trim(),
+    studentUid: String(d.studentUid || '').trim(),
+    studentNameSnap: d.studentNameSnap ? String(d.studentNameSnap).trim() : '',
+    instructorNameSnap: d.instructorNameSnap ? String(d.instructorNameSnap).trim() : '',
+    startAt: tsToIso(d.startAt),
+    endAt: tsToIso(d.endAt),
+    startAtMs: tsToMillis(d.startAt),
+    endAtMs: tsToMillis(d.endAt),
+    durationMinutes: Number(d.durationMinutes) || DRIVING_LESSON_DURATION_MINUTES_V1,
+    lessonAddress: d.lessonAddress ? String(d.lessonAddress).trim() : '',
+    addressSource: d.addressSource ? String(d.addressSource).trim() : '',
+    status: normalizeRole(d.status),
+    source: d.source ? String(d.source).trim() : '',
+    createdBy: d.createdBy ? String(d.createdBy).trim() : '',
+    createdAt: tsToIso(d.createdAt),
+    updatedAt: tsToIso(d.updatedAt),
+    createdAtMs: tsToMillis(d.createdAt),
+    updatedAtMs: tsToMillis(d.updatedAt)
+  };
+}
+
+async function queryPotentialOverlaps(fieldName, fieldValue, tenantId, startMs, endMs) {
+  const lookbackStart = admin.firestore.Timestamp.fromMillis(startMs - DRIVING_LESSON_OVERLAP_LOOKBACK_MS);
+  const endTs = admin.firestore.Timestamp.fromMillis(endMs);
+  const snap = await db.collection('drivingLessons')
+    .where('tenantId', '==', tenantId)
+    .where(fieldName, '==', fieldValue)
+    .where('startAt', '>=', lookbackStart)
+    .where('startAt', '<', endTs)
+    .get();
+  return (snap.docs || []).map((doc) => ({ id: doc.id, ...(doc.data() || {}) }));
+}
+
+function findOverlapConflict(rows, candidateStartMs, candidateEndMs) {
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    if (!lessonBlocksOverlap(row.status)) continue;
+    const existingStart = membershipExpiryToMillis(row.startAt);
+    const existingEnd = membershipExpiryToMillis(row.endAt);
+    if (existingStart == null || existingEnd == null) continue;
+    if (intervalsOverlap(existingStart, existingEnd, candidateStartMs, candidateEndMs)) {
+      return row;
+    }
+  }
+  return null;
+}
+
+/**
+ * Phase 2B — Create canonical drivingLessons assignment (institution_admin only).
+ */
+exports.createDrivingLessonAssignmentForInstitutionAdmin = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const data = request && request.data ? request.data : {};
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    const instructorUid = (data && data.instructorUid ? String(data.instructorUid) : '').trim();
+    const studentUid = (data && data.studentUid ? String(data.studentUid) : '').trim();
+    const slotStartRaw = data && data.slotStart != null ? data.slotStart : '';
+    const addressOverrideRaw = data && data.lessonAddressOverride != null
+      ? String(data.lessonAddressOverride)
+      : null;
+
+    if (!tenantId) throw new HttpsError('invalid-argument', 'tenantId is required.');
+    if (!instructorUid) throw new HttpsError('invalid-argument', 'instructorUid is required.');
+    if (!studentUid) throw new HttpsError('invalid-argument', 'studentUid is required.');
+    if (instructorUid === studentUid) {
+      throw new HttpsError('invalid-argument', 'Instructor and student must be different.');
+    }
+
+    await assertActiveInstitutionAdminForTenant(callerUid, tenantId);
+
+    const slot = parseTurkeySlotStartIso(slotStartRaw);
+
+    const tenantSnap = await db.collection('tenants').doc(tenantId).get();
+    if (!tenantSnap.exists) {
+      throw new HttpsError('not-found', 'Tenant not found.');
+    }
+    const tenantData = tenantSnap.data() || {};
+    const tenantAddress = String(tenantData.address || '').trim();
+
+    let lessonAddress = '';
+    let addressSource = 'tenant_default';
+    if (addressOverrideRaw != null) {
+      const trimmedOverride = String(addressOverrideRaw).trim().replace(/\s+/g, ' ');
+      if (trimmedOverride) {
+        if (trimmedOverride.length > DRIVING_LESSON_ADDRESS_MAX) {
+          throw new HttpsError('invalid-argument', 'Ders adresi en fazla 500 karakter olabilir.');
+        }
+        if (trimmedOverride !== tenantAddress) {
+          lessonAddress = trimmedOverride;
+          addressSource = 'override';
+        } else {
+          lessonAddress = tenantAddress;
+          addressSource = 'tenant_default';
+        }
+      }
+    }
+    if (!lessonAddress) {
+      lessonAddress = tenantAddress;
+      addressSource = 'tenant_default';
+    }
+    if (!lessonAddress) {
+      throw new HttpsError('failed-precondition', 'Ders adresi gereklidir. Kurum adresini girin veya bu ders için adres yazın.');
+    }
+    if (lessonAddress.length > DRIVING_LESSON_ADDRESS_MAX) {
+      throw new HttpsError('invalid-argument', 'Ders adresi en fazla 500 karakter olabilir.');
+    }
+
+    const instructorMembershipId = instructorUid + '_' + tenantId;
+    const studentMembershipId = studentUid + '_' + tenantId;
+    const [
+      instructorMemSnap,
+      studentMemSnap,
+      instructorUserSnap,
+      studentUserSnap
+    ] = await Promise.all([
+      db.collection('tenantMemberships').doc(instructorMembershipId).get(),
+      db.collection('tenantMemberships').doc(studentMembershipId).get(),
+      db.collection('users').doc(instructorUid).get(),
+      db.collection('users').doc(studentUid).get()
+    ]);
+
+    if (!instructorMemSnap.exists) {
+      throw new HttpsError('not-found', 'Instructor membership not found.');
+    }
+    const instructorMem = instructorMemSnap.data() || {};
+    if (String(instructorMem.tenantId || '').trim() !== tenantId) {
+      throw new HttpsError('permission-denied', 'Instructor does not belong to this tenant.');
+    }
+    if (normalizeRole(instructorMem.role) !== 'instructor') {
+      throw new HttpsError('invalid-argument', 'Target membership is not an instructor.');
+    }
+    if (normalizeRole(instructorMem.status) !== 'active') {
+      throw new HttpsError('failed-precondition', 'Instructor membership is not active.');
+    }
+    if (!instructorUserSnap.exists) {
+      throw new HttpsError('not-found', 'Instructor user not found.');
+    }
+    const instructorUser = instructorUserSnap.data() || {};
+    if (normalizeRole(instructorUser.role) !== 'instructor') {
+      throw new HttpsError('permission-denied', 'Target user is not an instructor.');
+    }
+
+    if (!studentMemSnap.exists) {
+      throw new HttpsError('not-found', 'Student membership not found.');
+    }
+    const studentMem = studentMemSnap.data() || {};
+    if (String(studentMem.tenantId || '').trim() !== tenantId) {
+      throw new HttpsError('permission-denied', 'Student does not belong to this tenant.');
+    }
+    if (normalizeRole(studentMem.role) !== 'student') {
+      throw new HttpsError('invalid-argument', 'Target membership is not a student.');
+    }
+    if (normalizeProgramType(studentMem.programType) !== DRIVING_PROGRAM_TYPE) {
+      throw new HttpsError('failed-precondition', 'Only Driving/Ehliyet students can be assigned.');
+    }
+    if (normalizeRole(studentMem.status) !== 'active') {
+      throw new HttpsError('failed-precondition', 'Student membership is not active.');
+    }
+    if (!studentUserSnap.exists) {
+      throw new HttpsError('not-found', 'Student user not found.');
+    }
+    const studentUser = studentUserSnap.data() || {};
+    if (normalizeRole(studentUser.role) !== 'student') {
+      throw new HttpsError('permission-denied', 'Target user is not a student.');
+    }
+
+    const instructorNameSnap = (instructorUser.fullName && String(instructorUser.fullName).trim())
+      ? String(instructorUser.fullName).trim()
+      : (instructorUser.username ? String(instructorUser.username).trim() : instructorUid);
+    const studentNameSnap = (studentUser.fullName && String(studentUser.fullName).trim())
+      ? String(studentUser.fullName).trim()
+      : (studentUser.username ? String(studentUser.username).trim() : studentUid);
+
+    // Prefer deterministic id. If an edited lesson still occupies that id but no longer
+    // overlaps this slot, create with an auto id (narrow collision-safety only).
+    const preferredSlotKey = tenantId + '_' + instructorUid + '_' + String(slot.startMs);
+    let lessonRef = db.collection('drivingLessons').doc(preferredSlotKey);
+    let instructorSlotKey = preferredSlotKey;
+    const preferredSnap = await lessonRef.get();
+    if (preferredSnap.exists) {
+      const preferredData = preferredSnap.data() || {};
+      if (lessonBlocksOverlap(preferredData.status)) {
+        const preferredStart = membershipExpiryToMillis(preferredData.startAt);
+        const preferredEnd = membershipExpiryToMillis(preferredData.endAt);
+        const preferredOverlaps = preferredStart != null && preferredEnd != null &&
+          intervalsOverlap(preferredStart, preferredEnd, slot.startMs, slot.endMs);
+        if (preferredOverlaps || preferredStart === slot.startMs) {
+          throw new HttpsError('already-exists', 'Bu saatte öğreticinin başka bir dersi var.');
+        }
+        lessonRef = db.collection('drivingLessons').doc();
+        instructorSlotKey = lessonRef.id;
+      }
+    }
+
+    const [instructorCandidates, studentCandidates] = await Promise.all([
+      queryPotentialOverlaps('instructorUid', instructorUid, tenantId, slot.startMs, slot.endMs),
+      queryPotentialOverlaps('studentUid', studentUid, tenantId, slot.startMs, slot.endMs)
+    ]);
+
+    const instructorConflict = findOverlapConflict(
+      instructorCandidates.filter((row) => row.id !== lessonRef.id),
+      slot.startMs,
+      slot.endMs
+    );
+    if (instructorConflict) {
+      throw new HttpsError('already-exists', 'Bu saatte öğreticinin başka bir dersi var.');
+    }
+    const studentConflict = findOverlapConflict(
+      studentCandidates.filter((row) => row.id !== lessonRef.id),
+      slot.startMs,
+      slot.endMs
+    );
+    if (studentConflict) {
+      throw new HttpsError('already-exists', 'Bu saatte öğrencinin başka bir dersi var.');
+    }
+
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    const lessonPayload = {
+      tenantId: tenantId,
+      instructorUid: instructorUid,
+      studentUid: studentUid,
+      studentNameSnap: studentNameSnap,
+      instructorNameSnap: instructorNameSnap,
+      startAt: slot.startTs,
+      endAt: slot.endTs,
+      durationMinutes: DRIVING_LESSON_DURATION_MINUTES_V1,
+      lessonAddress: lessonAddress,
+      addressSource: addressSource,
+      status: 'pending_instructor',
+      source: 'admin_manual',
+      createdBy: callerUid,
+      createdAt: now,
+      updatedAt: now,
+      instructorSlotKey: instructorSlotKey
+    };
+
+    try {
+      await db.runTransaction(async (tx) => {
+        const existingSnap = await tx.get(lessonRef);
+        if (existingSnap.exists) {
+          const existing = existingSnap.data() || {};
+          if (lessonBlocksOverlap(existing.status)) {
+            throw new HttpsError('already-exists', 'Bu saatte öğreticinin başka bir dersi var.');
+          }
+        }
+
+        const instructorRequery = await tx.get(
+          db.collection('drivingLessons')
+            .where('tenantId', '==', tenantId)
+            .where('instructorUid', '==', instructorUid)
+            .where('startAt', '>=', admin.firestore.Timestamp.fromMillis(slot.startMs - DRIVING_LESSON_OVERLAP_LOOKBACK_MS))
+            .where('startAt', '<', slot.endTs)
+        );
+        const instructorRows = (instructorRequery.docs || [])
+          .map((d) => ({ id: d.id, ...(d.data() || {}) }))
+          .filter((row) => row.id !== lessonRef.id);
+        if (findOverlapConflict(instructorRows, slot.startMs, slot.endMs)) {
+          throw new HttpsError('already-exists', 'Bu saatte öğreticinin başka bir dersi var.');
+        }
+
+        const studentRequery = await tx.get(
+          db.collection('drivingLessons')
+            .where('tenantId', '==', tenantId)
+            .where('studentUid', '==', studentUid)
+            .where('startAt', '>=', admin.firestore.Timestamp.fromMillis(slot.startMs - DRIVING_LESSON_OVERLAP_LOOKBACK_MS))
+            .where('startAt', '<', slot.endTs)
+        );
+        const studentRows = (studentRequery.docs || [])
+          .map((d) => ({ id: d.id, ...(d.data() || {}) }))
+          .filter((row) => row.id !== lessonRef.id);
+        if (findOverlapConflict(studentRows, slot.startMs, slot.endMs)) {
+          throw new HttpsError('already-exists', 'Bu saatte öğrencinin başka bir dersi var.');
+        }
+
+        if (existingSnap.exists) {
+          const prev = existingSnap.data() || {};
+          tx.set(lessonRef, Object.assign({}, lessonPayload, {
+            createdAt: prev.createdAt || now,
+            createdBy: prev.createdBy || callerUid
+          }), { merge: false });
+        } else {
+          tx.set(lessonRef, lessonPayload);
+        }
+      });
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      const msg = String((e && e.message) || e || '');
+      if (/FAILED_PRECONDITION|requires an index|index/i.test(msg)) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Firestore index required for drivingLessons overlap checks. Deploy firestore.indexes.json.'
+        );
+      }
+      throw new HttpsError(
+        'internal',
+        (e && e.message) ? e.message : 'Failed to create driving lesson assignment.'
+      );
+    }
+
+    return {
+      ok: true,
+      lessonId: lessonRef.id,
+      tenantId: tenantId,
+      instructorUid: instructorUid,
+      studentUid: studentUid,
+      status: 'pending_instructor',
+      source: 'admin_manual',
+      durationMinutes: DRIVING_LESSON_DURATION_MINUTES_V1,
+      startAt: new Date(slot.startMs).toISOString(),
+      endAt: new Date(slot.endMs).toISOString(),
+      lessonAddress: lessonAddress,
+      addressSource: addressSource,
+      studentNameSnap: studentNameSnap,
+      instructorNameSnap: instructorNameSnap
+    };
+  }
+);
+
+/**
+ * Phase 2B — List drivingLessons for Institution Admin agenda / recent / month stats.
+ */
+exports.listDrivingLessonsForInstitutionAdmin = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const data = request && request.data ? request.data : {};
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    const instructorUid = (data && data.instructorUid ? String(data.instructorUid) : '').trim();
+    const weekStartYmd = (data && data.weekStart ? String(data.weekStart) : '').trim();
+
+    if (!tenantId) throw new HttpsError('invalid-argument', 'tenantId is required.');
+    if (!instructorUid) throw new HttpsError('invalid-argument', 'instructorUid is required.');
+    if (!weekStartYmd) throw new HttpsError('invalid-argument', 'weekStart is required (YYYY-MM-DD Monday).');
+
+    await assertActiveInstitutionAdminForTenant(callerUid, tenantId);
+
+    const instructorMembershipId = instructorUid + '_' + tenantId;
+    const instructorMemSnap = await db.collection('tenantMemberships').doc(instructorMembershipId).get();
+    if (!instructorMemSnap.exists) {
+      throw new HttpsError('not-found', 'Instructor membership not found.');
+    }
+    const instructorMem = instructorMemSnap.data() || {};
+    if (String(instructorMem.tenantId || '').trim() !== tenantId) {
+      throw new HttpsError('permission-denied', 'Instructor does not belong to this tenant.');
+    }
+    if (normalizeRole(instructorMem.role) !== 'instructor') {
+      throw new HttpsError('invalid-argument', 'Target is not an instructor.');
+    }
+
+    const weekStartMs = parseTurkeyDateStartIso(weekStartYmd);
+    // Verify Monday in Turkey (+03): getUTCDay for +03 midnight maps awkwardly; use ISO weekday via formatter.
+    const weekStartProbe = new Date(weekStartMs);
+    const turkeyWeekday = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Europe/Istanbul',
+      weekday: 'short'
+    }).format(weekStartProbe);
+    if (turkeyWeekday !== 'Mon') {
+      throw new HttpsError('invalid-argument', 'weekStart must be a Monday (Europe/Istanbul).');
+    }
+    const weekEndMs = weekStartMs + (7 * 24 * 60 * 60 * 1000);
+
+    const monthParts = weekStartYmd.split('-');
+    const monthYear = parseInt(monthParts[0], 10);
+    const monthIndex = parseInt(monthParts[1], 10); // 1-12
+    if (!Number.isFinite(monthYear) || !Number.isFinite(monthIndex) || monthIndex < 1 || monthIndex > 12) {
+      throw new HttpsError('invalid-argument', 'weekStart month is invalid.');
+    }
+    const monthStartYmd = monthParts[0] + '-' + monthParts[1] + '-01';
+    const monthStartMs = parseTurkeyDateStartIso(monthStartYmd);
+    const nextMonthYear = monthIndex === 12 ? monthYear + 1 : monthYear;
+    const nextMonthIndex = monthIndex === 12 ? 1 : monthIndex + 1;
+    const nextMonthYmd =
+      String(nextMonthYear) + '-' +
+      (nextMonthIndex < 10 ? '0' : '') + String(nextMonthIndex) + '-01';
+    const monthEndMs = parseTurkeyDateStartIso(nextMonthYmd);
+
+    const weekStartTs = admin.firestore.Timestamp.fromMillis(weekStartMs);
+    const weekEndTs = admin.firestore.Timestamp.fromMillis(weekEndMs);
+    const monthStartTs = admin.firestore.Timestamp.fromMillis(monthStartMs);
+    const monthEndTs = admin.firestore.Timestamp.fromMillis(monthEndMs);
+
+    const tenantSnap = await db.collection('tenants').doc(tenantId).get();
+    const tenantAddress = tenantSnap.exists
+      ? String((tenantSnap.data() || {}).address || '').trim()
+      : '';
+
+    let weekSnap;
+    let monthSnap;
+    let recentSnap;
+    try {
+      [weekSnap, monthSnap, recentSnap] = await Promise.all([
+        db.collection('drivingLessons')
+          .where('tenantId', '==', tenantId)
+          .where('instructorUid', '==', instructorUid)
+          .where('startAt', '>=', weekStartTs)
+          .where('startAt', '<', weekEndTs)
+          .get(),
+        db.collection('drivingLessons')
+          .where('tenantId', '==', tenantId)
+          .where('instructorUid', '==', instructorUid)
+          .where('startAt', '>=', monthStartTs)
+          .where('startAt', '<', monthEndTs)
+          .get(),
+        db.collection('drivingLessons')
+          .where('tenantId', '==', tenantId)
+          .where('instructorUid', '==', instructorUid)
+          .orderBy('updatedAt', 'desc')
+          .limit(5)
+          .get()
+      ]);
+    } catch (e) {
+      const msg = String((e && e.message) || e || '');
+      if (/FAILED_PRECONDITION|requires an index|index/i.test(msg)) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Firestore index required for drivingLessons list. Deploy firestore.indexes.json.'
+        );
+      }
+      throw new HttpsError(
+        'internal',
+        (e && e.message) ? e.message : 'Failed to list driving lessons.'
+      );
+    }
+
+    // Exclude any non-lesson sentinel docs if present.
+    function mapLessonDocs(snap) {
+      return (snap.docs || [])
+        .filter((doc) => doc && doc.id && String(doc.id).indexOf('slot_') !== 0)
+        .map((doc) => serializeDrivingLessonDoc(doc.id, doc.data() || {}));
+    }
+
+    const weekLessons = mapLessonDocs(weekSnap);
+    const monthLessons = mapLessonDocs(monthSnap);
+    let recentLessons = mapLessonDocs(recentSnap);
+    if (!recentLessons.length) {
+      const merged = {};
+      weekLessons.concat(monthLessons).forEach((L) => { merged[L.id] = L; });
+      recentLessons = Object.keys(merged).map((k) => merged[k]).sort((a, b) => {
+        const am = a.updatedAtMs != null ? a.updatedAtMs : (a.createdAtMs || 0);
+        const bm = b.updatedAtMs != null ? b.updatedAtMs : (b.createdAtMs || 0);
+        return bm - am;
+      }).slice(0, 5);
+    }
+
+    let monthCompletedMinutes = 0;
+    let pendingCount = 0;
+    let consultationCount = 0;
+    monthLessons.forEach((L) => {
+      if (L.status === 'completed') {
+        monthCompletedMinutes += Number(L.durationMinutes) || DRIVING_LESSON_DURATION_MINUTES_V1;
+      }
+      if (L.status === 'pending_instructor') pendingCount += 1;
+      if (L.status === 'consultation_requested') consultationCount += 1;
+    });
+
+    const monthLabelTr = (() => {
+      try {
+        return new Intl.DateTimeFormat('tr-TR', {
+          timeZone: 'Europe/Istanbul',
+          month: 'long',
+          year: 'numeric'
+        }).format(new Date(monthStartMs));
+      } catch (_) {
+        return monthParts[1] + ' ' + monthParts[0];
+      }
+    })();
+
+    return {
+      ok: true,
+      tenantId: tenantId,
+      instructorUid: instructorUid,
+      tenantAddress: tenantAddress,
+      weekStart: weekStartYmd,
+      weekStartMs: weekStartMs,
+      weekEndMs: weekEndMs,
+      monthStart: monthStartYmd,
+      monthEndExclusive: nextMonthYmd,
+      monthLabel: monthLabelTr,
+      weekLessons: weekLessons,
+      recentLessons: recentLessons,
+      monthCompletedMinutes: monthCompletedMinutes,
+      monthCompletedHours: Math.round((monthCompletedMinutes / 60) * 100) / 100,
+      pendingCount: pendingCount,
+      consultationCount: consultationCount
+    };
+  }
+);
+
+/**
+ * Phase 2C-3A — Soft-cancel a drivingLessons assignment (institution_admin only).
+ */
+exports.cancelDrivingLessonAssignmentForInstitutionAdmin = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const data = request && request.data ? request.data : {};
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    const lessonId = (data && data.lessonId ? String(data.lessonId) : '').trim();
+    if (!tenantId) throw new HttpsError('invalid-argument', 'tenantId is required.');
+    if (!lessonId) throw new HttpsError('invalid-argument', 'lessonId is required.');
+
+    await assertActiveInstitutionAdminForTenant(callerUid, tenantId);
+
+    const lessonRef = db.collection('drivingLessons').doc(lessonId);
+    const lessonSnap = await lessonRef.get();
+    if (!lessonSnap.exists) {
+      throw new HttpsError('not-found', 'Driving lesson not found.');
+    }
+    const lesson = lessonSnap.data() || {};
+    if (String(lesson.tenantId || '').trim() !== tenantId) {
+      throw new HttpsError('permission-denied', 'Lesson does not belong to this tenant.');
+    }
+
+    const status = normalizeRole(lesson.status);
+    if (status === 'cancelled') {
+      throw new HttpsError('failed-precondition', 'Lesson is already cancelled.');
+    }
+    if (status === 'completed') {
+      throw new HttpsError('failed-precondition', 'Completed lessons cannot be cancelled.');
+    }
+    if (!DRIVING_LESSON_CANCELLABLE_STATUSES[status]) {
+      throw new HttpsError('failed-precondition', 'Lesson cannot be cancelled in its current status.');
+    }
+
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    try {
+      await db.runTransaction(async (tx) => {
+        const freshSnap = await tx.get(lessonRef);
+        if (!freshSnap.exists) {
+          throw new HttpsError('not-found', 'Driving lesson not found.');
+        }
+        const fresh = freshSnap.data() || {};
+        if (String(fresh.tenantId || '').trim() !== tenantId) {
+          throw new HttpsError('permission-denied', 'Lesson does not belong to this tenant.');
+        }
+        const freshStatus = normalizeRole(fresh.status);
+        if (freshStatus === 'cancelled') {
+          throw new HttpsError('failed-precondition', 'Lesson is already cancelled.');
+        }
+        if (freshStatus === 'completed') {
+          throw new HttpsError('failed-precondition', 'Completed lessons cannot be cancelled.');
+        }
+        if (!DRIVING_LESSON_CANCELLABLE_STATUSES[freshStatus]) {
+          throw new HttpsError('failed-precondition', 'Lesson cannot be cancelled in its current status.');
+        }
+        tx.update(lessonRef, {
+          status: 'cancelled',
+          cancelledAt: now,
+          cancelledBy: callerUid,
+          updatedAt: now
+        });
+      });
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      throw new HttpsError(
+        'internal',
+        (e && e.message) ? e.message : 'Failed to cancel driving lesson assignment.'
+      );
+    }
+
+    return {
+      ok: true,
+      lessonId: lessonId,
+      tenantId: tenantId,
+      status: 'cancelled'
+    };
+  }
+);
+
+/**
+ * Phase 2C-3A — Update a drivingLessons assignment in place (institution_admin only).
+ * Keeps lessonId stable. Instructor reassignment is not allowed.
+ */
+exports.updateDrivingLessonAssignmentForInstitutionAdmin = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const data = request && request.data ? request.data : {};
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    const lessonId = (data && data.lessonId ? String(data.lessonId) : '').trim();
+    const studentUid = (data && data.studentUid ? String(data.studentUid) : '').trim();
+    const slotStartRaw = data && data.slotStart != null ? data.slotStart : '';
+    const addressOverrideRaw = data && data.lessonAddressOverride != null
+      ? String(data.lessonAddressOverride)
+      : null;
+
+    if (!tenantId) throw new HttpsError('invalid-argument', 'tenantId is required.');
+    if (!lessonId) throw new HttpsError('invalid-argument', 'lessonId is required.');
+    if (!studentUid) throw new HttpsError('invalid-argument', 'studentUid is required.');
+    if (addressOverrideRaw == null) {
+      throw new HttpsError('invalid-argument', 'lessonAddressOverride is required.');
+    }
+
+    await assertActiveInstitutionAdminForTenant(callerUid, tenantId);
+
+    const slot = parseTurkeySlotStartIso(slotStartRaw);
+
+    const lessonRef = db.collection('drivingLessons').doc(lessonId);
+    const lessonSnap = await lessonRef.get();
+    if (!lessonSnap.exists) {
+      throw new HttpsError('not-found', 'Driving lesson not found.');
+    }
+    const existingLesson = lessonSnap.data() || {};
+    if (String(existingLesson.tenantId || '').trim() !== tenantId) {
+      throw new HttpsError('permission-denied', 'Lesson does not belong to this tenant.');
+    }
+
+    const currentStatus = normalizeRole(existingLesson.status);
+    if (currentStatus === 'completed') {
+      throw new HttpsError('failed-precondition', 'Completed lessons cannot be edited.');
+    }
+    if (currentStatus === 'cancelled') {
+      throw new HttpsError('failed-precondition', 'Cancelled lessons cannot be edited.');
+    }
+    if (!DRIVING_LESSON_EDITABLE_STATUSES[currentStatus]) {
+      throw new HttpsError('failed-precondition', 'Lesson cannot be edited in its current status.');
+    }
+
+    const instructorUid = String(existingLesson.instructorUid || '').trim();
+    if (!instructorUid) {
+      throw new HttpsError('failed-precondition', 'Lesson instructor is missing.');
+    }
+    if (instructorUid === studentUid) {
+      throw new HttpsError('invalid-argument', 'Instructor and student must be different.');
+    }
+
+    const tenantSnap = await db.collection('tenants').doc(tenantId).get();
+    if (!tenantSnap.exists) {
+      throw new HttpsError('not-found', 'Tenant not found.');
+    }
+    const tenantAddress = String((tenantSnap.data() || {}).address || '').trim();
+
+    const trimmedOverride = String(addressOverrideRaw || '').trim().replace(/\s+/g, ' ');
+    if (!trimmedOverride) {
+      throw new HttpsError('failed-precondition', 'Ders adresi gereklidir. Kurum adresini girin veya bu ders için adres yazın.');
+    }
+    if (trimmedOverride.length > DRIVING_LESSON_ADDRESS_MAX) {
+      throw new HttpsError('invalid-argument', 'Ders adresi en fazla 500 karakter olabilir.');
+    }
+    let lessonAddress = trimmedOverride;
+    let addressSource = trimmedOverride === tenantAddress ? 'tenant_default' : 'override';
+
+    const studentMembershipId = studentUid + '_' + tenantId;
+    const instructorMembershipId = instructorUid + '_' + tenantId;
+    const [
+      instructorMemSnap,
+      studentMemSnap,
+      studentUserSnap
+    ] = await Promise.all([
+      db.collection('tenantMemberships').doc(instructorMembershipId).get(),
+      db.collection('tenantMemberships').doc(studentMembershipId).get(),
+      db.collection('users').doc(studentUid).get()
+    ]);
+
+    if (!instructorMemSnap.exists) {
+      throw new HttpsError('not-found', 'Instructor membership not found.');
+    }
+    const instructorMem = instructorMemSnap.data() || {};
+    if (String(instructorMem.tenantId || '').trim() !== tenantId) {
+      throw new HttpsError('permission-denied', 'Instructor does not belong to this tenant.');
+    }
+    if (normalizeRole(instructorMem.role) !== 'instructor') {
+      throw new HttpsError('invalid-argument', 'Target membership is not an instructor.');
+    }
+    if (normalizeRole(instructorMem.status) !== 'active') {
+      throw new HttpsError('failed-precondition', 'Instructor membership is not active.');
+    }
+
+    if (!studentMemSnap.exists) {
+      throw new HttpsError('not-found', 'Student membership not found.');
+    }
+    const studentMem = studentMemSnap.data() || {};
+    if (String(studentMem.tenantId || '').trim() !== tenantId) {
+      throw new HttpsError('permission-denied', 'Student does not belong to this tenant.');
+    }
+    if (normalizeRole(studentMem.role) !== 'student') {
+      throw new HttpsError('invalid-argument', 'Target membership is not a student.');
+    }
+    if (normalizeProgramType(studentMem.programType) !== DRIVING_PROGRAM_TYPE) {
+      throw new HttpsError('failed-precondition', 'Only Driving/Ehliyet students can be assigned.');
+    }
+    if (normalizeRole(studentMem.status) !== 'active') {
+      throw new HttpsError('failed-precondition', 'Student membership is not active.');
+    }
+    if (!studentUserSnap.exists) {
+      throw new HttpsError('not-found', 'Student user not found.');
+    }
+    const studentUser = studentUserSnap.data() || {};
+    if (normalizeRole(studentUser.role) !== 'student') {
+      throw new HttpsError('permission-denied', 'Target user is not a student.');
+    }
+
+    const studentNameSnap = (studentUser.fullName && String(studentUser.fullName).trim())
+      ? String(studentUser.fullName).trim()
+      : (studentUser.username ? String(studentUser.username).trim() : studentUid);
+
+    const previousStartMs = membershipExpiryToMillis(existingLesson.startAt);
+    const previousStudentUid = String(existingLesson.studentUid || '').trim();
+    const scheduleChanged = previousStartMs !== slot.startMs;
+    const studentChanged = previousStudentUid !== studentUid;
+    const materialChange = scheduleChanged || studentChanged;
+
+    let nextStatus = currentStatus;
+    if (materialChange && (currentStatus === 'confirmed' || currentStatus === 'consultation_requested')) {
+      nextStatus = 'pending_instructor';
+    }
+
+    const [instructorCandidates, studentCandidates] = await Promise.all([
+      queryPotentialOverlaps('instructorUid', instructorUid, tenantId, slot.startMs, slot.endMs),
+      queryPotentialOverlaps('studentUid', studentUid, tenantId, slot.startMs, slot.endMs)
+    ]);
+
+    if (findOverlapConflict(
+      instructorCandidates.filter((row) => row.id !== lessonId),
+      slot.startMs,
+      slot.endMs
+    )) {
+      throw new HttpsError('already-exists', 'Bu saatte öğreticinin başka bir dersi var.');
+    }
+    if (findOverlapConflict(
+      studentCandidates.filter((row) => row.id !== lessonId),
+      slot.startMs,
+      slot.endMs
+    )) {
+      throw new HttpsError('already-exists', 'Bu saatte öğrencinin başka bir dersi var.');
+    }
+
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    const patch = {
+      studentUid: studentUid,
+      studentNameSnap: studentNameSnap,
+      startAt: slot.startTs,
+      endAt: slot.endTs,
+      durationMinutes: DRIVING_LESSON_DURATION_MINUTES_V1,
+      lessonAddress: lessonAddress,
+      addressSource: addressSource,
+      status: nextStatus,
+      updatedAt: now,
+      updatedBy: callerUid
+    };
+    if (materialChange) {
+      patch.instructorResponseNote = admin.firestore.FieldValue.delete();
+      patch.instructorRespondedAt = admin.firestore.FieldValue.delete();
+      patch.instructorResponseAction = admin.firestore.FieldValue.delete();
+    }
+
+    try {
+      await db.runTransaction(async (tx) => {
+        const freshSnap = await tx.get(lessonRef);
+        if (!freshSnap.exists) {
+          throw new HttpsError('not-found', 'Driving lesson not found.');
+        }
+        const fresh = freshSnap.data() || {};
+        if (String(fresh.tenantId || '').trim() !== tenantId) {
+          throw new HttpsError('permission-denied', 'Lesson does not belong to this tenant.');
+        }
+        if (String(fresh.instructorUid || '').trim() !== instructorUid) {
+          throw new HttpsError('failed-precondition', 'Lesson instructor changed unexpectedly.');
+        }
+        const freshStatus = normalizeRole(fresh.status);
+        if (freshStatus === 'completed') {
+          throw new HttpsError('failed-precondition', 'Completed lessons cannot be edited.');
+        }
+        if (freshStatus === 'cancelled') {
+          throw new HttpsError('failed-precondition', 'Cancelled lessons cannot be edited.');
+        }
+        if (!DRIVING_LESSON_EDITABLE_STATUSES[freshStatus]) {
+          throw new HttpsError('failed-precondition', 'Lesson cannot be edited in its current status.');
+        }
+
+        const instructorRequery = await tx.get(
+          db.collection('drivingLessons')
+            .where('tenantId', '==', tenantId)
+            .where('instructorUid', '==', instructorUid)
+            .where('startAt', '>=', admin.firestore.Timestamp.fromMillis(slot.startMs - DRIVING_LESSON_OVERLAP_LOOKBACK_MS))
+            .where('startAt', '<', slot.endTs)
+        );
+        const instructorRows = (instructorRequery.docs || [])
+          .map((d) => ({ id: d.id, ...(d.data() || {}) }))
+          .filter((row) => row.id !== lessonId);
+        if (findOverlapConflict(instructorRows, slot.startMs, slot.endMs)) {
+          throw new HttpsError('already-exists', 'Bu saatte öğreticinin başka bir dersi var.');
+        }
+
+        const studentRequery = await tx.get(
+          db.collection('drivingLessons')
+            .where('tenantId', '==', tenantId)
+            .where('studentUid', '==', studentUid)
+            .where('startAt', '>=', admin.firestore.Timestamp.fromMillis(slot.startMs - DRIVING_LESSON_OVERLAP_LOOKBACK_MS))
+            .where('startAt', '<', slot.endTs)
+        );
+        const studentRows = (studentRequery.docs || [])
+          .map((d) => ({ id: d.id, ...(d.data() || {}) }))
+          .filter((row) => row.id !== lessonId);
+        if (findOverlapConflict(studentRows, slot.startMs, slot.endMs)) {
+          throw new HttpsError('already-exists', 'Bu saatte öğrencinin başka bir dersi var.');
+        }
+
+        let txStatus = freshStatus;
+        const freshStartMs = membershipExpiryToMillis(fresh.startAt);
+        const freshStudentUid = String(fresh.studentUid || '').trim();
+        const txMaterial =
+          freshStartMs !== slot.startMs || freshStudentUid !== studentUid;
+        if (txMaterial && (freshStatus === 'confirmed' || freshStatus === 'consultation_requested')) {
+          txStatus = 'pending_instructor';
+        }
+        const txPatch = Object.assign({}, patch, { status: txStatus });
+        if (!txMaterial) {
+          delete txPatch.instructorResponseNote;
+          delete txPatch.instructorRespondedAt;
+          delete txPatch.instructorResponseAction;
+        }
+        tx.update(lessonRef, txPatch);
+      });
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      const msg = String((e && e.message) || e || '');
+      if (/FAILED_PRECONDITION|requires an index|index/i.test(msg)) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Firestore index required for drivingLessons overlap checks. Deploy firestore.indexes.json.'
+        );
+      }
+      throw new HttpsError(
+        'internal',
+        (e && e.message) ? e.message : 'Failed to update driving lesson assignment.'
+      );
+    }
+
+    return {
+      ok: true,
+      lessonId: lessonId,
+      tenantId: tenantId,
+      instructorUid: instructorUid,
+      studentUid: studentUid,
+      studentNameSnap: studentNameSnap,
+      status: nextStatus,
+      durationMinutes: DRIVING_LESSON_DURATION_MINUTES_V1,
+      startAt: new Date(slot.startMs).toISOString(),
+      endAt: new Date(slot.endMs).toISOString(),
+      lessonAddress: lessonAddress,
+      addressSource: addressSource,
+      scheduleChanged: !!scheduleChanged,
+      studentChanged: !!studentChanged
+    };
+  }
+);
+
+/* -------------------------------------------------------------------------- */
+/* Phase 2C-2B — Instructor mobile agenda (read-only)                         */
+/* -------------------------------------------------------------------------- */
+
+const INSTRUCTOR_AGENDA_HARD_CAP = 100;
+const INSTRUCTOR_AGENDA_FORWARD_DAYS = 31;
+const INSTRUCTOR_AGENDA_PENDING_LOOKBACK_DAYS = 180;
+
+function getEuropeIstanbulDayStartMs(nowMs) {
+  const now = Number.isFinite(nowMs) ? nowMs : Date.now();
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Istanbul',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(new Date(now));
+    const y = parts.find((p) => p.type === 'year');
+    const m = parts.find((p) => p.type === 'month');
+    const d = parts.find((p) => p.type === 'day');
+    const ymd = (y && y.value) + '-' + (m && m.value) + '-' + (d && d.value);
+    const ms = Date.parse(ymd + 'T00:00:00+03:00');
+    if (Number.isFinite(ms)) return ms;
+  } catch (_) {}
+  const fallback = new Date(now);
+  fallback.setHours(0, 0, 0, 0);
+  return fallback.getTime();
+}
+
+async function assertActiveInstructorForTenant(callerUid, tenantId) {
+  const tid = String(tenantId || '').trim();
+  if (!tid) {
+    throw new HttpsError('invalid-argument', 'tenantId is required.');
+  }
+  const [membershipSnap, userSnap] = await Promise.all([
+    db.collection('tenantMemberships').doc(callerUid + '_' + tid).get(),
+    db.collection('users').doc(callerUid).get()
+  ]);
+  if (!userSnap.exists) {
+    throw new HttpsError('permission-denied', 'User profile could not be verified.');
+  }
+  const userData = userSnap.data() || {};
+  if (normalizeRole(userData.role) !== 'instructor') {
+    throw new HttpsError('permission-denied', 'Only instructors can access the driving agenda.');
+  }
+  if (!membershipSnap.exists) {
+    throw new HttpsError('permission-denied', 'Not an active instructor for this tenant.');
+  }
+  const membership = membershipSnap.data() || {};
+  const membershipTenantId = String(membership.tenantId || '').trim();
+  if (
+    (membershipTenantId && membershipTenantId !== tid) ||
+    normalizeRole(membership.role) !== 'instructor' ||
+    normalizeRole(membership.status) !== 'active'
+  ) {
+    throw new HttpsError('permission-denied', 'Not an active instructor for this tenant.');
+  }
+  return { tenantId: tid, membership: membership, userData: userData };
+}
+
+function serializeDrivingLessonForInstructorAgenda(id, data) {
+  const d = data || {};
+  function tsToMillis(ts) {
+    try {
+      if (!ts) return null;
+      if (typeof ts.toMillis === 'function') return ts.toMillis();
+      if (typeof ts.toDate === 'function') return ts.toDate().getTime();
+      if (typeof ts._seconds === 'number') return ts._seconds * 1000;
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+  const noteRaw = d.instructorResponseNote != null ? String(d.instructorResponseNote).trim() : '';
+  const out = {
+    id: id,
+    tenantId: String(d.tenantId || '').trim(),
+    studentUid: String(d.studentUid || '').trim(),
+    studentNameSnap: d.studentNameSnap ? String(d.studentNameSnap).trim() : '',
+    startAtMs: tsToMillis(d.startAt),
+    endAtMs: tsToMillis(d.endAt),
+    durationMinutes: Number(d.durationMinutes) || DRIVING_LESSON_DURATION_MINUTES_V1,
+    lessonAddress: d.lessonAddress ? String(d.lessonAddress).trim() : '',
+    status: normalizeRole(d.status),
+    createdAtMs: tsToMillis(d.createdAt),
+    updatedAtMs: tsToMillis(d.updatedAt)
+  };
+  if (noteRaw) out.instructorResponseNote = noteRaw;
+  return out;
+}
+
+/**
+ * Phase 2C-2B / 2C-3B — List drivingLessons for the authenticated instructor (own lessons only).
+ * Optional weekStart (YYYY-MM-DD Monday, Europe/Istanbul) returns that week only.
+ * Without weekStart, preserves the original today → +31d window (+ pending lookback).
+ */
+exports.listDrivingLessonsForInstructor = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const data = request && request.data ? request.data : {};
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    if (!tenantId) {
+      throw new HttpsError('invalid-argument', 'tenantId is required.');
+    }
+
+    await assertActiveInstructorForTenant(callerUid, tenantId);
+
+    const weekStartRaw = data && data.weekStart != null ? String(data.weekStart).trim() : '';
+    const dayStartMs = getEuropeIstanbulDayStartMs(Date.now());
+
+    let windowStartMs;
+    let windowEndMs;
+    let weekMode = false;
+    let weekStartYmd = null;
+
+    if (weekStartRaw) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(weekStartRaw)) {
+        throw new HttpsError('invalid-argument', 'weekStart must be YYYY-MM-DD.');
+      }
+      const weekStartMs = parseTurkeyDateStartIso(weekStartRaw);
+      const turkeyWeekday = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Europe/Istanbul',
+        weekday: 'short'
+      }).format(new Date(weekStartMs));
+      if (turkeyWeekday !== 'Mon') {
+        throw new HttpsError('invalid-argument', 'weekStart must be a Monday (Europe/Istanbul).');
+      }
+      weekMode = true;
+      weekStartYmd = weekStartRaw;
+      windowStartMs = weekStartMs;
+      windowEndMs = weekStartMs + (7 * MS_PER_DAY);
+    } else {
+      windowStartMs = dayStartMs;
+      windowEndMs = dayStartMs + (INSTRUCTOR_AGENDA_FORWARD_DAYS * MS_PER_DAY);
+    }
+
+    const windowStartTs = admin.firestore.Timestamp.fromMillis(windowStartMs);
+    const windowEndTs = admin.firestore.Timestamp.fromMillis(windowEndMs);
+
+    let windowSnap;
+    let pendingLookbackSnap = null;
+    try {
+      if (weekMode) {
+        windowSnap = await db.collection('drivingLessons')
+          .where('tenantId', '==', tenantId)
+          .where('instructorUid', '==', callerUid)
+          .where('startAt', '>=', windowStartTs)
+          .where('startAt', '<', windowEndTs)
+          .orderBy('startAt', 'asc')
+          .limit(INSTRUCTOR_AGENDA_HARD_CAP)
+          .get();
+      } else {
+        const pendingLookbackMs = dayStartMs - (INSTRUCTOR_AGENDA_PENDING_LOOKBACK_DAYS * MS_PER_DAY);
+        const pendingLookbackTs = admin.firestore.Timestamp.fromMillis(pendingLookbackMs);
+        [windowSnap, pendingLookbackSnap] = await Promise.all([
+          db.collection('drivingLessons')
+            .where('tenantId', '==', tenantId)
+            .where('instructorUid', '==', callerUid)
+            .where('startAt', '>=', windowStartTs)
+            .where('startAt', '<', windowEndTs)
+            .orderBy('startAt', 'asc')
+            .limit(INSTRUCTOR_AGENDA_HARD_CAP)
+            .get(),
+          db.collection('drivingLessons')
+            .where('tenantId', '==', tenantId)
+            .where('instructorUid', '==', callerUid)
+            .where('startAt', '>=', pendingLookbackTs)
+            .where('startAt', '<', windowStartTs)
+            .orderBy('startAt', 'asc')
+            .limit(INSTRUCTOR_AGENDA_HARD_CAP)
+            .get()
+        ]);
+      }
+    } catch (e) {
+      const msg = String((e && e.message) || e || '');
+      if (/FAILED_PRECONDITION|requires an index|index/i.test(msg)) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Firestore index required for drivingLessons list. Deploy firestore.indexes.json.'
+        );
+      }
+      throw new HttpsError(
+        'internal',
+        (e && e.message) ? e.message : 'Failed to list instructor agenda.'
+      );
+    }
+
+    const byId = {};
+    function ingest(snap, pendingOnly) {
+      (snap.docs || []).forEach((doc) => {
+        if (!doc || !doc.id || String(doc.id).indexOf('slot_') === 0) return;
+        const raw = doc.data() || {};
+        if (String(raw.instructorUid || '').trim() !== callerUid) return;
+        if (String(raw.tenantId || '').trim() !== tenantId) return;
+        const status = normalizeRole(raw.status);
+        if (pendingOnly && status !== 'pending_instructor') return;
+        byId[doc.id] = serializeDrivingLessonForInstructorAgenda(doc.id, raw);
+      });
+    }
+    ingest(windowSnap, false);
+    if (pendingLookbackSnap) ingest(pendingLookbackSnap, true);
+
+    const lessons = Object.keys(byId).map((k) => byId[k]).sort((a, b) => {
+      const am = a.startAtMs != null ? a.startAtMs : 0;
+      const bm = b.startAtMs != null ? b.startAtMs : 0;
+      return am - bm;
+    }).slice(0, INSTRUCTOR_AGENDA_HARD_CAP);
+
+    const out = {
+      ok: true,
+      tenantId: tenantId,
+      dayStartMs: dayStartMs,
+      windowEndMs: windowEndMs,
+      lessons: lessons
+    };
+    if (weekMode) {
+      out.weekStart = weekStartYmd;
+      out.weekStartMs = windowStartMs;
+      out.weekEndMs = windowEndMs;
+    }
+    return out;
+  }
+);
+
+/**
+ * Phase 2C-3C — Instructor responds to a pending driving lesson assignment.
+ * confirm | consultation only. No notifications in this patch.
+ */
+exports.respondDrivingLessonForInstructor = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const data = request && request.data ? request.data : {};
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const lessonId = (data && data.lessonId ? String(data.lessonId) : '').trim();
+    const action = normalizeRole(data && data.action != null ? data.action : '');
+    const noteRaw = data && data.note != null ? String(data.note) : '';
+
+    if (!lessonId) {
+      throw new HttpsError('invalid-argument', 'lessonId is required.');
+    }
+    if (action !== 'confirm' && action !== 'consultation') {
+      throw new HttpsError('invalid-argument', 'action must be confirm or consultation.');
+    }
+
+    let note = '';
+    if (action === 'consultation') {
+      note = String(noteRaw || '').trim().replace(/\s+/g, ' ');
+      if (note.length > 300) {
+        throw new HttpsError('invalid-argument', 'İstişare notu en fazla 300 karakter olabilir.');
+      }
+    }
+
+    const lessonRef = db.collection('drivingLessons').doc(lessonId);
+    const lessonSnap = await lessonRef.get();
+    if (!lessonSnap.exists) {
+      throw new HttpsError('not-found', 'Driving lesson not found.');
+    }
+    const lesson = lessonSnap.data() || {};
+    const tenantId = String(lesson.tenantId || '').trim();
+    if (!tenantId) {
+      throw new HttpsError('failed-precondition', 'Lesson tenant is missing.');
+    }
+
+    await assertActiveInstructorForTenant(callerUid, tenantId);
+
+    if (String(lesson.instructorUid || '').trim() !== callerUid) {
+      throw new HttpsError('permission-denied', 'This lesson is not assigned to you.');
+    }
+
+    const status = normalizeRole(lesson.status);
+    if (status === 'cancelled') {
+      throw new HttpsError('failed-precondition', 'Cancelled lessons cannot be answered.');
+    }
+    if (status === 'completed') {
+      throw new HttpsError('failed-precondition', 'Completed lessons cannot be answered.');
+    }
+    if (status === 'confirmed') {
+      throw new HttpsError('failed-precondition', 'Lesson is already confirmed.');
+    }
+    if (status === 'consultation_requested') {
+      throw new HttpsError('failed-precondition', 'Consultation was already requested.');
+    }
+    if (status !== 'pending_instructor') {
+      throw new HttpsError('failed-precondition', 'Lesson cannot be answered in its current status.');
+    }
+
+    const nextStatus = action === 'confirm' ? 'confirmed' : 'consultation_requested';
+    const now = admin.firestore.FieldValue.serverTimestamp();
+
+    try {
+      await db.runTransaction(async (tx) => {
+        const freshSnap = await tx.get(lessonRef);
+        if (!freshSnap.exists) {
+          throw new HttpsError('not-found', 'Driving lesson not found.');
+        }
+        const fresh = freshSnap.data() || {};
+        if (String(fresh.tenantId || '').trim() !== tenantId) {
+          throw new HttpsError('permission-denied', 'Lesson tenant mismatch.');
+        }
+        if (String(fresh.instructorUid || '').trim() !== callerUid) {
+          throw new HttpsError('permission-denied', 'This lesson is not assigned to you.');
+        }
+        const freshStatus = normalizeRole(fresh.status);
+        if (freshStatus !== 'pending_instructor') {
+          if (freshStatus === 'confirmed') {
+            throw new HttpsError('failed-precondition', 'Lesson is already confirmed.');
+          }
+          if (freshStatus === 'consultation_requested') {
+            throw new HttpsError('failed-precondition', 'Consultation was already requested.');
+          }
+          if (freshStatus === 'completed') {
+            throw new HttpsError('failed-precondition', 'Completed lessons cannot be answered.');
+          }
+          if (freshStatus === 'cancelled') {
+            throw new HttpsError('failed-precondition', 'Cancelled lessons cannot be answered.');
+          }
+          throw new HttpsError('failed-precondition', 'Lesson cannot be answered in its current status.');
+        }
+
+        const patch = {
+          status: nextStatus,
+          updatedAt: now,
+          instructorRespondedAt: now,
+          instructorResponseAction: action
+        };
+        if (action === 'consultation') {
+          if (note) patch.instructorResponseNote = note;
+          else patch.instructorResponseNote = admin.firestore.FieldValue.delete();
+        } else {
+          patch.instructorResponseNote = admin.firestore.FieldValue.delete();
+        }
+        tx.update(lessonRef, patch);
+      });
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      throw new HttpsError(
+        'internal',
+        (e && e.message) ? e.message : 'Failed to respond to driving lesson.'
+      );
+    }
+
+    return {
+      ok: true,
+      lessonId: lessonId,
+      tenantId: tenantId,
+      status: nextStatus,
+      action: action
+    };
+  }
+);
+
+const INSTRUCTOR_ROOM_TYPE = 'instructor_group';
+const INSTRUCTOR_ROOM_TEXT_MAX = 1500;
+const INSTRUCTOR_ROOM_REPLY_SNIPPET_MAX = 160;
+const INSTRUCTOR_ROOM_DELETED_PREVIEW = 'Bu mesaj silindi.';
+const INSTRUCTOR_ROOM_ALLOWED_ROLES = {
+  institution_admin: true,
+  instructor: true
+};
+
+const ADMIN_POSITION_VALUES = {
+  professional_staff: true,
+  manager: true,
+  business_owner: true
+};
+
+const ADMIN_POSITION_LABELS = {
+  professional_staff: 'Mesleki Personel',
+  manager: 'Yönetici',
+  business_owner: 'İşletme Sahibi'
+};
+
+function normalizeAdminPosition(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function isElevatedInstitutionAdminPosition(position) {
+  const p = normalizeAdminPosition(position);
+  return p === 'manager' || p === 'business_owner';
+}
+
+function assertElevatedInstitutionAdminPosition(userData) {
+  const position = normalizeAdminPosition(userData && userData.adminPosition);
+  if (!isElevatedInstitutionAdminPosition(position)) {
+    throw new HttpsError(
+      'permission-denied',
+      'Bu işlem yalnız Yönetici veya İşletme Sahibi statüsündeki kurum yöneticileri tarafından yapılabilir.'
+    );
+  }
+  return position;
+}
+
+function parseRequiredAdminPosition(value) {
+  const position = normalizeAdminPosition(value);
+  if (!ADMIN_POSITION_VALUES[position]) {
+    throw new HttpsError('invalid-argument', 'Geçerli bir yönetici statüsü seçin.');
+  }
+  return position;
+}
+
+function adminPositionLabel(value) {
+  const position = normalizeAdminPosition(value);
+  return ADMIN_POSITION_LABELS[position] || '';
+}
+
+/**
+ * Returns true if at least one OTHER active same-tenant institution_admin
+ * has elevated adminPosition (manager | business_owner).
+ */
+async function hasOtherElevatedInstitutionAdminInTenant(tenantId, excludeUid) {
+  const tid = String(tenantId || '').trim();
+  const exclude = String(excludeUid || '').trim();
+  if (!tid) return false;
+
+  const memSnap = await db.collection('tenantMemberships')
+    .where('tenantId', '==', tid)
+    .where('role', '==', 'institution_admin')
+    .get();
+
+  const candidateUids = [];
+  (memSnap.docs || []).forEach((docSnap) => {
+    const m = docSnap.data() || {};
+    const uid = String(m.uid || '').trim();
+    if (!uid || uid === exclude) return;
+    if (normalizeRole(m.status) !== 'active') return;
+    const memTenantId = String(m.tenantId || '').trim();
+    if (memTenantId && memTenantId !== tid) return;
+    candidateUids.push(uid);
+  });
+
+  for (const uid of candidateUids) {
+    const userSnap = await db.collection('users').doc(uid).get();
+    if (!userSnap.exists) continue;
+    const userData = userSnap.data() || {};
+    if (normalizeRole(userData.role) !== 'institution_admin') continue;
+    if (isElevatedInstitutionAdminPosition(userData.adminPosition)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function hasReliableInstructorRoomPersonName(userData) {
+  const d = userData && typeof userData === 'object' ? userData : {};
+  return !!(
+    String(d.fullName || '').trim()
+    || String(d.displayName || '').trim()
+    || String(d.username || '').trim()
+  );
+}
+
+function isLegacyInstitutionAdminBootstrapEligible(userData) {
+  const d = userData && typeof userData === 'object' ? userData : {};
+  const existingPos = normalizeAdminPosition(d.adminPosition);
+  if (ADMIN_POSITION_VALUES[existingPos]) return false;
+  const createdBy = String(d.createdBy || '').trim();
+  return !createdBy;
+}
+
+function resolveInstructorRoomPersonName(userData, uid, role) {
+  const d = userData && typeof userData === 'object' ? userData : {};
+  const fullName = String(d.fullName || '').trim().replace(/\s+/g, ' ');
+  if (fullName) return fullName.slice(0, 200);
+  const displayName = String(d.displayName || '').trim().replace(/\s+/g, ' ');
+  if (displayName) return displayName.slice(0, 200);
+  const username = String(d.username || '').trim();
+  if (username) return username.slice(0, 80);
+  if (normalizeRole(role) === 'institution_admin') return 'Kurum Yöneticisi';
+  if (normalizeRole(role) === 'instructor') return 'Usta Öğretici';
+  const fallbackUid = String(uid || '').trim();
+  return fallbackUid ? ('Kullanıcı ' + fallbackUid.slice(0, 8)) : 'Kullanıcı';
+}
+
+function resolveInstructorRoomSenderName(userData, uid, role) {
+  if (normalizeRole(role) !== 'institution_admin') {
+    return resolveInstructorRoomPersonName(userData, uid, role);
+  }
+
+  const positionLabel = adminPositionLabel((userData && userData.adminPosition) || '');
+  const personName = resolveInstructorRoomPersonName(userData, uid, role);
+  // ROOM-B1.6-A UI: Person (Position), e.g. "Sefa Dere (Mesleki Personel)"
+  if (positionLabel) {
+    return (personName + ' (' + positionLabel + ')').slice(0, 240);
+  }
+  if (hasReliableInstructorRoomPersonName(userData)) {
+    return (personName + ' (Kurum Yöneticisi)').slice(0, 240);
+  }
+  return 'Kurum Yöneticisi';
+}
+
+function normalizeInstructorRoomReplySnippet(value, maxLength) {
+  const max = (typeof maxLength === 'number' && maxLength > 0)
+    ? maxLength
+    : INSTRUCTOR_ROOM_REPLY_SNIPPET_MAX;
+  const text = String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
+  if (!text) return '';
+  if (text.length <= max) return text;
+  return text.slice(0, max);
+}
+
+async function assertActiveInstructorRoomParticipant(callerUid, tenantId) {
+  const tid = String(tenantId || '').trim();
+  if (!tid) {
+    throw new HttpsError('invalid-argument', 'tenantId is required.');
+  }
+  const membershipId = callerUid + '_' + tid;
+  const [membershipSnap, userSnap] = await Promise.all([
+    db.collection('tenantMemberships').doc(membershipId).get(),
+    db.collection('users').doc(callerUid).get()
+  ]);
+
+  if (!membershipSnap.exists) {
+    throw new HttpsError('permission-denied', 'Not an active room participant for this tenant.');
+  }
+  const membership = membershipSnap.data() || {};
+  const membershipTenantId = String(membership.tenantId || '').trim();
+  if (membershipTenantId && membershipTenantId !== tid) {
+    throw new HttpsError('permission-denied', 'Not an active room participant for this tenant.');
+  }
+  if (normalizeRole(membership.status) !== 'active') {
+    throw new HttpsError('failed-precondition', 'Membership is not active.');
+  }
+  const membershipRole = normalizeRole(membership.role);
+  if (!INSTRUCTOR_ROOM_ALLOWED_ROLES[membershipRole]) {
+    throw new HttpsError('permission-denied', 'Not an active room participant for this tenant.');
+  }
+  if (!userSnap.exists) {
+    throw new HttpsError('permission-denied', 'User profile could not be verified.');
+  }
+  const userData = userSnap.data() || {};
+  const userRole = normalizeRole(userData.role);
+  if (!userRole || userRole !== membershipRole) {
+    throw new HttpsError('permission-denied', 'Account role could not be verified.');
+  }
+  if (userRole === 'student' || userRole === 'machine_operator' || userRole === 'public_user') {
+    throw new HttpsError('permission-denied', 'Not an active room participant for this tenant.');
+  }
+  return {
+    tenantId: tid,
+    membership: membership,
+    membershipRole: membershipRole,
+    userData: userData
+  };
+}
+
+async function resolveInstructorRoomReplyMetadata(roomRef, tenantId, replyToMessageId) {
+  const sourceSnap = await roomRef.collection('messages').doc(replyToMessageId).get();
+  if (!sourceSnap.exists) {
+    throw new HttpsError('not-found', 'Yanıtlanmak istenen mesaj bulunamadı.');
+  }
+  const source = sourceSnap.data() || {};
+  const sourceTenantId = String(source.tenantId || '').trim();
+  if (sourceTenantId && sourceTenantId !== tenantId) {
+    throw new HttpsError('permission-denied', 'Yanıtlanmak istenen mesaj bu odaya ait değil.');
+  }
+  if (source.isDeleted === true) {
+    throw new HttpsError('failed-precondition', 'Yanıtlanmak istenen mesaj artık kullanılamıyor.');
+  }
+  const sourceText = (typeof source.text === 'string') ? source.text : '';
+  return {
+    replyToMessageId: replyToMessageId,
+    replyToSenderUid: String(source.senderUid || '').trim(),
+    replyToSenderName: String(source.senderName || '').trim() || 'Kullanıcı',
+    replyToTextSnippet: normalizeInstructorRoomReplySnippet(
+      sourceText,
+      INSTRUCTOR_ROOM_REPLY_SNIPPET_MAX
+    )
+  };
+}
+
+function parseOptionalInstructorRoomReplyToMessageId(data) {
+  if (!data || data.replyToMessageId == null || data.replyToMessageId === undefined) {
+    return '';
+  }
+  if (typeof data.replyToMessageId !== 'string') {
+    throw new HttpsError('invalid-argument', 'replyToMessageId must be a string.');
+  }
+  return data.replyToMessageId.trim();
+}
+
+/**
+ * ROOM-B1 / ROOM-B1.6-A — Send text message (optional reply snapshot) to tenant instructor group room.
+ * Auth: active same-tenant institution_admin OR instructor; users.role must agree.
+ */
+exports.sendTenantInstructorRoomMessage = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const data = request && request.data ? request.data : {};
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    const textRaw = data && typeof data.text === 'string' ? data.text : null;
+
+    if (!tenantId) {
+      throw new HttpsError('invalid-argument', 'tenantId is required.');
+    }
+    if (typeof textRaw !== 'string') {
+      throw new HttpsError('invalid-argument', 'text must be a string.');
+    }
+    const text = textRaw.trim();
+    if (!text) {
+      throw new HttpsError('invalid-argument', 'text cannot be empty.');
+    }
+    if (text.length > INSTRUCTOR_ROOM_TEXT_MAX) {
+      throw new HttpsError('invalid-argument', 'text must be 1500 characters or less.');
+    }
+
+    const authCtx = await assertActiveInstructorRoomParticipant(callerUid, tenantId);
+    const membershipRole = authCtx.membershipRole;
+    const userData = authCtx.userData;
+    const replyToMessageId = parseOptionalInstructorRoomReplyToMessageId(data);
+
+    const senderName = resolveInstructorRoomSenderName(
+      userData,
+      callerUid,
+      membershipRole
+    );
+    const roomRef = db.collection('tenantInstructorRooms').doc(tenantId);
+    const messageRef = roomRef.collection('messages').doc();
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    const preview = text.length > 180 ? text.slice(0, 180) : text;
+
+    let replyMetadata = null;
+    if (replyToMessageId) {
+      try {
+        replyMetadata = await resolveInstructorRoomReplyMetadata(roomRef, tenantId, replyToMessageId);
+      } catch (e) {
+        if (e instanceof HttpsError) throw e;
+        console.error('[InstructorRoomReply] resolve failed', {
+          code: e && e.code ? String(e.code) : null,
+          message: e && e.message ? String(e.message) : String(e)
+        });
+        throw new HttpsError('internal', 'Mesaj gönderilemedi. Lütfen tekrar deneyin.');
+      }
+    }
+
+    const messagePayload = {
+      tenantId: tenantId,
+      roomType: INSTRUCTOR_ROOM_TYPE,
+      senderUid: callerUid,
+      senderName: senderName,
+      senderRole: membershipRole,
+      messageType: 'text',
+      text: text,
+      createdAt: now,
+      isDeleted: false
+    };
+    if (replyMetadata) {
+      messagePayload.replyToMessageId = replyMetadata.replyToMessageId;
+      messagePayload.replyToSenderUid = replyMetadata.replyToSenderUid;
+      messagePayload.replyToSenderName = replyMetadata.replyToSenderName;
+      messagePayload.replyToTextSnippet = replyMetadata.replyToTextSnippet;
+    }
+
+    try {
+      await db.runTransaction(async (tx) => {
+        const roomSnap = await tx.get(roomRef);
+        const roomUpdate = {
+          tenantId: tenantId,
+          roomType: INSTRUCTOR_ROOM_TYPE,
+          updatedAt: now,
+          lastMessageAt: now,
+          lastMessageText: preview,
+          lastMessageSenderUid: callerUid,
+          lastMessageSenderName: senderName,
+          lastMessageId: messageRef.id
+        };
+        if (!roomSnap.exists) {
+          roomUpdate.createdAt = now;
+        }
+        tx.set(roomRef, roomUpdate, { merge: true });
+        tx.set(messageRef, messagePayload);
+      });
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      console.error('[InstructorRoomMessage] send failed', {
+        code: e && e.code ? String(e.code) : null,
+        message: e && e.message ? String(e.message) : String(e),
+        tenantId: tenantId
+      });
+      throw new HttpsError('internal', 'Failed to send message.');
+    }
+
+    return {
+      ok: true,
+      tenantId: tenantId,
+      messageId: messageRef.id
+    };
+  }
+);
+
+/**
+ * ROOM-B1.6-A — Edit own instructor-room message text.
+ */
+exports.editTenantInstructorRoomMessage = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const data = request && request.data ? request.data : {};
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    const messageId = (data && data.messageId ? String(data.messageId) : '').trim();
+    const textRaw = data && typeof data.text === 'string' ? data.text : null;
+
+    if (!tenantId) {
+      throw new HttpsError('invalid-argument', 'tenantId is required.');
+    }
+    if (!messageId) {
+      throw new HttpsError('invalid-argument', 'messageId is required.');
+    }
+    if (typeof textRaw !== 'string') {
+      throw new HttpsError('invalid-argument', 'text must be a string.');
+    }
+    const text = textRaw.trim();
+    if (!text) {
+      throw new HttpsError('invalid-argument', 'text cannot be empty.');
+    }
+    if (text.length > INSTRUCTOR_ROOM_TEXT_MAX) {
+      throw new HttpsError('invalid-argument', 'text must be 1500 characters or less.');
+    }
+
+    await assertActiveInstructorRoomParticipant(callerUid, tenantId);
+
+    const roomRef = db.collection('tenantInstructorRooms').doc(tenantId);
+    const msgRef = roomRef.collection('messages').doc(messageId);
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    const preview = text.length > 180 ? text.slice(0, 180) : text;
+
+    try {
+      await db.runTransaction(async (tx) => {
+        const msgSnap = await tx.get(msgRef);
+        if (!msgSnap.exists) {
+          throw new HttpsError('not-found', 'Message not found.');
+        }
+        const msgData = msgSnap.data() || {};
+        if (String(msgData.senderUid || '').trim() !== callerUid) {
+          throw new HttpsError('permission-denied', 'Bu mesajı düzenleme yetkiniz bulunmuyor.');
+        }
+        if (msgData.isDeleted === true) {
+          throw new HttpsError('failed-precondition', 'Deleted messages cannot be edited.');
+        }
+
+        const roomSnap = await tx.get(roomRef);
+        const roomData = roomSnap.exists ? (roomSnap.data() || {}) : {};
+        const isLast = String(roomData.lastMessageId || '').trim() === messageId;
+
+        tx.set(msgRef, {
+          text: text,
+          editedAt: now,
+          editedBy: callerUid
+        }, { merge: true });
+
+        if (isLast) {
+          tx.set(roomRef, {
+            lastMessageText: preview,
+            updatedAt: now
+          }, { merge: true });
+        }
+      });
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      console.error('[InstructorRoomEdit] failed', {
+        code: e && e.code ? String(e.code) : null,
+        message: e && e.message ? String(e.message) : String(e)
+      });
+      throw new HttpsError('internal', 'Mesaj düzenlenemedi. Lütfen tekrar deneyin.');
+    }
+
+    return { ok: true, tenantId: tenantId, messageId: messageId };
+  }
+);
+
+/**
+ * ROOM-B1.6-A — Soft-delete own instructor-room message. Original text preserved.
+ */
+exports.deleteTenantInstructorRoomMessage = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const data = request && request.data ? request.data : {};
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    const messageId = (data && data.messageId ? String(data.messageId) : '').trim();
+
+    if (!tenantId) {
+      throw new HttpsError('invalid-argument', 'tenantId is required.');
+    }
+    if (!messageId) {
+      throw new HttpsError('invalid-argument', 'messageId is required.');
+    }
+
+    await assertActiveInstructorRoomParticipant(callerUid, tenantId);
+
+    const roomRef = db.collection('tenantInstructorRooms').doc(tenantId);
+    const msgRef = roomRef.collection('messages').doc(messageId);
+    const now = admin.firestore.FieldValue.serverTimestamp();
+
+    try {
+      await db.runTransaction(async (tx) => {
+        const msgSnap = await tx.get(msgRef);
+        if (!msgSnap.exists) {
+          throw new HttpsError('not-found', 'Message not found.');
+        }
+        const msgData = msgSnap.data() || {};
+        if (String(msgData.senderUid || '').trim() !== callerUid) {
+          throw new HttpsError('permission-denied', 'Bu mesajı silme yetkiniz bulunmuyor.');
+        }
+        if (msgData.isDeleted === true) {
+          return;
+        }
+
+        const roomSnap = await tx.get(roomRef);
+        const roomData = roomSnap.exists ? (roomSnap.data() || {}) : {};
+        const isLast = String(roomData.lastMessageId || '').trim() === messageId;
+
+        tx.set(msgRef, {
+          isDeleted: true,
+          deletedAt: now,
+          deletedBy: callerUid
+        }, { merge: true });
+
+        if (isLast) {
+          tx.set(roomRef, {
+            lastMessageText: INSTRUCTOR_ROOM_DELETED_PREVIEW,
+            updatedAt: now
+          }, { merge: true });
+        }
+      });
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      console.error('[InstructorRoomDelete] failed', {
+        code: e && e.code ? String(e.code) : null,
+        message: e && e.message ? String(e.message) : String(e)
+      });
+      throw new HttpsError('internal', 'Mesaj silinemedi. Lütfen tekrar deneyin.');
+    }
+
+    return { ok: true, tenantId: tenantId, messageId: messageId };
+  }
+);
+
+/**
+ * ROOM-B1.6-B — Toggle like on another participant's non-deleted instructor-room message.
+ * Writes likes/{uid} + cached message.likeCount via Admin SDK only.
+ */
+exports.toggleTenantInstructorRoomMessageLike = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const data = request && request.data ? request.data : {};
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    const messageId = (data && data.messageId ? String(data.messageId) : '').trim();
+
+    if (!tenantId) {
+      throw new HttpsError('invalid-argument', 'tenantId is required.');
+    }
+    if (!messageId) {
+      throw new HttpsError('invalid-argument', 'messageId is required.');
+    }
+
+    await assertActiveInstructorRoomParticipant(callerUid, tenantId);
+
+    const roomRef = db.collection('tenantInstructorRooms').doc(tenantId);
+    const msgRef = roomRef.collection('messages').doc(messageId);
+    const likeRef = msgRef.collection('likes').doc(callerUid);
+    const now = admin.firestore.FieldValue.serverTimestamp();
+
+    let liked = false;
+    let likeCount = 0;
+
+    try {
+      await db.runTransaction(async (tx) => {
+        const msgSnap = await tx.get(msgRef);
+        if (!msgSnap.exists) {
+          throw new HttpsError('not-found', 'Mesaj bulunamadı.');
+        }
+        const msgData = msgSnap.data() || {};
+        const msgTenantId = String(msgData.tenantId || '').trim();
+        if (msgTenantId && msgTenantId !== tenantId) {
+          throw new HttpsError('permission-denied', 'Bu mesajı beğenme yetkiniz bulunmuyor.');
+        }
+        if (msgData.isDeleted === true) {
+          throw new HttpsError('failed-precondition', 'Silinmiş bir mesaj beğenilemez.');
+        }
+        const senderUid = String(msgData.senderUid || '').trim();
+        if (senderUid && senderUid === callerUid) {
+          throw new HttpsError('permission-denied', 'Kendi mesajınızı beğenemezsiniz.');
+        }
+
+        const likeSnap = await tx.get(likeRef);
+        const currentCountRaw = Number(msgData.likeCount);
+        const currentCount = Number.isFinite(currentCountRaw) ? Math.max(0, Math.floor(currentCountRaw)) : 0;
+
+        if (likeSnap.exists) {
+          likeCount = Math.max(0, currentCount - 1);
+          liked = false;
+          tx.delete(likeRef);
+          tx.set(msgRef, { likeCount: likeCount }, { merge: true });
+        } else {
+          likeCount = currentCount + 1;
+          liked = true;
+          tx.set(likeRef, {
+            uid: callerUid,
+            createdAt: now
+          });
+          tx.set(msgRef, { likeCount: likeCount }, { merge: true });
+        }
+      });
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      console.error('[InstructorRoomLike] failed', {
+        code: e && e.code ? String(e.code) : null,
+        message: e && e.message ? String(e.message) : String(e)
+      });
+      throw new HttpsError('internal', 'Beğeni güncellenemedi. Lütfen tekrar deneyin.');
+    }
+
+    return {
+      ok: true,
+      liked: liked,
+      likeCount: likeCount
+    };
+  }
+);
+
+/**
+ * ROOM-B1.6-C — Permanent purge of own soft-deleted instructor-room message.
+ * Soft delete (deleteTenantInstructorRoomMessage) remains stage 1 and unchanged.
+ * Recursively removes message + likes; rebuilds room last* when needed.
+ */
+exports.purgeTenantInstructorRoomMessage = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const callerUid = request && request.auth ? request.auth.uid : null;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const data = request && request.data ? request.data : {};
+    const tenantId = (data && data.tenantId ? String(data.tenantId) : '').trim();
+    const messageId = (data && data.messageId ? String(data.messageId) : '').trim();
+
+    if (!tenantId) {
+      throw new HttpsError('invalid-argument', 'tenantId is required.');
+    }
+    if (!messageId) {
+      throw new HttpsError('invalid-argument', 'messageId is required.');
+    }
+
+    await assertActiveInstructorRoomParticipant(callerUid, tenantId);
+
+    const roomRef = db.collection('tenantInstructorRooms').doc(tenantId);
+    const msgRef = roomRef.collection('messages').doc(messageId);
+
+    let wasLastMessage = false;
+
+    try {
+      const [msgSnap, roomSnap] = await Promise.all([
+        msgRef.get(),
+        roomRef.get()
+      ]);
+
+      if (!msgSnap.exists) {
+        throw new HttpsError('not-found', 'Mesaj zaten kaldırılmış.');
+      }
+
+      const msgData = msgSnap.data() || {};
+      const msgTenantId = String(msgData.tenantId || '').trim();
+      if (msgTenantId && msgTenantId !== tenantId) {
+        throw new HttpsError('permission-denied', 'Bu mesajı kalıcı olarak silme yetkiniz bulunmuyor.');
+      }
+      if (String(msgData.senderUid || '').trim() !== callerUid) {
+        throw new HttpsError('permission-denied', 'Bu mesajı kalıcı olarak silme yetkiniz bulunmuyor.');
+      }
+      if (msgData.isDeleted !== true) {
+        throw new HttpsError('failed-precondition', 'Önce mesajı silmeniz gerekir.');
+      }
+
+      const roomData = roomSnap.exists ? (roomSnap.data() || {}) : {};
+      wasLastMessage = String(roomData.lastMessageId || '').trim() === messageId;
+
+      await deleteDocRecursiveSafe(msgRef);
+
+      if (wasLastMessage) {
+        const now = admin.firestore.FieldValue.serverTimestamp();
+        const newestSnap = await roomRef.collection('messages')
+          .orderBy('createdAt', 'desc')
+          .limit(1)
+          .get();
+
+        if (!newestSnap || newestSnap.empty) {
+          await roomRef.set({
+            lastMessageId: admin.firestore.FieldValue.delete(),
+            lastMessageAt: admin.firestore.FieldValue.delete(),
+            lastMessageText: admin.firestore.FieldValue.delete(),
+            lastMessageSenderUid: admin.firestore.FieldValue.delete(),
+            lastMessageSenderName: admin.firestore.FieldValue.delete(),
+            updatedAt: now
+          }, { merge: true });
+        } else {
+          const newestDoc = newestSnap.docs[0];
+          const newest = newestDoc.data() || {};
+          const newestText = typeof newest.text === 'string' ? newest.text : '';
+          const preview = newest.isDeleted === true
+            ? INSTRUCTOR_ROOM_DELETED_PREVIEW
+            : (newestText.length > 180 ? newestText.slice(0, 180) : newestText);
+
+          await roomRef.set({
+            lastMessageId: newestDoc.id,
+            lastMessageAt: newest.createdAt || now,
+            lastMessageText: preview,
+            lastMessageSenderUid: String(newest.senderUid || '').trim(),
+            lastMessageSenderName: String(newest.senderName || '').trim() || 'Kullanıcı',
+            updatedAt: now
+          }, { merge: true });
+        }
+      }
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      console.error('[InstructorRoomPurge] failed', {
+        code: e && e.code ? String(e.code) : null,
+        message: e && e.message ? String(e.message) : String(e)
+      });
+      throw new HttpsError('internal', 'Mesaj kalıcı olarak silinemedi. Lütfen tekrar deneyin.');
+    }
+
+    return {
+      ok: true,
+      tenantId: tenantId,
+      messageId: messageId,
+      purged: true
+    };
+  }
+);

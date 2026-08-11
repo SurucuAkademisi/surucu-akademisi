@@ -1,0 +1,677 @@
+/* Scoped public contact / institution application forms */
+.page-contact,
+.page-institution-application {
+  color: #e8f0fa;
+}
+
+.page-contact .contact-main,
+.page-institution-application .contact-main {
+  padding: 2.35rem 0 3.5rem;
+}
+
+.page-contact .contact-shell,
+.page-institution-application .contact-shell {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.page-contact .contact-hero-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 1.25rem;
+  margin: 0 0 1rem;
+  min-width: 0;
+}
+
+.page-contact .contact-hero-row .contact-title {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.page-contact .contact-institution-cta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.28rem;
+  flex: 0 1 280px;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0.85rem 1.05rem;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #041016;
+  background: linear-gradient(145deg, #67e8f9 0%, #22d3ee 48%, #06b6d4 100%);
+  border: 1px solid rgba(165, 243, 252, 0.85);
+  box-shadow:
+    0 0 18px rgba(34, 211, 238, 0.42),
+    0 0 36px rgba(6, 182, 212, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+}
+
+.page-contact .contact-institution-cta:hover,
+.page-contact .contact-institution-cta:focus-visible {
+  text-decoration: none;
+  color: #020617;
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 24px rgba(34, 211, 238, 0.55),
+    0 0 44px rgba(6, 182, 212, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.page-contact .contact-institution-cta:focus-visible {
+  outline: 2px solid rgba(165, 243, 252, 0.95);
+  outline-offset: 3px;
+}
+
+.page-contact .contact-institution-cta__title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.page-contact .contact-institution-cta__text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.4;
+  opacity: 0.92;
+}
+
+.page-contact .contact-title,
+.page-institution-application .contact-title {
+  margin: 0 0 1rem;
+  font-size: clamp(1.75rem, 3.4vw, 2.35rem);
+  line-height: 1.18;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #eef8ff;
+  background: linear-gradient(120deg, #f0f9ff 0%, #67e8f9 48%, #fcd34d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+  .page-contact .contact-title,
+  .page-institution-application .contact-title {
+    color: #eef8ff;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+  }
+}
+
+.page-contact .contact-lead,
+.page-institution-application .contact-lead {
+  margin: 0 0 1.5rem;
+  padding: 1.1rem 1.2rem;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: #cbd5e1;
+  border: 1px solid rgba(34, 211, 238, 0.34);
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 100% at 0% 0%, rgba(34, 211, 238, 0.12), transparent 58%),
+    linear-gradient(155deg, rgba(14, 28, 49, 0.94) 0%, rgba(8, 16, 30, 0.9) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 10px 28px rgba(2, 8, 23, 0.35);
+}
+
+.page-contact .contact-channels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0 0 1.5rem;
+}
+
+.page-contact .contact-channel {
+  min-width: 0;
+  padding: 0.95rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  background: rgba(8, 16, 30, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.page-contact .contact-channel__label {
+  display: block;
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.page-contact .contact-channel__value {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #e2e8f0;
+  word-break: break-word;
+}
+
+.page-contact .contact-channel a {
+  color: #a5f3fc;
+  text-decoration: none;
+}
+
+.page-contact .contact-channel a:hover,
+.page-contact .contact-channel a:focus-visible {
+  text-decoration: underline;
+}
+
+.page-contact .contact-operator {
+  margin: 0 0 1.5rem;
+  font-size: 0.92rem;
+  color: #94a3b8;
+}
+
+.page-contact .contact-form-card,
+.page-institution-application .contact-form-card {
+  padding: 1.25rem 1.2rem 1.35rem;
+  border-radius: 16px;
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  background:
+    radial-gradient(110% 90% at 100% 0%, rgba(34, 211, 238, 0.08), transparent 55%),
+    linear-gradient(158deg, rgba(14, 26, 46, 0.94) 0%, rgba(8, 16, 30, 0.92) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 12px 30px rgba(2, 8, 23, 0.35);
+}
+
+.page-contact .contact-form-heading,
+.page-institution-application .contact-form-heading {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+  font-weight: 750;
+  color: #f1f5f9;
+}
+
+.page-contact .contact-form-grid,
+.page-institution-application .contact-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+}
+
+.page-contact .contact-field,
+.page-institution-application .contact-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.page-contact .contact-field--full,
+.page-institution-application .contact-field--full {
+  grid-column: 1 / -1;
+}
+
+.page-contact .contact-field label,
+.page-institution-application .contact-field label,
+.page-institution-application .contact-field .contact-field-label {
+  font-size: 0.86rem;
+  font-weight: 650;
+  color: #cbd5e1;
+}
+
+.page-contact .contact-field .req,
+.page-institution-application .contact-field .req {
+  color: #67e8f9;
+}
+
+/* Premium custom program select — institution application only */
+.page-institution-application .sa-premium-select {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.page-institution-application .sa-premium-select__native {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.page-institution-application .sa-premium-select__trigger {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid rgba(34, 211, 238, 0.38);
+  background:
+    linear-gradient(155deg, rgba(10, 22, 42, 0.92) 0%, rgba(6, 14, 28, 0.88) 100%);
+  color: #f8fafc;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 0 rgba(34, 211, 238, 0);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.page-institution-application .sa-premium-select__trigger.is-placeholder .sa-premium-select__value {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.page-institution-application .sa-premium-select__value {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+.page-institution-application .sa-premium-select__chevron {
+  flex: 0 0 auto;
+  width: 0.65rem;
+  height: 0.65rem;
+  margin-top: -0.15rem;
+  border-right: 2px solid rgba(103, 232, 249, 0.9);
+  border-bottom: 2px solid rgba(103, 232, 249, 0.9);
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+.page-institution-application .sa-premium-select.is-open .sa-premium-select__chevron {
+  margin-top: 0.2rem;
+  transform: rotate(225deg);
+}
+
+.page-institution-application .sa-premium-select__trigger:hover {
+  border-color: rgba(34, 211, 238, 0.55);
+}
+
+.page-institution-application .sa-premium-select__trigger:focus-visible,
+.page-institution-application .sa-premium-select.is-open .sa-premium-select__trigger {
+  outline: none;
+  border-color: rgba(34, 211, 238, 0.7);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 0 2px rgba(34, 211, 238, 0.28),
+    0 0 18px rgba(34, 211, 238, 0.18);
+}
+
+.page-institution-application .sa-premium-select__list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.35rem);
+  z-index: 40;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  border-radius: 12px;
+  border: 1px solid rgba(34, 211, 238, 0.4);
+  background:
+    linear-gradient(160deg, rgba(10, 22, 42, 0.98) 0%, rgba(6, 14, 28, 0.97) 100%);
+  box-shadow:
+    0 16px 36px rgba(2, 8, 23, 0.55),
+    0 0 24px rgba(34, 211, 238, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  max-height: min(280px, 50vh);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.page-institution-application .sa-premium-select__option {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.72rem 0.8rem;
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: normal;
+  cursor: pointer;
+  outline: none;
+}
+
+.page-institution-application .sa-premium-select__option.is-placeholder {
+  color: #94a3b8;
+}
+
+.page-institution-application .sa-premium-select__option:hover,
+.page-institution-application .sa-premium-select__option:focus {
+  background: rgba(34, 211, 238, 0.14);
+  color: #ecfeff;
+}
+
+.page-institution-application .sa-premium-select__option.is-selected {
+  background: linear-gradient(145deg, rgba(34, 211, 238, 0.28), rgba(14, 116, 144, 0.24));
+  color: #ecfeff;
+  box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.35);
+}
+
+.page-contact .contact-field input,
+.page-contact .contact-field select,
+.page-contact .contact-field textarea,
+.page-institution-application .contact-field input,
+.page-institution-application .contact-field select,
+.page-institution-application .contact-field textarea {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(2, 8, 23, 0.55);
+  color: #f8fafc;
+  padding: 0.65rem 0.8rem;
+  font: inherit;
+}
+
+.page-contact .contact-field textarea,
+.page-institution-application .contact-field textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+.page-contact .contact-field input:focus,
+.page-contact .contact-field select:focus,
+.page-contact .contact-field textarea:focus,
+.page-institution-application .contact-field input:focus,
+.page-institution-application .contact-field select:focus,
+.page-institution-application .contact-field textarea:focus {
+  outline: 2px solid rgba(34, 211, 238, 0.45);
+  outline-offset: 1px;
+  border-color: rgba(34, 211, 238, 0.55);
+}
+
+.page-contact .contact-hp,
+.page-institution-application .contact-hp {
+  position: absolute !important;
+  left: -10000px !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+}
+
+.page-contact .contact-notice,
+.page-institution-application .contact-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin: 1rem 0 0.85rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(2, 8, 23, 0.4);
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.page-contact .contact-notice input,
+.page-institution-application .contact-notice input {
+  margin-top: 0.2rem;
+  flex: 0 0 auto;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.page-contact .contact-notice a,
+.page-institution-application .contact-notice a {
+  color: #a5f3fc;
+}
+
+.page-contact .contact-actions,
+.page-institution-application .contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+.page-contact .contact-submit,
+.page-institution-application .contact-submit {
+  appearance: none;
+  border: 1px solid rgba(34, 211, 238, 0.45);
+  border-radius: 12px;
+  min-height: 46px;
+  padding: 0.7rem 1.25rem;
+  font: inherit;
+  font-weight: 750;
+  color: #ecfeff;
+  cursor: pointer;
+  background: linear-gradient(165deg, rgba(34, 211, 238, 0.28), rgba(14, 116, 144, 0.4));
+  box-shadow: 0 8px 22px rgba(2, 8, 23, 0.35);
+}
+
+.page-contact .contact-submit:disabled,
+.page-institution-application .contact-submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.page-contact .contact-form-status,
+.page-institution-application .contact-form-status {
+  margin: 0.85rem 0 0;
+  min-height: 1.35rem;
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+.page-contact .contact-form-status[data-state='ok'],
+.page-institution-application .contact-form-status[data-state='ok'] {
+  color: #86efac;
+}
+
+.page-contact .contact-form-status[data-state='error'],
+.page-institution-application .contact-form-status[data-state='error'] {
+  color: #fca5a5;
+}
+
+.page-contact .contact-form-status[data-state='pending'],
+.page-institution-application .contact-form-status[data-state='pending'] {
+  color: #a5f3fc;
+}
+
+.page-contact .contact-aside-note,
+.page-institution-application .contact-aside-note {
+  margin: 1rem 0 0;
+  font-size: 0.86rem;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+@media (max-width: 720px) {
+  .page-contact .contact-hero-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+  }
+
+  .page-contact .contact-institution-cta {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .page-contact .contact-channels,
+  .page-contact .contact-form-grid,
+  .page-institution-application .contact-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-contact .contact-main,
+  .page-institution-application .contact-main {
+    padding: 1.6rem 0 2.75rem;
+  }
+
+  .page-contact .contact-form-card,
+  .page-institution-application .contact-form-card {
+    padding: 1.05rem 0.95rem 1.15rem;
+  }
+}
+
+/* Kurumsal Başvuru — logo uploader only (does not affect /iletisim/) */
+.page-institution-application .inst-logo-upload {
+  display: grid;
+  grid-template-columns: minmax(112px, 140px) minmax(0, 1fr);
+  gap: 0.85rem 1rem;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 0.85rem 0.95rem;
+  border-radius: 14px;
+  border: 1px solid rgba(34, 211, 238, 0.34);
+  background:
+    linear-gradient(145deg, rgba(10, 22, 40, 0.92) 0%, rgba(8, 18, 34, 0.88) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 22px rgba(34, 211, 238, 0.08);
+}
+
+.page-institution-application .inst-logo-upload__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.page-institution-application .inst-logo-upload__preview-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 140px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(2, 8, 23, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.page-institution-application .inst-logo-upload__preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  padding: 0.35rem;
+  box-sizing: border-box;
+}
+
+.page-institution-application .inst-logo-upload__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.55rem;
+  text-align: center;
+  color: rgba(148, 163, 184, 0.95);
+}
+
+.page-institution-application .inst-logo-upload__icon {
+  width: 1.55rem;
+  height: 1.55rem;
+  color: rgba(34, 211, 238, 0.85);
+}
+
+.page-institution-application .inst-logo-upload__hint {
+  font-size: 0.68rem;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+.page-institution-application .inst-logo-upload__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.page-institution-application .inst-logo-upload__pick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.55rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(165, 243, 252, 0.55);
+  background: linear-gradient(145deg, rgba(34, 211, 238, 0.22), rgba(6, 182, 212, 0.14));
+  color: #ecfeff;
+  font-size: 0.9rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: filter 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.page-institution-application .inst-logo-upload__pick:hover,
+.page-institution-application .inst-logo-upload__pick:focus-visible {
+  filter: brightness(1.08);
+  border-color: rgba(165, 243, 252, 0.85);
+  outline: none;
+}
+
+.page-institution-application .inst-logo-upload__file-name {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: #94a3b8;
+  word-break: break-all;
+}
+
+.page-institution-application .inst-logo-upload.is-selected .inst-logo-upload__file-name {
+  color: #cbd5e1;
+}
+
+.page-institution-application .inst-logo-upload.is-selected .inst-logo-upload__placeholder {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .page-institution-application .inst-logo-upload {
+    grid-template-columns: 1fr;
+    justify-items: stretch;
+  }
+
+  .page-institution-application .inst-logo-upload__preview-wrap {
+    max-width: 160px;
+    margin: 0 auto;
+  }
+
+  .page-institution-application .inst-logo-upload__actions {
+    align-items: center;
+    text-align: center;
+  }
+}

@@ -1,6 +1,7 @@
 /**
  * Super Admin — İletişim Talepleri (contactRequests)
- * Reads via Firestore listeners; writes only via updateContactRequest callable.
+ * Reads via Firestore listeners; writes via updateContactRequest /
+ * softDeleteContactRequest callables.
  * No Auth observer / Firebase init / direct Firestore writes.
  */
 (function () {
@@ -10,15 +11,31 @@
   var LIST_LIMIT = 200;
   var NOTE_MAX = 2000;
   var FILTERS = ['all', 'new', 'read', 'in_progress', 'answered', 'closed'];
+  var TYPE_FILTERS = ['all', 'general', 'premium', 'technical', 'student', 'partnership', 'institution'];
+  var TYPE_FILTER_MAP = {
+    general: { other: true, education_content: true },
+    premium: { premium_access: true },
+    technical: { technical_support: true },
+    student: { institution_student_support: true },
+    partnership: { partnership: true },
+    institution: { institution_application: true }
+  };
 
   var REQUEST_TYPE_LABELS = {
-    premium_access: 'Bireysel Premium Erişim Talebi',
-    institution_membership: 'Sürücü Kursu Kurumsal Üyelik Talebi',
-    institution_student_support: 'Mevcut Kurum Öğrencisi Desteği',
+    premium_access: 'Premium',
+    institution_membership: 'Kurumsal Üyelik (Eski)',
+    institution_student_support: 'Kurum Öğrencisi Desteği',
     technical_support: 'Teknik Destek',
-    education_content: 'Eğitim İçerikleri Hakkında Bilgi',
-    partnership: 'İş Birliği Talebi',
-    other: 'Diğer'
+    education_content: 'Eğitim İçerikleri',
+    partnership: 'İş Birliği',
+    other: 'Genel İletişim',
+    institution_application: 'Kurumsal Katılım'
+  };
+
+  var INTERESTED_PROGRAM_LABELS = {
+    driving_license: 'Ehliyet',
+    machine_operator: 'İş Makineleri',
+    both: 'Her İkisi'
   };
 
   var USER_TYPE_LABELS = {
@@ -45,10 +62,13 @@
     requestOrder: [],
     selectedRequestId: null,
     activeFilter: 'all',
+    activeTypeFilter: 'all',
     listLoaded: false,
     listError: false,
     updateInProgress: false,
     noteSaveInProgress: false,
+    deleteInProgress: false,
+    pendingDeleteRequestId: null,
     markReadInFlight: {},
     uiBound: false
   };
@@ -62,13 +82,17 @@
     return firebase.firestore();
   }
 
-  function getCallable() {
+  function getCallable(name) {
     if (typeof firebase === 'undefined' || !firebase.functions) return null;
     try {
-      return firebase.functions().httpsCallable('updateContactRequest');
+      return firebase.functions().httpsCallable(name || 'updateContactRequest');
     } catch (e) {
       return null;
     }
+  }
+
+  function isDeletedDoc(data) {
+    return !!(data && data.deleted === true);
   }
 
   function text(el, value) {
@@ -211,10 +235,13 @@
     state.requestOrder = [];
     state.selectedRequestId = null;
     state.activeFilter = 'all';
+    state.activeTypeFilter = 'all';
     state.listLoaded = false;
     state.listError = false;
     state.updateInProgress = false;
     state.noteSaveInProgress = false;
+    state.deleteInProgress = false;
+    state.pendingDeleteRequestId = null;
     state.markReadInFlight = {};
   }
 
@@ -225,6 +252,9 @@
     state.isAuthorized = false;
     var layout = $('contact-requests-layout');
     if (layout) layout.classList.remove('is-detail-open');
+    var deleteModal = $('contact-requests-delete-confirm');
+    if (deleteModal) deleteModal.hidden = true;
+    setDeleteConfirmBusy(false);
     renderList();
     renderDetail();
   }
@@ -245,27 +275,65 @@
           ? ''
           : safeStr(d.institutionName).trim(),
       city: d.city == null || d.city === '' ? '' : safeStr(d.city).trim(),
+      district: d.district == null || d.district === '' ? '' : safeStr(d.district).trim(),
+      authorizedPersonName:
+        d.authorizedPersonName == null || d.authorizedPersonName === ''
+          ? ''
+          : safeStr(d.authorizedPersonName).trim(),
+      authorizedPersonTitle:
+        d.authorizedPersonTitle == null || d.authorizedPersonTitle === ''
+          ? ''
+          : safeStr(d.authorizedPersonTitle).trim(),
+      interestedProgram:
+        d.interestedProgram == null || d.interestedProgram === ''
+          ? ''
+          : safeStr(d.interestedProgram).trim(),
+      estimatedStudentCount:
+        d.estimatedStudentCount == null || d.estimatedStudentCount === ''
+          ? ''
+          : safeStr(d.estimatedStudentCount).trim(),
       message: safeStr(d.message),
       noticeAcknowledged: d.noticeAcknowledged === true,
       noticeVersion: safeStr(d.noticeVersion).trim(),
       sourcePage: safeStr(d.sourcePage).trim(),
       submitterUid: d.submitterUid == null || d.submitterUid === '' ? '' : safeStr(d.submitterUid),
       tenantId: d.tenantId == null || d.tenantId === '' ? '' : safeStr(d.tenantId),
+      onboardingApplicationId:
+        d.onboardingApplicationId == null || d.onboardingApplicationId === ''
+          ? ''
+          : safeStr(d.onboardingApplicationId).trim(),
       createdAt: d.createdAt || null,
       updatedAt: d.updatedAt || null,
       readAt: d.readAt || null,
       answeredAt: d.answeredAt || null,
       closedAt: d.closedAt || null,
       adminNote: d.adminNote == null ? '' : safeStr(d.adminNote),
-      statusHistory: Array.isArray(d.statusHistory) ? d.statusHistory : []
+      statusHistory: Array.isArray(d.statusHistory) ? d.statusHistory : [],
+      deleted: d.deleted === true
     };
+  }
+
+  function interestedProgramLabel(v) {
+    var key = safeStr(v).trim();
+    return INTERESTED_PROGRAM_LABELS[key] || (key ? key : '—');
+  }
+
+  function matchesTypeFilter(req, typeFilter) {
+    if (!typeFilter || typeFilter === 'all') return true;
+    var map = TYPE_FILTER_MAP[typeFilter];
+    if (!map) return true;
+    return !!map[safeStr(req && req.requestType).trim()];
   }
 
   function applyListSnapshot(snap) {
     var nextMap = {};
     var nextOrder = [];
     (snap.docs || []).forEach(function (doc) {
-      var row = normalizeDoc(doc.id, doc.data());
+      var raw = doc.data() || {};
+      // Soft-deleted docs stay in Firestore but are hidden from normal CRM UI.
+      // Do not query where('deleted','==',false) — legacy docs omit the field.
+      if (isDeletedDoc(raw)) return;
+      var row = normalizeDoc(doc.id, raw);
       nextMap[doc.id] = row;
       nextOrder.push(doc.id);
     });
@@ -301,7 +369,11 @@
               hideBadge();
               return;
             }
-            updateBadge(snap.size || 0);
+            var n = 0;
+            (snap.docs || []).forEach(function (doc) {
+              if (!isDeletedDoc(doc.data())) n += 1;
+            });
+            updateBadge(n);
           },
           function (err) {
             try {
@@ -376,20 +448,38 @@
 
   function getFilteredIds() {
     var filter = state.activeFilter || 'all';
+    var typeFilter = state.activeTypeFilter || 'all';
     var ids = state.requestOrder.slice();
-    if (filter === 'all') return ids;
     return ids.filter(function (id) {
       var req = state.requestsById[id];
-      return req && req.status === filter;
+      if (!req) return false;
+      if (filter !== 'all' && req.status !== filter) return false;
+      if (!matchesTypeFilter(req, typeFilter)) return false;
+      return true;
     });
   }
 
   function countByStatus(status) {
-    if (status === 'all') return state.requestOrder.length;
+    var typeFilter = state.activeTypeFilter || 'all';
     var n = 0;
     state.requestOrder.forEach(function (id) {
       var req = state.requestsById[id];
-      if (req && req.status === status) n += 1;
+      if (!req) return;
+      if (!matchesTypeFilter(req, typeFilter)) return;
+      if (status === 'all' || req.status === status) n += 1;
+    });
+    return n;
+  }
+
+  function countByType(typeKey) {
+    var statusFilter = state.activeFilter || 'all';
+    var n = 0;
+    state.requestOrder.forEach(function (id) {
+      var req = state.requestsById[id];
+      if (!req) return;
+      if (statusFilter !== 'all' && req.status !== statusFilter) return;
+      if (!matchesTypeFilter(req, typeKey)) return;
+      n += 1;
     });
     return n;
   }
@@ -404,6 +494,15 @@
       if (!countEl) return;
       text(countEl, String(countByStatus(key)));
       btn.classList.toggle('is-active', state.activeFilter === key);
+    });
+    TYPE_FILTERS.forEach(function (key) {
+      var btn = document.querySelector(
+        '#admin-page-contact-requests .contact-requests-type-filter[data-type-filter="' + key + '"]'
+      );
+      if (!btn) return;
+      var countEl = btn.querySelector('.contact-requests-filter-count');
+      if (countEl) text(countEl, String(countByType(key)));
+      btn.classList.toggle('is-active', state.activeTypeFilter === key);
     });
   }
 
@@ -449,45 +548,85 @@
     ids.forEach(function (id) {
       var req = state.requestsById[id];
       if (!req) return;
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'contact-requests-item';
-      if (req.status === 'new') btn.className += ' is-new';
-      if (state.selectedRequestId === id) btn.className += ' is-selected';
-      btn.setAttribute('data-request-id', id);
+      // div (not button): card hosts a nested Sil control — nested <button> is invalid HTML.
+      var card = document.createElement('div');
+      card.className = 'contact-requests-item';
+      if (req.status === 'new') card.className += ' is-new';
+      if (state.selectedRequestId === id) card.className += ' is-selected';
+      card.setAttribute('data-request-id', id);
+      card.setAttribute('role', 'button');
+      card.setAttribute('tabindex', '0');
 
       var top = document.createElement('div');
       top.className = 'contact-requests-item-top';
       top.appendChild(createStatusBadge(req.status));
+
+      var topEnd = document.createElement('div');
+      topEnd.className = 'contact-requests-item-top-end';
       var typeEl = document.createElement('span');
       typeEl.className = 'contact-requests-item-type';
       text(typeEl, requestTypeLabel(req.requestType));
-      top.appendChild(typeEl);
-      btn.appendChild(top);
+      topEnd.appendChild(typeEl);
 
+      var deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'contact-requests-item-delete';
+      deleteBtn.setAttribute('aria-label', 'Talebi listeden kaldır');
+      text(deleteBtn, state.deleteInProgress ? '…' : 'Sil');
+      deleteBtn.disabled = state.deleteInProgress;
+      deleteBtn.addEventListener('click', function (e) {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+        openDeleteConfirm(id);
+      });
+      topEnd.appendChild(deleteBtn);
+      top.appendChild(topEnd);
+      card.appendChild(top);
+
+      var isInstApp = req.requestType === 'institution_application';
       var nameEl = document.createElement('div');
       nameEl.className = 'contact-requests-item-name';
-      text(nameEl, displayOrDash(req.fullName));
-      btn.appendChild(nameEl);
+      if (isInstApp) {
+        text(nameEl, displayOrDash(req.institutionName || req.fullName));
+      } else {
+        text(nameEl, displayOrDash(req.fullName));
+      }
+      card.appendChild(nameEl);
 
       var meta = document.createElement('div');
       meta.className = 'contact-requests-item-meta';
-      var metaParts = [displayOrDash(req.email)];
-      if (req.institutionName) metaParts.push(req.institutionName);
-      if (req.city) metaParts.push(req.city);
-      metaParts.push(formatDateTime(req.createdAt));
+      var metaParts = [];
+      if (isInstApp) {
+        var person = req.authorizedPersonName || req.fullName;
+        if (person) metaParts.push(person);
+        if (req.city) metaParts.push(req.city);
+        metaParts.push(statusLabel(req.status));
+        metaParts.push(formatDateTime(req.createdAt));
+      } else {
+        metaParts.push(displayOrDash(req.email));
+        if (req.institutionName) metaParts.push(req.institutionName);
+        if (req.city) metaParts.push(req.city);
+        metaParts.push(formatDateTime(req.createdAt));
+      }
       text(meta, metaParts.join(' · '));
-      btn.appendChild(meta);
+      card.appendChild(meta);
 
       var preview = document.createElement('div');
       preview.className = 'contact-requests-item-preview';
       text(preview, previewMessage(req.message) || '—');
-      btn.appendChild(preview);
+      card.appendChild(preview);
 
-      btn.addEventListener('click', function () {
+      card.addEventListener('click', function () {
         openRequest(id);
       });
-      host.appendChild(btn);
+      card.addEventListener('keydown', function (e) {
+        if (!e) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openRequest(id);
+        }
+      });
+      host.appendChild(card);
     });
   }
 
@@ -503,6 +642,226 @@
     field.appendChild(lab);
     field.appendChild(val);
     grid.appendChild(field);
+  }
+
+  function appendFieldIfPresent(grid, label, value, wide) {
+    var s = safeStr(value).trim();
+    if (!s) return;
+    appendField(grid, label, s, wide);
+  }
+
+  function logoContentTypeLabel(contentType) {
+    var ct = safeStr(contentType).trim().toLowerCase();
+    if (ct === 'image/png') return 'PNG';
+    if (ct === 'image/jpeg') return 'JPG / JPEG';
+    if (ct === 'image/webp') return 'WEBP';
+    return ct || '—';
+  }
+
+  function triggerLogoDownload(url, fileName) {
+    if (!url) return;
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = fileName || 'logo';
+    a.rel = 'noopener';
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  function mapLogoAccessErrorMessage(err) {
+    var code = err && err.code ? String(err.code) : '';
+    var lower = code.toLowerCase();
+    if (lower.indexOf('not-found') !== -1) {
+      return 'Logo erişim servisi henüz kullanılamıyor.';
+    }
+    if (
+      lower.indexOf('unauthenticated') !== -1 ||
+      lower.indexOf('permission-denied') !== -1
+    ) {
+      return 'Logo erişimi için yetkiniz doğrulanamadı.';
+    }
+    return 'Logo önizlemesi alınamadı.';
+  }
+
+  function renderInstitutionLogoSection(body, req) {
+    if (!body || !req || req.requestType !== 'institution_application') return;
+
+    var section = document.createElement('div');
+    section.className = 'contact-requests-logo-section';
+    section.setAttribute('data-onboarding-application-id', safeStr(req.onboardingApplicationId));
+
+    var heading = document.createElement('h4');
+    heading.className = 'contact-requests-logo-heading';
+    text(heading, 'Kurum Logosu');
+    section.appendChild(heading);
+
+    var statusEl = document.createElement('p');
+    statusEl.className = 'contact-requests-logo-status muted';
+    section.appendChild(statusEl);
+
+    var previewFrame = document.createElement('div');
+    previewFrame.className = 'contact-requests-logo-preview-frame';
+    previewFrame.hidden = true;
+    var img = document.createElement('img');
+    img.className = 'contact-requests-logo-preview';
+    img.alt = 'Kurum logosu önizleme';
+    img.hidden = true;
+    previewFrame.appendChild(img);
+    section.appendChild(previewFrame);
+
+    var meta = document.createElement('div');
+    meta.className = 'contact-requests-logo-meta';
+    meta.hidden = true;
+    var nameEl = document.createElement('div');
+    nameEl.className = 'contact-requests-logo-meta-line';
+    var typeEl = document.createElement('div');
+    typeEl.className = 'contact-requests-logo-meta-line';
+    meta.appendChild(nameEl);
+    meta.appendChild(typeEl);
+    section.appendChild(meta);
+
+    var actions = document.createElement('div');
+    actions.className = 'contact-requests-logo-actions';
+    actions.hidden = true;
+    var downloadBtn = document.createElement('button');
+    downloadBtn.type = 'button';
+    downloadBtn.className = 'contact-requests-btn contact-requests-btn--primary';
+    downloadBtn.disabled = true;
+    downloadBtn.setAttribute('aria-disabled', 'true');
+    text(downloadBtn, 'Orijinal Logoyu İndir');
+    actions.appendChild(downloadBtn);
+    section.appendChild(actions);
+
+    body.appendChild(section);
+
+    var accessPayload = null;
+
+    function setStatusMessage(message) {
+      text(statusEl, message || '');
+      statusEl.hidden = !message;
+    }
+
+    function hideLogoVisuals() {
+      previewFrame.hidden = true;
+      img.hidden = true;
+      img.removeAttribute('src');
+      img.alt = 'Kurum logosu önizleme';
+      meta.hidden = true;
+      actions.hidden = true;
+      downloadBtn.disabled = true;
+      downloadBtn.setAttribute('aria-disabled', 'true');
+    }
+
+    function enableDownloadIfReady() {
+      if (accessPayload && accessPayload.downloadUrl) {
+        actions.hidden = false;
+        downloadBtn.disabled = false;
+        downloadBtn.setAttribute('aria-disabled', 'false');
+        return;
+      }
+      actions.hidden = true;
+      downloadBtn.disabled = true;
+      downloadBtn.setAttribute('aria-disabled', 'true');
+    }
+
+    function showLogoMeta(data) {
+      text(nameEl, 'Dosya adı: ' + displayOrDash(data && data.logoOriginalName));
+      text(typeEl, 'Format: ' + logoContentTypeLabel(data && data.logoContentType));
+      meta.hidden = false;
+    }
+
+    downloadBtn.addEventListener('click', function () {
+      if (!accessPayload || !accessPayload.downloadUrl || downloadBtn.disabled) return;
+      triggerLogoDownload(
+        accessPayload.downloadUrl,
+        accessPayload.logoOriginalName || 'logo'
+      );
+    });
+
+    img.addEventListener('error', function () {
+      if (!state.selectedRequestId || state.selectedRequestId !== req.id) return;
+      img.hidden = true;
+      img.removeAttribute('src');
+      previewFrame.hidden = true;
+      setStatusMessage('Logo önizlemesi yüklenemedi.');
+      enableDownloadIfReady();
+      if (accessPayload) showLogoMeta(accessPayload);
+    });
+
+    img.addEventListener('load', function () {
+      if (!state.selectedRequestId || state.selectedRequestId !== req.id) return;
+      if (!accessPayload || !accessPayload.viewUrl) return;
+      img.hidden = false;
+      previewFrame.hidden = false;
+      if (!accessPayload.downloadUrl) {
+        setStatusMessage('');
+      }
+    });
+
+    var applicationId = safeStr(req.onboardingApplicationId).trim();
+    if (!applicationId) {
+      hideLogoVisuals();
+      setStatusMessage('Logo yüklenmemiş');
+      return;
+    }
+
+    if (typeof firebase === 'undefined' || !firebase.functions) {
+      hideLogoVisuals();
+      setStatusMessage('Logo erişim servisi henüz kullanılamıyor.');
+      return;
+    }
+
+    hideLogoVisuals();
+    setStatusMessage('Logo hazırlanıyor...');
+    var requestIdAtStart = req.id;
+
+    firebase
+      .functions()
+      .httpsCallable('getInstitutionOnboardingLogoAccess')({ applicationId: applicationId })
+      .then(function (res) {
+        if (!state.selectedRequestId || state.selectedRequestId !== requestIdAtStart) return;
+        var data = res && res.data ? res.data : null;
+        if (!data || data.ok !== true || data.hasLogo !== true) {
+          accessPayload = null;
+          hideLogoVisuals();
+          setStatusMessage('Logo yüklenmemiş');
+          return;
+        }
+
+        accessPayload = data;
+        showLogoMeta(data);
+        enableDownloadIfReady();
+
+        if (!data.viewUrl) {
+          previewFrame.hidden = true;
+          img.hidden = true;
+          img.removeAttribute('src');
+          setStatusMessage(
+            data.downloadUrl
+              ? 'Logo önizlemesi yüklenemedi.'
+              : 'Logo yüklenmemiş'
+          );
+          return;
+        }
+
+        setStatusMessage('');
+        img.alt = 'Kurum logosu önizleme';
+        img.hidden = true;
+        previewFrame.hidden = true;
+        img.src = data.viewUrl;
+      })
+      .catch(function (err) {
+        if (!state.selectedRequestId || state.selectedRequestId !== requestIdAtStart) return;
+        accessPayload = null;
+        hideLogoVisuals();
+        console.warn('[contact-requests] logo access failed', {
+          code: err && err.code ? String(err.code) : '',
+          message: err && err.message ? String(err.message) : ''
+        });
+        setStatusMessage(mapLogoAccessErrorMessage(err));
+      });
   }
 
   function sortedHistory(history) {
@@ -538,7 +897,13 @@
       return;
     }
     if (empty) empty.hidden = true;
-    text(title, displayOrDash(req.fullName));
+    var isInstApp = req.requestType === 'institution_application';
+    text(
+      title,
+      isInstApp
+        ? displayOrDash(req.institutionName || req.fullName)
+        : displayOrDash(req.fullName)
+    );
 
     var feedback = document.createElement('div');
     feedback.id = 'contact-requests-detail-feedback';
@@ -549,21 +914,38 @@
     grid.className = 'contact-requests-field-grid';
     appendField(grid, 'Durum', statusLabel(req.status));
     appendField(grid, 'Talep türü', requestTypeLabel(req.requestType));
-    appendField(grid, 'Kullanıcı türü', userTypeLabel(req.userType));
-    appendField(grid, 'Ad Soyad', displayOrDash(req.fullName));
-    appendField(grid, 'E-posta', displayOrDash(req.email));
-    appendField(grid, 'Telefon', displayOrDash(req.phone));
-    appendField(grid, 'Kurum adı', displayOrDash(req.institutionName));
-    appendField(grid, 'Şehir', displayOrDash(req.city));
+    if (!isInstApp) {
+      appendField(grid, 'Kullanıcı türü', userTypeLabel(req.userType));
+      appendField(grid, 'Ad Soyad', displayOrDash(req.fullName));
+      appendField(grid, 'E-posta', displayOrDash(req.email));
+      appendField(grid, 'Telefon', displayOrDash(req.phone));
+      appendFieldIfPresent(grid, 'Kurum adı', req.institutionName);
+      appendFieldIfPresent(grid, 'Şehir', req.city);
+    } else {
+      appendField(grid, 'Kurum Adı', displayOrDash(req.institutionName));
+      appendField(
+        grid,
+        'Yetkili',
+        displayOrDash(req.authorizedPersonName || req.fullName)
+      );
+      appendFieldIfPresent(grid, 'Yetkili Görevi', req.authorizedPersonTitle);
+      appendField(grid, 'E-posta', displayOrDash(req.email));
+      appendField(grid, 'Telefon', displayOrDash(req.phone));
+      appendField(grid, 'İl', displayOrDash(req.city));
+      appendFieldIfPresent(grid, 'İlçe', req.district);
+      appendField(grid, 'İlgilenilen Program', interestedProgramLabel(req.interestedProgram));
+      appendFieldIfPresent(grid, 'Tahmini Öğrenci Sayısı', req.estimatedStudentCount);
+      appendFieldIfPresent(grid, 'Onboarding ID', req.onboardingApplicationId);
+    }
     appendField(grid, 'Talep ID', displayOrDash(req.id), true);
     appendField(grid, 'Gönderim', formatDateTime(req.createdAt));
     appendField(grid, 'Son güncelleme', formatDateTime(req.updatedAt));
     appendField(grid, 'Okunma', formatDateTime(req.readAt));
     appendField(grid, 'Yanıtlanma', formatDateTime(req.answeredAt));
     appendField(grid, 'Kapatılma', formatDateTime(req.closedAt));
-    appendField(grid, 'Gönderen UID', displayOrDash(req.submitterUid));
-    appendField(grid, 'Tenant ID', displayOrDash(req.tenantId));
-    appendField(grid, 'Kaynak sayfa', displayOrDash(req.sourcePage));
+    appendFieldIfPresent(grid, 'Gönderen UID', req.submitterUid);
+    appendFieldIfPresent(grid, 'Tenant ID', req.tenantId);
+    appendFieldIfPresent(grid, 'Kaynak sayfa', req.sourcePage);
     appendField(grid, 'Aydınlatma sürümü', displayOrDash(req.noticeVersion));
     appendField(grid, 'Aydınlatma bildirimi', req.noticeAcknowledged ? 'Okundu / bilgi edinildi' : '—');
     body.appendChild(grid);
@@ -579,6 +961,10 @@
     msgField.appendChild(msgLab);
     msgField.appendChild(msgVal);
     body.appendChild(msgField);
+
+    if (isInstApp) {
+      renderInstitutionLogoSection(body, req);
+    }
 
     var actions = document.createElement('div');
     actions.className = 'contact-requests-actions';
@@ -816,9 +1202,129 @@
       });
   }
 
+  function setDeleteConfirmBusy(busy) {
+    var okBtn = $('contact-requests-delete-confirm-ok');
+    var cancelBtn = $('contact-requests-delete-confirm-cancel');
+    if (okBtn) {
+      okBtn.disabled = !!busy;
+      text(okBtn, busy ? 'Kaldırılıyor…' : 'Talebi Sil');
+    }
+    if (cancelBtn) cancelBtn.disabled = !!busy;
+  }
+
+  function closeDeleteConfirm() {
+    if (state.deleteInProgress) return;
+    state.pendingDeleteRequestId = null;
+    var modal = $('contact-requests-delete-confirm');
+    if (modal) modal.hidden = true;
+    setDeleteConfirmBusy(false);
+  }
+
+  function openDeleteConfirm(requestId) {
+    if (state.deleteInProgress) return;
+    var req = state.requestsById[requestId];
+    if (!req || req.deleted === true) return;
+    state.pendingDeleteRequestId = requestId;
+    var modal = $('contact-requests-delete-confirm');
+    if (!modal) {
+      // Fallback if modal markup is unavailable.
+      if (
+        !window.confirm(
+          'Bu talep iletişim talepleri listesinden kaldırılacak.\nDevam etmek istiyor musunuz?'
+        )
+      ) {
+        return;
+      }
+      performSoftDelete(requestId);
+      return;
+    }
+    setDeleteConfirmBusy(false);
+    modal.hidden = false;
+  }
+
+  function removeRequestFromLocalState(requestId) {
+    if (!requestId) return;
+    if (state.requestsById[requestId]) delete state.requestsById[requestId];
+    state.requestOrder = state.requestOrder.filter(function (id) {
+      return id !== requestId;
+    });
+    if (state.selectedRequestId === requestId) {
+      state.selectedRequestId = null;
+      var layout = $('contact-requests-layout');
+      if (layout) layout.classList.remove('is-detail-open');
+    }
+  }
+
+  function setCardDeleteButtonsBusy(busy) {
+    var nodes = document.querySelectorAll(
+      '#admin-page-contact-requests .contact-requests-item-delete'
+    );
+    for (var i = 0; i < nodes.length; i++) {
+      nodes[i].disabled = !!busy;
+      text(nodes[i], busy ? '…' : 'Sil');
+    }
+  }
+
+  function performSoftDelete(requestId) {
+    if (state.deleteInProgress) return;
+    var listStatus = $('contact-requests-list-status');
+    var callable = getCallable('softDeleteContactRequest');
+    if (!callable) {
+      setFeedback(listStatus, 'Cloud Function istemcisi yüklenemedi.', 'error');
+      closeDeleteConfirm();
+      return;
+    }
+    state.deleteInProgress = true;
+    setDeleteConfirmBusy(true);
+    setCardDeleteButtonsBusy(true);
+    setFeedback(listStatus, 'Talep listeden kaldırılıyor…', '');
+    var deleteSucceeded = false;
+    var deleteErrorMessage = '';
+    callable({ requestId: requestId })
+      .then(function () {
+        deleteSucceeded = true;
+        state.pendingDeleteRequestId = null;
+        var modal = $('contact-requests-delete-confirm');
+        if (modal) modal.hidden = true;
+        setDeleteConfirmBusy(false);
+        removeRequestFromLocalState(requestId);
+      })
+      .catch(function (err) {
+        deleteErrorMessage = callableErrorMessage(err);
+        try {
+          console.warn(
+            '[AdminContactRequests] soft delete failed',
+            err && (err.code || err.message || err)
+          );
+        } catch (e) {}
+        setDeleteConfirmBusy(false);
+        var modal = $('contact-requests-delete-confirm');
+        if (modal) modal.hidden = true;
+        state.pendingDeleteRequestId = null;
+      })
+      .then(function () {
+        state.deleteInProgress = false;
+        renderFilterCounts();
+        renderList();
+        renderDetail();
+        if (deleteSucceeded) {
+          setFeedback($('contact-requests-list-status'), 'Talep listeden kaldırıldı.', 'ok');
+        } else if (deleteErrorMessage) {
+          setFeedback($('contact-requests-list-status'), deleteErrorMessage, 'error');
+        }
+      });
+  }
+
   function setFilter(filter) {
     if (FILTERS.indexOf(filter) === -1) filter = 'all';
     state.activeFilter = filter;
+    renderFilterCounts();
+    renderList();
+  }
+
+  function setTypeFilter(filter) {
+    if (TYPE_FILTERS.indexOf(filter) === -1) filter = 'all';
+    state.activeTypeFilter = filter;
     renderFilterCounts();
     renderList();
   }
@@ -834,10 +1340,44 @@
         setFilter(btn.getAttribute('data-filter') || 'all');
       });
     }
+    var typeToolbar = $('contact-requests-type-toolbar');
+    if (typeToolbar) {
+      typeToolbar.addEventListener('click', function (e) {
+        var btn = e.target && e.target.closest ? e.target.closest('[data-type-filter]') : null;
+        if (!btn || !typeToolbar.contains(btn)) return;
+        setTypeFilter(btn.getAttribute('data-type-filter') || 'all');
+      });
+    }
     var back = $('contact-requests-back-btn');
     if (back) {
       back.addEventListener('click', function () {
         closeDetail();
+      });
+    }
+    var deleteCancel = $('contact-requests-delete-confirm-cancel');
+    if (deleteCancel) {
+      deleteCancel.addEventListener('click', function () {
+        closeDeleteConfirm();
+      });
+    }
+    var deleteOk = $('contact-requests-delete-confirm-ok');
+    if (deleteOk) {
+      deleteOk.addEventListener('click', function () {
+        if (state.deleteInProgress) return;
+        var id = state.pendingDeleteRequestId;
+        if (!id) {
+          closeDeleteConfirm();
+          return;
+        }
+        performSoftDelete(id);
+      });
+    }
+    var deleteModal = $('contact-requests-delete-confirm');
+    if (deleteModal) {
+      deleteModal.addEventListener('click', function (e) {
+        if (e.target === deleteModal && !state.deleteInProgress) {
+          closeDeleteConfirm();
+        }
       });
     }
   }

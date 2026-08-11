@@ -9886,6 +9886,1001 @@ All other login/auth files are deprecated and must not be imported.
                 margin-top: 14px;
             }
         }
+        /* ===== Instructor session shell (Phase 2C-1) — scoped; no student/machine nav reuse ===== */
+        #instructor-session-screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            max-width: 100vw;
+            overflow: hidden;
+            box-sizing: border-box;
+            background:
+                radial-gradient(ellipse 70% 50% at 50% 0%, rgba(34, 211, 238, 0.14), transparent 58%),
+                radial-gradient(ellipse 50% 40% at 90% 80%, rgba(56, 189, 248, 0.08), transparent 55%),
+                linear-gradient(168deg, #020617 0%, #07111f 48%, #020617 100%);
+            color: #e2e8f0;
+            padding:
+                calc(env(safe-area-inset-top, 0px) + 18px)
+                env(safe-area-inset-right, 0px)
+                0
+                env(safe-area-inset-left, 0px);
+        }
+        #instructor-session-screen.full-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+        }
+        #instructor-session-screen #instructor-shell {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 0;
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+        #instructor-session-screen #instructor-shell-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-shrink: 0;
+            padding: 10px 14px 8px;
+            box-sizing: border-box;
+        }
+        #instructor-session-screen #instructor-shell-top-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+        #instructor-session-screen #instructor-shell-top-right-spacer {
+            width: auto;
+            min-width: 44px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        #instructor-session-screen #instructor-notification-bell-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #8fd9ff;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin: 0;
+            padding: 0;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        #instructor-session-screen #instructor-notification-bell-btn:active {
+            transform: scale(0.96);
+            opacity: 0.92;
+        }
+        #instructor-session-screen #instructor-notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            border-radius: 50%;
+            background: #e53935;
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        #instructor-session-screen #instructor-notification-badge.visible {
+            display: flex;
+        }
+        #instructor-session-screen #instructor-notification-panel-modal.notification-panel-overlay {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 40;
+            display: none;
+            justify-content: flex-end;
+            align-items: flex-start;
+            padding: 12px;
+            padding-top: calc(56px + env(safe-area-inset-top, 0px) + 18px);
+            padding-right: max(12px, env(safe-area-inset-right, 0px));
+            backdrop-filter: blur(4px);
+            box-sizing: border-box;
+        }
+        #instructor-session-screen #instructor-notification-panel-modal.notification-panel-overlay.visible {
+            display: flex;
+        }
+        #instructor-session-screen #instructor-notification-panel-modal .notification-panel-card {
+            width: 100%;
+            max-width: 340px;
+            max-height: 70vh;
+            background: rgba(15, 23, 42, 0.94);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        #instructor-session-screen #instructor-notification-panel-modal .notif-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+            background: rgba(0, 0, 0, 0.2);
+        }
+        #instructor-session-screen #instructor-notification-panel-modal .notif-panel-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #8fd9ff;
+            margin: 0;
+        }
+        #instructor-session-screen #instructor-notification-panel-modal .notif-panel-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: rgba(255, 255, 255, 0.08);
+            color: #94a3b8;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        #instructor-session-screen #instructor-notification-panel-empty {
+            padding: 16px;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        #instructor-session-screen #btn-instructor-session-logout {
+            appearance: none;
+            -webkit-appearance: none;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: rgba(15, 23, 42, 0.55);
+            color: #e2e8f0;
+            border-radius: 12px;
+            min-height: 40px;
+            padding: 8px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font: inherit;
+            font-weight: 700;
+            font-size: 0.86rem;
+            cursor: pointer;
+        }
+        #instructor-session-screen #btn-instructor-session-logout:active {
+            transform: scale(0.98);
+            opacity: 0.92;
+        }
+        #instructor-session-screen #btn-instructor-shell-back {
+            appearance: none;
+            -webkit-appearance: none;
+            border: 1px solid rgba(34, 211, 238, 0.35);
+            background: rgba(8, 47, 73, 0.45);
+            color: #a5f3fc;
+            border-radius: 12px;
+            min-height: 40px;
+            padding: 8px 12px;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            font: inherit;
+            font-weight: 700;
+            font-size: 0.86rem;
+            cursor: pointer;
+        }
+        #instructor-session-screen #btn-instructor-shell-back.is-visible {
+            display: inline-flex;
+        }
+        #instructor-session-screen #instructor-shell-top-title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 800;
+            color: #f8fafc;
+            letter-spacing: 0.01em;
+        }
+        #instructor-session-screen #instructor-shell-top-title.is-home {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #instructor-session-screen #instructor-shell-main {
+            flex: 1;
+            min-height: 0;
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 4px 16px 12px;
+            box-sizing: border-box;
+            padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        }
+        #instructor-session-screen #instructor-shell-main.has-bottom-nav {
+            padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+        }
+        #instructor-session-screen .instructor-shell-pane {
+            display: none;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        #instructor-session-screen .instructor-shell-pane.is-active {
+            display: block;
+        }
+        #instructor-session-screen #instructor-home-hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 10px;
+            margin: 4px 0 18px;
+        }
+        /* PHASE 2C-2A — logo is the object; no decorative card frame */
+        #instructor-session-screen .instructor-home-logo-wrap {
+            width: clamp(96px, 26vw, 120px);
+            height: clamp(96px, 26vw, 120px);
+            border-radius: 0;
+            overflow: visible;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #instructor-session-screen #instructor-home-logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            filter: drop-shadow(0 0 18px rgba(34, 211, 238, 0.35));
+        }
+        #instructor-session-screen #instructor-home-institution-name {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #f8fafc;
+            line-height: 1.3;
+        }
+        #instructor-session-screen .instructor-identity-card {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            border-radius: 18px;
+            padding: 14px 14px 12px;
+            margin: 0 0 16px;
+            background: linear-gradient(155deg, rgba(15, 23, 42, 0.78), rgba(8, 47, 73, 0.42));
+            border: 1px solid rgba(34, 211, 238, 0.22);
+            box-shadow: 0 10px 28px rgba(2, 6, 23, 0.35);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+        }
+        #instructor-session-screen .instructor-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: linear-gradient(145deg, #0e7490, #155e75);
+            border: 1px solid rgba(165, 243, 252, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ecfeff;
+            font-weight: 800;
+            font-size: 1.05rem;
+        }
+        #instructor-session-screen .instructor-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        #instructor-session-screen .instructor-identity-copy {
+            min-width: 0;
+            flex: 1;
+        }
+        #instructor-session-screen .instructor-identity-name {
+            margin: 0 0 2px;
+            font-size: 1.02rem;
+            font-weight: 800;
+            color: #f8fafc;
+            line-height: 1.25;
+            word-break: break-word;
+        }
+        #instructor-session-screen .instructor-identity-username {
+            margin: 0 0 6px;
+            font-size: 0.86rem;
+            color: #94a3b8;
+            word-break: break-all;
+        }
+        #instructor-session-screen .instructor-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #a7f3d0;
+            background: rgba(16, 185, 129, 0.14);
+            border: 1px solid rgba(52, 211, 153, 0.35);
+            border-radius: 999px;
+            padding: 3px 10px;
+        }
+        #instructor-session-screen .instructor-status-pill::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #34d399;
+            box-shadow: 0 0 8px rgba(52, 211, 153, 0.8);
+        }
+        #instructor-session-screen .instructor-home-menu-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        #instructor-session-screen .instructor-home-menu-btn {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-align: left;
+            border: 1px solid rgba(34, 211, 238, 0.22);
+            border-radius: 18px;
+            padding: 16px 16px;
+            min-height: 72px;
+            cursor: pointer;
+            font: inherit;
+            color: #f8fafc;
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.82), rgba(8, 47, 73, 0.38));
+            box-shadow: 0 8px 22px rgba(2, 6, 23, 0.28);
+            position: relative;
+            overflow: hidden;
+        }
+        #instructor-session-screen .instructor-home-menu-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 4px;
+            background: linear-gradient(180deg, #22d3ee, #0284c7);
+        }
+        #instructor-session-screen .instructor-home-menu-btn:active {
+            transform: scale(0.985);
+            opacity: 0.95;
+        }
+        #instructor-session-screen .instructor-home-menu-btn i {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: rgba(34, 211, 238, 0.12);
+            color: #67e8f9;
+            font-size: 1.05rem;
+        }
+        #instructor-session-screen .instructor-home-menu-btn-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+        #instructor-session-screen .instructor-home-menu-btn-title {
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            white-space: normal;
+            word-break: break-word;
+            line-height: 1.25;
+        }
+        #instructor-session-screen .instructor-home-menu-btn-subtitle {
+            font-size: 0.82rem;
+            color: #94a3b8;
+            font-weight: 600;
+            line-height: 1.35;
+        }
+        #instructor-session-screen .instructor-home-menu-btn.is-room::before {
+            background: linear-gradient(180deg, #fbbf24, #d97706);
+        }
+        #instructor-session-screen .instructor-home-menu-btn.is-room i {
+            background: rgba(251, 191, 36, 0.12);
+            color: #fcd34d;
+        }
+        /* PHASE 2C-3B — instructor weekly agenda grid */
+        #instructor-session-screen #instructor-agenda-root {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+        #instructor-session-screen .instructor-agenda-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 0 0 10px;
+        }
+        #instructor-session-screen .instructor-agenda-toolbar-title {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #f8fafc;
+        }
+        #instructor-session-screen #btn-instructor-agenda-refresh {
+            appearance: none;
+            -webkit-appearance: none;
+            border: 1px solid rgba(34, 211, 238, 0.35);
+            background: rgba(8, 47, 73, 0.45);
+            color: #a5f3fc;
+            border-radius: 12px;
+            min-height: 36px;
+            padding: 6px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font: inherit;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        #instructor-session-screen #btn-instructor-agenda-refresh:disabled {
+            opacity: 0.55;
+            cursor: default;
+        }
+        #instructor-session-screen .instructor-agenda-week-nav {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0 0 8px;
+        }
+        #instructor-session-screen .instructor-agenda-week-nav button {
+            appearance: none;
+            -webkit-appearance: none;
+            border: 1px solid rgba(34, 211, 238, 0.28);
+            background: rgba(8, 47, 73, 0.4);
+            color: #e2e8f0;
+            border-radius: 10px;
+            min-height: 34px;
+            padding: 4px 10px;
+            font: inherit;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            flex: 1 1 auto;
+        }
+        #instructor-session-screen .instructor-agenda-week-nav button:disabled {
+            opacity: 0.55;
+            cursor: default;
+        }
+        #instructor-session-screen #instructor-agenda-week-range {
+            margin: 0 0 10px;
+            font-size: 0.84rem;
+            font-weight: 650;
+            color: #94a3b8;
+            text-align: center;
+        }
+        #instructor-session-screen .instructor-agenda-status {
+            margin: 0 0 10px;
+            font-size: 0.88rem;
+            color: #94a3b8;
+            display: none;
+        }
+        #instructor-session-screen .instructor-agenda-status.is-visible {
+            display: block;
+        }
+        #instructor-session-screen .instructor-agenda-status.is-error {
+            color: #fca5a5;
+        }
+        #instructor-session-screen .instructor-agenda-week-hint {
+            margin: 0 0 8px;
+            font-size: 0.8rem;
+            color: #64748b;
+            display: none;
+        }
+        #instructor-session-screen .instructor-agenda-week-hint.is-visible {
+            display: block;
+        }
+        #instructor-session-screen .instructor-agenda-grid-shell {
+            border-radius: 14px;
+            border: 1px solid rgba(34, 211, 238, 0.22);
+            background: linear-gradient(160deg, rgba(15, 23, 42, 0.88), rgba(8, 47, 73, 0.42));
+            box-shadow: 0 10px 28px rgba(2, 6, 23, 0.32);
+            overflow: hidden;
+            width: 100%;
+            max-width: 100%;
+        }
+        #instructor-session-screen .instructor-agenda-grid-scroll {
+            overflow: hidden;
+            width: 100%;
+            max-width: 100%;
+        }
+        #instructor-session-screen .instructor-agenda-grid {
+            display: grid;
+            grid-template-columns: 34px repeat(7, minmax(0, 1fr));
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+        #instructor-session-screen .instructor-agenda-corner {
+            background: rgba(2, 6, 23, 0.96);
+            border-bottom: 1px solid rgba(34, 211, 238, 0.16);
+            border-right: 1px solid rgba(34, 211, 238, 0.16);
+            min-height: 38px;
+        }
+        #instructor-session-screen .instructor-agenda-day-head {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1px;
+            min-height: 38px;
+            min-width: 0;
+            padding: 4px 1px;
+            border-bottom: 1px solid rgba(34, 211, 238, 0.16);
+            border-right: 1px solid rgba(34, 211, 238, 0.1);
+            background: rgba(2, 6, 23, 0.72);
+            color: #a5f3fc;
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            text-transform: uppercase;
+        }
+        #instructor-session-screen .instructor-agenda-day-num {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            letter-spacing: 0;
+            text-transform: none;
+        }
+        #instructor-session-screen .instructor-agenda-time-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 58px;
+            padding: 2px 1px;
+            border-bottom: 1px solid rgba(34, 211, 238, 0.1);
+            border-right: 1px solid rgba(34, 211, 238, 0.16);
+            background: rgba(2, 6, 23, 0.96);
+            color: #94a3b8;
+            font-size: 0.56rem;
+            font-weight: 700;
+            line-height: 1.1;
+            text-align: center;
+            white-space: nowrap;
+        }
+        #instructor-session-screen .instructor-agenda-cell {
+            min-height: 58px;
+            min-width: 0;
+            border-bottom: 1px solid rgba(34, 211, 238, 0.08);
+            border-right: 1px solid rgba(34, 211, 238, 0.08);
+            background: rgba(15, 23, 42, 0.35);
+            padding: 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0;
+        }
+        #instructor-session-screen .instructor-agenda-lesson-block {
+            appearance: none;
+            -webkit-appearance: none;
+            border: 1px solid transparent;
+            border-radius: 0;
+            padding: 3px 3px 2px;
+            text-align: left;
+            font: inherit;
+            cursor: pointer;
+            width: 100%;
+            max-width: 100%;
+            height: 100%;
+            flex: 1 1 0;
+            align-self: stretch;
+            box-sizing: border-box;
+            min-height: 0;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            gap: 2px;
+            background: rgba(8, 47, 73, 0.55);
+            overflow: hidden;
+        }
+        #instructor-session-screen .instructor-agenda-lesson-block.is-pending {
+            background: rgba(245, 158, 11, 0.16);
+            border-color: rgba(251, 191, 36, 0.45);
+        }
+        #instructor-session-screen .instructor-agenda-lesson-block.is-confirmed {
+            background: rgba(22, 163, 74, 0.34);
+            border-color: rgba(34, 197, 94, 0.9);
+        }
+        #instructor-session-screen .instructor-agenda-lesson-block.is-consultation {
+            background: rgba(220, 38, 38, 0.3);
+            border-color: rgba(248, 113, 113, 0.92);
+        }
+        #instructor-session-screen .instructor-agenda-lesson-block.is-completed {
+            background: rgba(16, 185, 129, 0.14);
+            border-color: rgba(52, 211, 153, 0.4);
+        }
+        #instructor-session-screen .instructor-agenda-lesson-name {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            min-width: 0;
+            max-width: 100%;
+            font-size: 0.56rem;
+            font-weight: 800;
+            color: #f8fafc;
+            line-height: 1.12;
+            overflow: hidden;
+        }
+        #instructor-session-screen .instructor-agenda-lesson-name-line {
+            display: block;
+            max-width: 100%;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            white-space: normal;
+        }
+        #instructor-session-screen .instructor-agenda-lesson-status {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+            min-width: 0;
+            max-width: 100%;
+            font-size: 0.5rem;
+            font-weight: 700;
+            line-height: 1.15;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            white-space: normal;
+        }
+        #instructor-session-screen .instructor-agenda-lesson-status-icon {
+            flex-shrink: 0;
+            margin-top: 2px;
+            font-size: 0.52rem;
+            line-height: 1;
+            color: #f8fafc;
+        }
+        #instructor-session-screen .instructor-agenda-lesson-status-text {
+            min-width: 0;
+            max-width: 100%;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            white-space: normal;
+        }
+        #instructor-session-screen .instructor-agenda-lesson-block.is-pending .instructor-agenda-lesson-status { color: #fde68a; }
+        #instructor-session-screen .instructor-agenda-lesson-block.is-confirmed .instructor-agenda-lesson-status { color: #bbf7d0; }
+        #instructor-session-screen .instructor-agenda-lesson-block.is-consultation .instructor-agenda-lesson-status { color: #fecaca; }
+        #instructor-session-screen .instructor-agenda-lesson-block.is-completed .instructor-agenda-lesson-status { color: #a7f3d0; }
+        #instructor-session-screen #instructor-agenda-error-actions {
+            display: none;
+            margin-top: 10px;
+        }
+        #instructor-session-screen #instructor-agenda-error-actions.is-visible {
+            display: block;
+        }
+        #instructor-session-screen #btn-instructor-agenda-retry {
+            appearance: none;
+            -webkit-appearance: none;
+            border: 1px solid rgba(34, 211, 238, 0.4);
+            background: rgba(8, 47, 73, 0.5);
+            color: #a5f3fc;
+            border-radius: 12px;
+            min-height: 40px;
+            padding: 8px 14px;
+            font: inherit;
+            font-weight: 700;
+            font-size: 0.88rem;
+            cursor: pointer;
+        }
+        #instructor-session-screen #instructor-agenda-lesson-detail-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 2100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding:
+                max(16px, env(safe-area-inset-top, 0px))
+                14px
+                max(16px, env(safe-area-inset-bottom, 0px));
+            background: rgba(2, 6, 23, 0.68);
+            box-sizing: border-box;
+        }
+        #instructor-session-screen #instructor-agenda-lesson-detail-modal.is-open {
+            display: flex;
+        }
+        #instructor-session-screen .instructor-agenda-detail-card {
+            width: min(420px, 100%);
+            max-height: min(86vh, 680px);
+            overflow: auto;
+            border-radius: 18px;
+            border: 1px solid rgba(34, 211, 238, 0.28);
+            background: linear-gradient(165deg, rgba(15, 23, 42, 0.98), rgba(8, 47, 73, 0.92));
+            box-shadow: 0 18px 40px rgba(2, 6, 23, 0.45);
+            padding: 16px 16px 14px;
+            box-sizing: border-box;
+            margin: auto;
+        }
+        #instructor-session-screen .instructor-agenda-detail-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        #instructor-session-screen .instructor-agenda-detail-title {
+            margin: 0;
+            font-size: 1.02rem;
+            font-weight: 800;
+            color: #f8fafc;
+        }
+        #instructor-session-screen #btn-instructor-agenda-detail-x {
+            appearance: none;
+            -webkit-appearance: none;
+            border: 0;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 1.4rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 4px 6px;
+        }
+        #instructor-session-screen .instructor-agenda-detail-grid {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        #instructor-session-screen .instructor-agenda-detail-row {
+            display: grid;
+            gap: 2px;
+        }
+        #instructor-session-screen .instructor-agenda-detail-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+        #instructor-session-screen .instructor-agenda-detail-value {
+            font-size: 0.92rem;
+            font-weight: 650;
+            color: #e2e8f0;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+        #instructor-session-screen #instructor-agenda-detail-note {
+            margin: 0 0 12px;
+            font-size: 0.84rem;
+            color: #94a3b8;
+            line-height: 1.4;
+            display: none;
+        }
+        #instructor-session-screen #instructor-agenda-detail-note.is-visible {
+            display: block;
+        }
+        #instructor-session-screen #instructor-agenda-detail-consult-wrap {
+            display: none;
+            margin: 0 0 12px;
+        }
+        #instructor-session-screen #instructor-agenda-detail-consult-wrap.is-visible {
+            display: block;
+        }
+        #instructor-session-screen #instructor-agenda-detail-consult-wrap label {
+            display: block;
+            margin: 0 0 6px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #94a3b8;
+        }
+        #instructor-session-screen #instructor-agenda-detail-consult-note {
+            width: 100%;
+            min-height: 72px;
+            resize: vertical;
+            box-sizing: border-box;
+            border-radius: 12px;
+            border: 1px solid rgba(34, 211, 238, 0.28);
+            background: rgba(2, 6, 23, 0.55);
+            color: #e2e8f0;
+            padding: 10px 12px;
+            font: inherit;
+            font-size: 0.88rem;
+            line-height: 1.4;
+        }
+        #instructor-session-screen #instructor-agenda-detail-action-msg {
+            margin: 0 0 10px;
+            font-size: 0.84rem;
+            color: #fca5a5;
+            display: none;
+        }
+        #instructor-session-screen #instructor-agenda-detail-action-msg.is-visible {
+            display: block;
+        }
+        #instructor-session-screen .instructor-agenda-detail-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        #instructor-session-screen #btn-instructor-agenda-detail-close,
+        #instructor-session-screen #btn-instructor-agenda-detail-confirm,
+        #instructor-session-screen #btn-instructor-agenda-detail-consult {
+            appearance: none;
+            -webkit-appearance: none;
+            border-radius: 12px;
+            min-height: 40px;
+            padding: 8px 14px;
+            font: inherit;
+            font-weight: 700;
+            font-size: 0.86rem;
+            cursor: pointer;
+        }
+        #instructor-session-screen #btn-instructor-agenda-detail-close {
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: rgba(15, 23, 42, 0.55);
+            color: #cbd5e1;
+        }
+        #instructor-session-screen #btn-instructor-agenda-detail-confirm {
+            border: 1px solid rgba(34, 211, 238, 0.45);
+            background: linear-gradient(135deg, rgba(8, 145, 178, 0.55), rgba(14, 165, 233, 0.42));
+            color: #ecfeff;
+        }
+        #instructor-session-screen #btn-instructor-agenda-detail-consult {
+            border: 1px solid rgba(167, 139, 250, 0.45);
+            background: rgba(91, 33, 182, 0.35);
+            color: #ede9fe;
+        }
+        #instructor-session-screen #btn-instructor-agenda-detail-confirm:disabled,
+        #instructor-session-screen #btn-instructor-agenda-detail-consult:disabled,
+        #instructor-session-screen #btn-instructor-agenda-detail-close:disabled {
+            opacity: 0.55;
+            cursor: default;
+        }
+        #instructor-session-screen #instructor-agenda-detail-response-actions {
+            display: none;
+            width: 100%;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        #instructor-session-screen #instructor-agenda-detail-response-actions.is-visible {
+            display: flex;
+        }
+        #instructor-session-screen .instructor-empty-card,
+        #instructor-session-screen .instructor-profile-card {
+            border-radius: 18px;
+            padding: 18px 16px;
+            background: linear-gradient(155deg, rgba(15, 23, 42, 0.78), rgba(8, 47, 73, 0.35));
+            border: 1px solid rgba(34, 211, 238, 0.2);
+            box-shadow: 0 10px 28px rgba(2, 6, 23, 0.3);
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 100%;
+        }
+        #instructor-session-screen .instructor-empty-title {
+            margin: 0 0 8px;
+            font-size: 1.08rem;
+            font-weight: 800;
+            color: #f8fafc;
+        }
+        #instructor-session-screen .instructor-empty-text {
+            margin: 0;
+            color: #94a3b8;
+            font-size: 0.92rem;
+            line-height: 1.45;
+        }
+        #instructor-session-screen .instructor-profile-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+        }
+        #instructor-session-screen .instructor-profile-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        #instructor-session-screen .instructor-profile-row:first-child {
+            padding-top: 0;
+        }
+        #instructor-session-screen .instructor-profile-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+        #instructor-session-screen .instructor-profile-value {
+            font-size: 0.95rem;
+            font-weight: 650;
+            color: #e2e8f0;
+            word-break: break-word;
+        }
+        #instructor-session-screen .instructor-profile-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+        }
+        #instructor-session-screen #instructor-bottom-nav {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: stretch;
+            justify-content: space-around;
+            gap: 4px;
+            padding:
+                8px 8px
+                calc(8px + env(safe-area-inset-bottom, 0px));
+            background: rgba(2, 6, 23, 0.92);
+            border-top: 1px solid rgba(34, 211, 238, 0.18);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-sizing: border-box;
+            z-index: 5;
+        }
+        #instructor-session-screen #instructor-shell {
+            position: relative;
+        }
+        #instructor-session-screen .instructor-nav-item {
+            appearance: none;
+            -webkit-appearance: none;
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            min-height: 48px;
+            padding: 6px 4px;
+            font: inherit;
+            font-size: 0.68rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        #instructor-session-screen .instructor-nav-item i {
+            font-size: 1.05rem;
+        }
+        #instructor-session-screen .instructor-nav-item.is-active {
+            color: #67e8f9;
+        }
         /* Generic Driving auth preparing — visual twin of Machine restore busy; no program badge. */
         #auth-preparing-busy.tp-auth-preparing-busy {
             position: fixed;
@@ -10934,6 +11929,222 @@ All other login/auth files are deprecated and must not be imported.
                     <p class="machine-notifications-empty-sub">Yeni bildirimler burada görüntülenecek.</p>
                 </div>
                 <div id="machine-notifications-list" class="machine-notifications-list machine-overlay-scroll"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="instructor-session-screen" class="full-screen scroll-screen" style="display:none; z-index: 2000;">
+        <div id="instructor-shell">
+            <div id="instructor-shell-topbar">
+                <div id="instructor-shell-top-left">
+                    <button type="button" id="btn-instructor-session-logout" onclick="handleLogout()" title="Çıkış Yap">
+                        <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+                        <span>Çıkış</span>
+                    </button>
+                    <button type="button" id="btn-instructor-shell-back" aria-label="Geri" onclick="showInstructorHomePane()">
+                        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                        <span>Geri</span>
+                    </button>
+                </div>
+                <h2 id="instructor-shell-top-title" class="is-home">Ana Sayfa</h2>
+                <div id="instructor-shell-top-right-spacer">
+                    <button type="button" id="instructor-notification-bell-btn" class="header-notification-btn" onclick="openInstructorNotificationPanel()" title="Bildirimler" aria-label="Bildirimler">
+                        <i class="fa-solid fa-bell" aria-hidden="true"></i>
+                        <span id="instructor-notification-badge" class="notification-badge" aria-hidden="true">0</span>
+                    </button>
+                </div>
+            </div>
+            <div id="instructor-shell-main" class="has-bottom-nav">
+                <section id="instructor-home-screen" class="instructor-shell-pane is-active" data-instructor-pane="instructor-home-screen">
+                    <div id="instructor-home-hero">
+                        <div class="instructor-home-logo-wrap">
+                            <img id="instructor-home-logo-img" src="./assets/tenant-logos/surucu_akademisi.png" alt="Kurum logosu" onerror="this.onerror=null;this.src='./resimler/logo.png'">
+                        </div>
+                        <h2 id="instructor-home-institution-name">Sürücü Akademisi</h2>
+                    </div>
+                    <div class="instructor-identity-card" id="instructor-home-identity">
+                        <div class="instructor-avatar" id="instructor-home-avatar" aria-hidden="true">?</div>
+                        <div class="instructor-identity-copy">
+                            <p class="instructor-identity-name" id="instructor-home-full-name">—</p>
+                            <p class="instructor-identity-username" id="instructor-home-username">@—</p>
+                            <span class="instructor-status-pill" id="instructor-home-status">Aktif</span>
+                        </div>
+                    </div>
+                    <div class="instructor-home-menu-stack">
+                        <button type="button" class="instructor-home-menu-btn" data-instructor-target="instructor-agenda-screen">
+                            <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+                            <div class="instructor-home-menu-btn-copy">
+                                <span class="instructor-home-menu-btn-title">AJANDAM</span>
+                                <span class="instructor-home-menu-btn-subtitle">Direksiyon ders programı</span>
+                            </div>
+                        </button>
+                        <button type="button" class="instructor-home-menu-btn" data-instructor-target="instructor-messages-screen">
+                            <i class="fa-solid fa-envelope" aria-hidden="true"></i>
+                            <div class="instructor-home-menu-btn-copy">
+                                <span class="instructor-home-menu-btn-title">MESAJLAR</span>
+                                <span class="instructor-home-menu-btn-subtitle">Kurumunuzla birebir iletişim kurun.</span>
+                            </div>
+                        </button>
+                        <button type="button" class="instructor-home-menu-btn" data-instructor-target="instructor-profile-screen">
+                            <i class="fa-solid fa-user" aria-hidden="true"></i>
+                            <div class="instructor-home-menu-btn-copy">
+                                <span class="instructor-home-menu-btn-title">PROFİLİM</span>
+                                <span class="instructor-home-menu-btn-subtitle">Hesap bilgileri</span>
+                            </div>
+                        </button>
+                        <button type="button" class="instructor-home-menu-btn is-room" data-instructor-target="instructor-room-screen">
+                            <i class="fa-solid fa-comments" aria-hidden="true"></i>
+                            <div class="instructor-home-menu-btn-copy">
+                                <span class="instructor-home-menu-btn-title">USTA ÖĞRETİCİLER İLETİŞİM ODASI</span>
+                                <span class="instructor-home-menu-btn-subtitle">Kurumunuzdaki direksiyon usta öğreticileriyle grup iletişimi.</span>
+                            </div>
+                        </button>
+                    </div>
+                </section>
+                <section id="instructor-agenda-screen" class="instructor-shell-pane" data-instructor-pane="instructor-agenda-screen">
+                    <div id="instructor-agenda-root">
+                        <div class="instructor-agenda-toolbar">
+                            <h3 class="instructor-agenda-toolbar-title">Ajandam</h3>
+                            <button type="button" id="btn-instructor-agenda-refresh" onclick="loadInstructorAgenda({ force: true })" title="Yenile" aria-label="Yenile">
+                                <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                                <span>Yenile</span>
+                            </button>
+                        </div>
+                        <div class="instructor-agenda-week-nav" role="group" aria-label="Hafta gezintisi">
+                            <button type="button" id="btn-instructor-agenda-prev" onclick="shiftInstructorAgendaWeek(-1)">Önceki</button>
+                            <button type="button" id="btn-instructor-agenda-today" onclick="goInstructorAgendaThisWeek()">Bu Hafta</button>
+                            <button type="button" id="btn-instructor-agenda-next" onclick="shiftInstructorAgendaWeek(1)">Sonraki</button>
+                        </div>
+                        <p id="instructor-agenda-week-range">—</p>
+                        <p id="instructor-agenda-status" class="instructor-agenda-status" role="status" aria-live="polite"></p>
+                        <p id="instructor-agenda-week-hint" class="instructor-agenda-week-hint">Bu hafta için planlanmış ders bulunmuyor.</p>
+                        <div class="instructor-agenda-grid-shell">
+                            <div class="instructor-agenda-grid-scroll">
+                                <div id="instructor-agenda-grid" class="instructor-agenda-grid" role="grid" aria-label="Haftalık direksiyon dersi ajandası"></div>
+                            </div>
+                        </div>
+                        <div id="instructor-agenda-error-actions">
+                            <button type="button" id="btn-instructor-agenda-retry" onclick="loadInstructorAgenda({ force: true })">Tekrar Dene</button>
+                        </div>
+                    </div>
+                </section>
+                <section id="instructor-messages-screen" class="instructor-shell-pane" data-instructor-pane="instructor-messages-screen">
+                    <div class="instructor-empty-card">
+                        <h3 class="instructor-empty-title">MESAJLAR</h3>
+                        <p class="instructor-empty-text">Kurumunuzla yaptığınız birebir mesajlaşmalar burada görüntülenecek.</p>
+                    </div>
+                </section>
+                <section id="instructor-profile-screen" class="instructor-shell-pane" data-instructor-pane="instructor-profile-screen">
+                    <div class="instructor-profile-card">
+                        <div class="instructor-profile-header">
+                            <div class="instructor-avatar" id="instructor-profile-avatar" aria-hidden="true">?</div>
+                            <div class="instructor-identity-copy">
+                                <p class="instructor-identity-name" id="instructor-profile-full-name">—</p>
+                                <p class="instructor-identity-username" id="instructor-profile-username">@—</p>
+                            </div>
+                        </div>
+                        <div class="instructor-profile-row">
+                            <span class="instructor-profile-label">Ad Soyad</span>
+                            <span class="instructor-profile-value" id="instructor-profile-name-value">—</span>
+                        </div>
+                        <div class="instructor-profile-row">
+                            <span class="instructor-profile-label">Kullanıcı Adı</span>
+                            <span class="instructor-profile-value" id="instructor-profile-username-value">—</span>
+                        </div>
+                        <div class="instructor-profile-row">
+                            <span class="instructor-profile-label">Telefon</span>
+                            <span class="instructor-profile-value" id="instructor-profile-phone-value">—</span>
+                        </div>
+                        <div class="instructor-profile-row">
+                            <span class="instructor-profile-label">İletişim E-postası</span>
+                            <span class="instructor-profile-value" id="instructor-profile-email-value">—</span>
+                        </div>
+                        <div class="instructor-profile-row">
+                            <span class="instructor-profile-label">Kurum</span>
+                            <span class="instructor-profile-value" id="instructor-profile-tenant-value">—</span>
+                        </div>
+                        <div class="instructor-profile-row">
+                            <span class="instructor-profile-label">Hesap Durumu</span>
+                            <span class="instructor-profile-value" id="instructor-profile-status-value">—</span>
+                        </div>
+                    </div>
+                </section>
+                <section id="instructor-room-screen" class="instructor-shell-pane" data-instructor-pane="instructor-room-screen">
+                    <div class="instructor-empty-card">
+                        <h3 class="instructor-empty-title">Usta Öğreticiler İletişim Odası</h3>
+                        <p class="instructor-empty-text">Grup iletişim odanız burada görüntülenecek.</p>
+                    </div>
+                </section>
+            </div>
+            <nav id="instructor-bottom-nav" aria-label="Usta öğretici menü">
+                <button type="button" class="instructor-nav-item is-active" data-instructor-target="instructor-home-screen" id="instructor-nav-home">
+                    <i class="fa-solid fa-house" aria-hidden="true"></i>
+                    <span>Ana Sayfa</span>
+                </button>
+                <button type="button" class="instructor-nav-item" data-instructor-target="instructor-agenda-screen" id="instructor-nav-agenda">
+                    <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+                    <span>Ajandam</span>
+                </button>
+                <button type="button" class="instructor-nav-item" data-instructor-target="instructor-messages-screen" id="instructor-nav-messages">
+                    <i class="fa-solid fa-envelope" aria-hidden="true"></i>
+                    <span>Mesajlar</span>
+                </button>
+                <button type="button" class="instructor-nav-item" data-instructor-target="instructor-profile-screen" id="instructor-nav-profile">
+                    <i class="fa-solid fa-user" aria-hidden="true"></i>
+                    <span>Profilim</span>
+                </button>
+            </nav>
+            <div id="instructor-notification-panel-modal" class="notification-panel-overlay" onclick="closeInstructorNotificationPanel()" aria-hidden="true">
+                <div class="notification-panel-card" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="instructor-notif-panel-title">
+                    <div class="notif-panel-header">
+                        <h3 id="instructor-notif-panel-title" class="notif-panel-title">Bildirimler</h3>
+                        <button type="button" class="notif-panel-close" onclick="closeInstructorNotificationPanel()" aria-label="Kapat">&times;</button>
+                    </div>
+                    <div id="instructor-notification-panel-empty" class="notification-panel-empty">Henüz yeni bildiriminiz bulunmuyor.</div>
+                </div>
+            </div>
+            <div id="instructor-agenda-lesson-detail-modal" onclick="closeInstructorAgendaLessonDetail(event)" aria-hidden="true">
+                <div class="instructor-agenda-detail-card" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="instructor-agenda-detail-title">
+                    <div class="instructor-agenda-detail-header">
+                        <h3 id="instructor-agenda-detail-title" class="instructor-agenda-detail-title">Direksiyon Dersi</h3>
+                        <button type="button" id="btn-instructor-agenda-detail-x" onclick="closeInstructorAgendaLessonDetail()" aria-label="Kapat">&times;</button>
+                    </div>
+                    <div class="instructor-agenda-detail-grid">
+                        <div class="instructor-agenda-detail-row">
+                            <span class="instructor-agenda-detail-label">Öğrenci</span>
+                            <span class="instructor-agenda-detail-value" id="instructor-agenda-detail-student">—</span>
+                        </div>
+                        <div class="instructor-agenda-detail-row">
+                            <span class="instructor-agenda-detail-label">Tarih</span>
+                            <span class="instructor-agenda-detail-value" id="instructor-agenda-detail-date">—</span>
+                        </div>
+                        <div class="instructor-agenda-detail-row">
+                            <span class="instructor-agenda-detail-label">Saat</span>
+                            <span class="instructor-agenda-detail-value" id="instructor-agenda-detail-time">—</span>
+                        </div>
+                        <div class="instructor-agenda-detail-row">
+                            <span class="instructor-agenda-detail-label">Ders Yeri</span>
+                            <span class="instructor-agenda-detail-value" id="instructor-agenda-detail-address">—</span>
+                        </div>
+                        <div class="instructor-agenda-detail-row">
+                            <span class="instructor-agenda-detail-label">Durum</span>
+                            <span class="instructor-agenda-detail-value" id="instructor-agenda-detail-status">—</span>
+                        </div>
+                    </div>
+                    <p id="instructor-agenda-detail-note">Bu ders öğretici onayınızı bekliyor.</p>
+                    <div id="instructor-agenda-detail-consult-wrap">
+                        <label for="instructor-agenda-detail-consult-note">İstişare notu (isteğe bağlı)</label>
+                        <textarea id="instructor-agenda-detail-consult-note" maxlength="300" placeholder="Kısa bir not yazabilirsiniz..."></textarea>
+                    </div>
+                    <p id="instructor-agenda-detail-action-msg" role="status" aria-live="polite"></p>
+                    <div class="instructor-agenda-detail-actions">
+                        <button type="button" id="btn-instructor-agenda-detail-close" onclick="closeInstructorAgendaLessonDetail()">Kapat</button>
+                        <div id="instructor-agenda-detail-response-actions">
+                            <button type="button" id="btn-instructor-agenda-detail-consult" onclick="submitInstructorAgendaConsultation()">İstişare Talebi Gönder</button>
+                            <button type="button" id="btn-instructor-agenda-detail-confirm" onclick="submitInstructorAgendaConfirm()">Onayla</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -12468,7 +13679,7 @@ var MACHINE_PUBLIC_CONTACT = {
 };
 
 function setRootScreenVisible(screenId) {
-    var ids = ['program-select-screen', 'login-screen', 'machine-login-screen', 'machine-session-screen', 'machine-restore-busy', 'app-container'];
+    var ids = ['program-select-screen', 'login-screen', 'machine-login-screen', 'machine-session-screen', 'instructor-session-screen', 'machine-restore-busy', 'app-container'];
     for (var i = 0; i < ids.length; i++) {
         var el = document.getElementById(ids[i]);
         if (!el) continue;
@@ -19904,6 +21115,37 @@ function showLogin() {
     updateSelectedKurumDisplay();
 }
 
+/** AUTH CORRECTIVE — one-shot route intent for controlled institution-login signOut. */
+function markDrivingInstitutionLoginAuthNullRoute() {
+    try {
+        if (window.SA_LOGIN && typeof window.SA_LOGIN.markDrivingInstitutionLoginAuthNullRoute === 'function') {
+            window.SA_LOGIN.markDrivingInstitutionLoginAuthNullRoute();
+            return;
+        }
+    } catch (_) {}
+    try { window.__saAuthNullRouteIntent = 'driving_institution_login'; } catch (_) {}
+}
+
+function consumeDrivingInstitutionLoginAuthNullRoute() {
+    var intent = '';
+    try { intent = String(window.__saAuthNullRouteIntent || '').trim(); } catch (_) { intent = ''; }
+    try { window.__saAuthNullRouteIntent = null; } catch (_) {}
+    return intent === 'driving_institution_login';
+}
+
+/**
+ * Stay on Driving institution login after controlled validation signOut.
+ * Does NOT clear an existing login-error message.
+ */
+function stayOnDrivingInstitutionLoginAfterControlledSignOut() {
+    hideAuthPreparingOverlay();
+    closePasswordResetModal();
+    currentEntryProgram = 'driving_license';
+    currentInstitutionSelectorContext = 'driving';
+    setRootScreenVisible('login-screen');
+    try { updateSelectedKurumDisplay(); } catch (_) {}
+}
+
 var __duelPresenceHeartbeatId = null;
 function startDuelPresenceHeartbeat() {
     if (__duelPresenceHeartbeatId != null) {
@@ -20144,6 +21386,817 @@ async function showApp() {
     ensureDuelInviteListener();
 }
 
+function instructorInitialsFromName(fullName, username) {
+    var name = String(fullName || '').trim();
+    if (name) {
+        var parts = name.split(/\s+/).filter(Boolean);
+        if (parts.length >= 2) {
+            return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+        }
+        return name.slice(0, 2).toUpperCase();
+    }
+    var u = String(username || '').trim().replace(/^@/, '');
+    if (u) return u.slice(0, 2).toUpperCase();
+    return '?';
+}
+
+function setInstructorAvatarEl(el, photoUrl, initials) {
+    if (!el) return;
+    var url = String(photoUrl || '').trim();
+    if (url) {
+        el.innerHTML = '';
+        var img = document.createElement('img');
+        img.alt = '';
+        img.src = url;
+        img.onerror = function () {
+            el.textContent = initials || '?';
+        };
+        el.appendChild(img);
+        return;
+    }
+    el.textContent = initials || '?';
+}
+
+function showInstructorPane(paneId) {
+    var panes = document.querySelectorAll('#instructor-session-screen .instructor-shell-pane');
+    for (var i = 0; i < panes.length; i++) {
+        var pane = panes[i];
+        var id = pane.getAttribute('data-instructor-pane') || pane.id;
+        if (id === paneId) pane.classList.add('is-active');
+        else pane.classList.remove('is-active');
+    }
+    var navItems = document.querySelectorAll('#instructor-session-screen #instructor-bottom-nav .instructor-nav-item');
+    for (var n = 0; n < navItems.length; n++) {
+        var item = navItems[n];
+        if (item.getAttribute('data-instructor-target') === paneId) item.classList.add('is-active');
+        else item.classList.remove('is-active');
+    }
+    var titleEl = document.getElementById('instructor-shell-top-title');
+    var backBtn = document.getElementById('btn-instructor-shell-back');
+    var logoutBtn = document.getElementById('btn-instructor-session-logout');
+    var titles = {
+        'instructor-home-screen': 'Ana Sayfa',
+        'instructor-agenda-screen': 'Ajandam',
+        'instructor-messages-screen': 'Mesajlar',
+        'instructor-profile-screen': 'Profilim',
+        'instructor-room-screen': 'Usta Öğreticiler İletişim Odası'
+    };
+    var isHome = paneId === 'instructor-home-screen';
+    if (titleEl) {
+        titleEl.textContent = titles[paneId] || 'Ana Sayfa';
+        if (isHome) titleEl.classList.add('is-home');
+        else titleEl.classList.remove('is-home');
+    }
+    if (backBtn) {
+        if (isHome) backBtn.classList.remove('is-visible');
+        else backBtn.classList.add('is-visible');
+    }
+    if (logoutBtn) {
+        logoutBtn.style.display = isHome ? 'inline-flex' : 'none';
+    }
+    if (paneId === 'instructor-agenda-screen') {
+        try { loadInstructorAgenda(); } catch (_) {}
+    }
+}
+
+function showInstructorHomePane() {
+    showInstructorPane('instructor-home-screen');
+}
+
+var __instructorAgendaBusy = false;
+var __instructorAgendaRequestToken = 0;
+var __instructorAgendaWeekStartYmd = null;
+var __instructorAgendaLessonsById = {};
+var __instructorAgendaDetailLessonId = null;
+var __instructorAgendaResponseBusy = false;
+var INSTRUCTOR_AGENDA_DAY_LABELS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+var INSTRUCTOR_AGENDA_SLOT_HOURS = [8, 10, 12, 14, 16, 18, 20];
+
+function escapeInstructorAgendaText(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function instructorAgendaPad2(n) {
+    var v = Number(n);
+    if (!isFinite(v)) return '00';
+    return v < 10 ? '0' + v : String(v);
+}
+
+function instructorAgendaStatusMeta(status) {
+    var s = String(status || '').trim().toLowerCase();
+    if (s === 'pending_instructor') {
+        return { label: 'Öğretici Onayı Bekleniyor', short: 'Onay Bekliyor', chip: 'is-pending' };
+    }
+    if (s === 'confirmed') {
+        return { label: 'Onaylandı', short: 'Onaylandı', chip: 'is-confirmed' };
+    }
+    if (s === 'consultation_requested') {
+        return { label: 'İstişare Talebi', short: 'İstişare Talebi', chip: 'is-consultation' };
+    }
+    if (s === 'completed') {
+        return { label: 'Tamamlandı', short: 'Tamamlandı', chip: 'is-completed' };
+    }
+    if (s === 'cancelled') {
+        return { label: 'İptal Edildi', short: 'İptal', chip: 'is-cancelled' };
+    }
+    return { label: 'Durum bilinmiyor', short: 'Durum', chip: 'is-unknown' };
+}
+
+function instructorAgendaNameLinesHtml(fullName) {
+    var raw = String(fullName || '').trim() || 'Öğrenci';
+    var parts = raw.split(/\s+/).filter(Boolean);
+    if (!parts.length) {
+        return '<span class="instructor-agenda-lesson-name-line">Öğrenci</span>';
+    }
+    if (parts.length === 1) {
+        return '<span class="instructor-agenda-lesson-name-line">' + escapeInstructorAgendaText(parts[0]) + '</span>';
+    }
+    return '<span class="instructor-agenda-lesson-name-line">' + escapeInstructorAgendaText(parts[0]) + '</span>'
+        + '<span class="instructor-agenda-lesson-name-line">' + escapeInstructorAgendaText(parts.slice(1).join(' ')) + '</span>';
+}
+
+function instructorAgendaIstanbulPartsFromMs(ms) {
+    if (ms == null || !isFinite(Number(ms))) return null;
+    try {
+        var parts = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Europe/Istanbul',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        }).formatToParts(new Date(Number(ms)));
+        var map = {};
+        parts.forEach(function (p) {
+            if (p.type !== 'literal') map[p.type] = p.value;
+        });
+        return {
+            y: map.year,
+            m: map.month,
+            d: map.day,
+            hour: parseInt(map.hour, 10),
+            minute: parseInt(map.minute, 10),
+            ymd: map.year + '-' + map.month + '-' + map.day
+        };
+    } catch (_) {
+        return null;
+    }
+}
+
+function instructorAgendaDayKey(ms) {
+    var p = instructorAgendaIstanbulPartsFromMs(ms);
+    return p ? p.ymd : '';
+}
+
+function instructorAgendaBucketHour(hour) {
+    var h = Number(hour);
+    if (!isFinite(h)) return INSTRUCTOR_AGENDA_SLOT_HOURS[0];
+    var best = INSTRUCTOR_AGENDA_SLOT_HOURS[0];
+    for (var i = 0; i < INSTRUCTOR_AGENDA_SLOT_HOURS.length; i++) {
+        if (INSTRUCTOR_AGENDA_SLOT_HOURS[i] <= h) best = INSTRUCTOR_AGENDA_SLOT_HOURS[i];
+        else break;
+    }
+    return best;
+}
+
+function instructorAgendaSlotRangeLabel(startHour) {
+    var h = Number(startHour);
+    return instructorAgendaPad2(h) + '–' + instructorAgendaPad2(h + 2);
+}
+
+function getInstructorAgendaMondayYmd(fromMs) {
+    var dayStartMs = null;
+    try {
+        var parts = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Europe/Istanbul',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).formatToParts(new Date(Number.isFinite(fromMs) ? fromMs : Date.now()));
+        var y = parts.find(function (p) { return p.type === 'year'; });
+        var m = parts.find(function (p) { return p.type === 'month'; });
+        var d = parts.find(function (p) { return p.type === 'day'; });
+        var ymd = (y && y.value) + '-' + (m && m.value) + '-' + (d && d.value);
+        dayStartMs = Date.parse(ymd + 'T00:00:00+03:00');
+    } catch (_) {}
+    if (!isFinite(dayStartMs)) {
+        var fallback = new Date();
+        fallback.setHours(0, 0, 0, 0);
+        dayStartMs = fallback.getTime();
+    }
+    var probe = new Date(dayStartMs);
+    var weekday = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Europe/Istanbul',
+        weekday: 'short'
+    }).format(probe);
+    var map = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
+    var offset = map[weekday] != null ? map[weekday] : 0;
+    var mondayMs = dayStartMs - (offset * 24 * 60 * 60 * 1000);
+    var mp = instructorAgendaIstanbulPartsFromMs(mondayMs);
+    return mp ? mp.ymd : '';
+}
+
+function ensureInstructorAgendaWeekStart() {
+    if (!__instructorAgendaWeekStartYmd) {
+        __instructorAgendaWeekStartYmd = getInstructorAgendaMondayYmd(Date.now());
+    }
+    return __instructorAgendaWeekStartYmd;
+}
+
+function formatInstructorAgendaWeekRange(weekStartYmd) {
+    var startMs = Date.parse(String(weekStartYmd) + 'T00:00:00+03:00');
+    if (!isFinite(startMs)) return '—';
+    var endMs = startMs + (6 * 24 * 60 * 60 * 1000);
+    try {
+        var fmt = new Intl.DateTimeFormat('tr-TR', {
+            timeZone: 'Europe/Istanbul',
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+        });
+        return fmt.format(new Date(startMs)) + ' – ' + fmt.format(new Date(endMs));
+    } catch (_) {
+        return String(weekStartYmd);
+    }
+}
+
+function formatInstructorAgendaDateLabel(ms) {
+    if (ms == null || !isFinite(Number(ms))) return '—';
+    try {
+        return new Intl.DateTimeFormat('tr-TR', {
+            timeZone: 'Europe/Istanbul',
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        }).format(new Date(Number(ms)));
+    } catch (_) {
+        return '—';
+    }
+}
+
+function formatInstructorAgendaTimePart(ms) {
+    if (ms == null || !isFinite(Number(ms))) return '';
+    try {
+        return new Intl.DateTimeFormat('tr-TR', {
+            timeZone: 'Europe/Istanbul',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        }).format(new Date(Number(ms)));
+    } catch (_) {
+        return '';
+    }
+}
+
+function formatInstructorAgendaTimeRange(lesson) {
+    var start = formatInstructorAgendaTimePart(lesson && lesson.startAtMs);
+    var end = formatInstructorAgendaTimePart(lesson && lesson.endAtMs);
+    if (start && end) return start + ' – ' + end;
+    if (start) return start;
+    return '—';
+}
+
+function setInstructorAgendaStatus(text, isError) {
+    var el = document.getElementById('instructor-agenda-status');
+    if (!el) return;
+    var msg = String(text || '').trim();
+    if (!msg) {
+        el.textContent = '';
+        el.classList.remove('is-visible', 'is-error');
+        return;
+    }
+    el.textContent = msg;
+    el.classList.add('is-visible');
+    if (isError) el.classList.add('is-error');
+    else el.classList.remove('is-error');
+}
+
+function setInstructorAgendaWeekNavDisabled(disabled) {
+    ['btn-instructor-agenda-prev', 'btn-instructor-agenda-today', 'btn-instructor-agenda-next', 'btn-instructor-agenda-refresh'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.disabled = !!disabled;
+    });
+}
+
+function shiftInstructorAgendaWeek(deltaWeeks) {
+    var current = ensureInstructorAgendaWeekStart();
+    var startMs = Date.parse(current + 'T00:00:00+03:00');
+    if (!isFinite(startMs)) return;
+    var nextMs = startMs + (Number(deltaWeeks) * 7 * 24 * 60 * 60 * 1000);
+    var parts = instructorAgendaIstanbulPartsFromMs(nextMs);
+    if (!parts || !parts.ymd) return;
+    __instructorAgendaWeekStartYmd = parts.ymd;
+    loadInstructorAgenda({ force: true });
+}
+
+function goInstructorAgendaThisWeek() {
+    __instructorAgendaWeekStartYmd = getInstructorAgendaMondayYmd(Date.now());
+    loadInstructorAgenda({ force: true });
+}
+
+function renderInstructorAgendaWeeklyGrid(lessons, weekStartYmd) {
+    var grid = document.getElementById('instructor-agenda-grid');
+    var rangeEl = document.getElementById('instructor-agenda-week-range');
+    var hintEl = document.getElementById('instructor-agenda-week-hint');
+    if (!grid) return;
+    if (rangeEl) rangeEl.textContent = formatInstructorAgendaWeekRange(weekStartYmd);
+
+    var weekStartMs = Date.parse(String(weekStartYmd) + 'T00:00:00+03:00');
+    var dayYmDs = [];
+    var dayNums = [];
+    for (var d = 0; d < 7; d++) {
+        var dayMs = weekStartMs + (d * 24 * 60 * 60 * 1000);
+        var p = instructorAgendaIstanbulPartsFromMs(dayMs);
+        dayYmDs.push(p ? p.ymd : '');
+        dayNums.push(p ? String(parseInt(p.d, 10)) : '—');
+    }
+
+    var bucket = {};
+    var visibleCount = 0;
+    __instructorAgendaLessonsById = {};
+    (Array.isArray(lessons) ? lessons : []).forEach(function (L) {
+        if (!L || !L.id) return;
+        var status = String(L.status || '').trim().toLowerCase();
+        if (status === 'cancelled') return;
+        var parts = instructorAgendaIstanbulPartsFromMs(L.startAtMs);
+        if (!parts) return;
+        var dayIndex = dayYmDs.indexOf(parts.ymd);
+        if (dayIndex < 0) return;
+        var hour = instructorAgendaBucketHour(parts.hour);
+        var key = dayIndex + '_' + hour;
+        if (!bucket[key]) bucket[key] = [];
+        bucket[key].push(L);
+        __instructorAgendaLessonsById[String(L.id)] = L;
+        visibleCount += 1;
+    });
+    Object.keys(bucket).forEach(function (k) {
+        bucket[k].sort(function (a, b) {
+            return (a.startAtMs || 0) - (b.startAtMs || 0);
+        });
+    });
+
+    if (hintEl) {
+        if (visibleCount === 0) hintEl.classList.add('is-visible');
+        else hintEl.classList.remove('is-visible');
+    }
+
+    var html = '<div class="instructor-agenda-corner" aria-hidden="true"></div>';
+    for (var di = 0; di < 7; di++) {
+        html +=
+            '<div class="instructor-agenda-day-head" role="columnheader">' +
+            escapeInstructorAgendaText(INSTRUCTOR_AGENDA_DAY_LABELS[di]) +
+            '<span class="instructor-agenda-day-num">' + escapeInstructorAgendaText(dayNums[di]) + '</span>' +
+            '</div>';
+    }
+    for (var hi = 0; hi < INSTRUCTOR_AGENDA_SLOT_HOURS.length; hi++) {
+        var hour = INSTRUCTOR_AGENDA_SLOT_HOURS[hi];
+        html +=
+            '<div class="instructor-agenda-time-cell">' +
+            escapeInstructorAgendaText(instructorAgendaSlotRangeLabel(hour)) +
+            '</div>';
+        for (var day = 0; day < 7; day++) {
+            var cellKey = day + '_' + hour;
+            var cellLessons = bucket[cellKey] || [];
+            html += '<div class="instructor-agenda-cell" data-day-index="' + day + '" data-hour="' + hour + '">';
+            for (var li = 0; li < cellLessons.length; li++) {
+                var lesson = cellLessons[li];
+                var meta = instructorAgendaStatusMeta(lesson.status);
+                var student = String(lesson.studentNameSnap || '').trim() || 'Öğrenci';
+                var statusIconHtml = meta.chip === 'is-confirmed'
+                    ? '<i class="fa-solid fa-check instructor-agenda-lesson-status-icon" aria-hidden="true"></i>'
+                    : '';
+                html +=
+                    '<button type="button" class="instructor-agenda-lesson-block ' + meta.chip + '"' +
+                    ' data-lesson-id="' + escapeInstructorAgendaText(lesson.id) + '"' +
+                    ' aria-label="' + escapeInstructorAgendaText(student + ' · ' + meta.short) + '">' +
+                    '<span class="instructor-agenda-lesson-name">' + instructorAgendaNameLinesHtml(student) + '</span>' +
+                    '<span class="instructor-agenda-lesson-status">' +
+                      '<span class="instructor-agenda-lesson-status-text">' + escapeInstructorAgendaText(meta.short) + '</span>' +
+                      statusIconHtml +
+                    '</span>' +
+                    '</button>';
+            }
+            html += '</div>';
+        }
+    }
+    grid.innerHTML = html;
+
+    var blocks = grid.querySelectorAll('.instructor-agenda-lesson-block');
+    for (var bi = 0; bi < blocks.length; bi++) {
+        blocks[bi].addEventListener('click', function (e) {
+            var id = e.currentTarget.getAttribute('data-lesson-id') || '';
+            var found = __instructorAgendaLessonsById[id];
+            if (found) openInstructorAgendaLessonDetail(found);
+        });
+    }
+}
+
+function openInstructorAgendaLessonDetail(lesson) {
+    var L = lesson || {};
+    var modal = document.getElementById('instructor-agenda-lesson-detail-modal');
+    if (!modal) return;
+    __instructorAgendaDetailLessonId = L.id ? String(L.id) : null;
+    __instructorAgendaResponseBusy = false;
+    var setText = function (id, value) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = value == null || value === '' ? '—' : String(value);
+    };
+    var meta = instructorAgendaStatusMeta(L.status);
+    var status = String(L.status || '').trim().toLowerCase();
+    setText('instructor-agenda-detail-student', String(L.studentNameSnap || '').trim() || '—');
+    setText('instructor-agenda-detail-date', formatInstructorAgendaDateLabel(L.startAtMs));
+    setText('instructor-agenda-detail-time', formatInstructorAgendaTimeRange(L));
+    setText('instructor-agenda-detail-address', String(L.lessonAddress || '').trim() || 'Ders adresi belirtilmemiş.');
+    setText('instructor-agenda-detail-status', meta.label);
+    var note = document.getElementById('instructor-agenda-detail-note');
+    var consultWrap = document.getElementById('instructor-agenda-detail-consult-wrap');
+    var consultNote = document.getElementById('instructor-agenda-detail-consult-note');
+    var responseActions = document.getElementById('instructor-agenda-detail-response-actions');
+    var actionMsg = document.getElementById('instructor-agenda-detail-action-msg');
+    if (actionMsg) {
+        actionMsg.textContent = '';
+        actionMsg.classList.remove('is-visible');
+    }
+    if (consultNote) consultNote.value = '';
+    if (status === 'pending_instructor') {
+        if (note) {
+            note.textContent = 'Bu ders öğretici onayınızı bekliyor.';
+            note.classList.add('is-visible');
+        }
+        if (consultWrap) consultWrap.classList.add('is-visible');
+        if (responseActions) responseActions.classList.add('is-visible');
+    } else {
+        if (note) {
+            note.textContent = '';
+            note.classList.remove('is-visible');
+        }
+        if (consultWrap) consultWrap.classList.remove('is-visible');
+        if (responseActions) responseActions.classList.remove('is-visible');
+    }
+    setInstructorAgendaDetailBusy(false);
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeInstructorAgendaLessonDetail(event) {
+    if (__instructorAgendaResponseBusy) return;
+    if (event && event.target && event.currentTarget && event.target !== event.currentTarget) return;
+    var modal = document.getElementById('instructor-agenda-lesson-detail-modal');
+    if (!modal) return;
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    __instructorAgendaDetailLessonId = null;
+    var consultNote = document.getElementById('instructor-agenda-detail-consult-note');
+    if (consultNote) consultNote.value = '';
+    var actionMsg = document.getElementById('instructor-agenda-detail-action-msg');
+    if (actionMsg) {
+        actionMsg.textContent = '';
+        actionMsg.classList.remove('is-visible');
+    }
+}
+
+function setInstructorAgendaDetailBusy(isBusy) {
+    __instructorAgendaResponseBusy = !!isBusy;
+    var ids = [
+        'btn-instructor-agenda-detail-close',
+        'btn-instructor-agenda-detail-x',
+        'btn-instructor-agenda-detail-confirm',
+        'btn-instructor-agenda-detail-consult',
+        'instructor-agenda-detail-consult-note'
+    ];
+    ids.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.disabled = !!isBusy;
+    });
+}
+
+function instructorAgendaResponseErrorMessage(error) {
+    var code = String((error && error.code) || '').trim().toLowerCase();
+    if (code.indexOf('functions/') === 0) code = code.slice('functions/'.length);
+    var msg = String((error && error.message) || '').toLowerCase();
+    if (code === 'failed-precondition') {
+        if (msg.indexOf('already confirmed') !== -1 || msg.indexOf('already') !== -1 && msg.indexOf('confirm') !== -1) {
+            return 'Bu ders zaten onaylanmış.';
+        }
+        if (msg.indexOf('consultation') !== -1) {
+            return 'Bu ders için istişare talebi zaten gönderilmiş.';
+        }
+        if (msg.indexOf('completed') !== -1) {
+            return 'Tamamlanan ders yanıtlanamaz.';
+        }
+        if (msg.indexOf('cancelled') !== -1) {
+            return 'İptal edilen ders yanıtlanamaz.';
+        }
+        return 'Bu ders şu an yanıtlanamaz.';
+    }
+    if (code === 'permission-denied') {
+        return 'Bu ders için işlem yetkiniz doğrulanamadı.';
+    }
+    if (code === 'not-found') {
+        return 'Ders kaydı bulunamadı. Lütfen ajandayı yenileyin.';
+    }
+    if (code === 'unauthenticated') {
+        return 'Oturumunuz doğrulanamadı. Lütfen yeniden giriş yapın.';
+    }
+    if (code === 'invalid-argument') {
+        if (msg.indexOf('300') !== -1 || msg.indexOf('not') !== -1) {
+            return 'İstişare notu geçersiz. En fazla 300 karakter kullanın.';
+        }
+        return 'Gönderilen bilgiler geçersiz.';
+    }
+    return 'İşlem tamamlanamadı. Lütfen tekrar deneyin.';
+}
+
+async function respondInstructorAgendaLesson(action) {
+    if (__instructorAgendaResponseBusy) return;
+    var lessonId = String(__instructorAgendaDetailLessonId || '').trim();
+    if (!lessonId) return;
+    var actionMsg = document.getElementById('instructor-agenda-detail-action-msg');
+    if (actionMsg) {
+        actionMsg.textContent = '';
+        actionMsg.classList.remove('is-visible');
+    }
+    var payload = { lessonId: lessonId, action: action };
+    if (action === 'consultation') {
+        var noteEl = document.getElementById('instructor-agenda-detail-consult-note');
+        var note = noteEl ? String(noteEl.value || '').trim().replace(/\s+/g, ' ') : '';
+        if (note) payload.note = note;
+    }
+    setInstructorAgendaDetailBusy(true);
+    try {
+        if (typeof firebase === 'undefined' || !firebase.app) {
+            throw new Error('firebase_missing');
+        }
+        var callable = firebase.app().functions('us-central1').httpsCallable('respondDrivingLessonForInstructor');
+        await callable(payload);
+        setInstructorAgendaDetailBusy(false);
+        __instructorAgendaDetailLessonId = null;
+        var modal = document.getElementById('instructor-agenda-lesson-detail-modal');
+        if (modal) {
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+        setInstructorAgendaStatus(
+            action === 'confirm' ? 'Ders onaylandı.' : 'İstişare talebi gönderildi.',
+            false
+        );
+        await loadInstructorAgenda({ force: true });
+    } catch (e) {
+        setInstructorAgendaDetailBusy(false);
+        try {
+            console.warn('[InstructorAgenda]', {
+                code: e && e.code ? String(e.code) : null,
+                message: e && e.message ? String(e.message) : String(e)
+            });
+        } catch (_) {}
+        if (actionMsg) {
+            actionMsg.textContent = instructorAgendaResponseErrorMessage(e);
+            actionMsg.classList.add('is-visible');
+        }
+    }
+}
+
+function submitInstructorAgendaConfirm() {
+    respondInstructorAgendaLesson('confirm');
+}
+
+function submitInstructorAgendaConsultation() {
+    respondInstructorAgendaLesson('consultation');
+}
+
+/**
+ * PHASE 2C-3B/3C — Instructor weekly agenda grid via callable.
+ */
+async function loadInstructorAgenda(opts) {
+    opts = opts || {};
+    var grid = document.getElementById('instructor-agenda-grid');
+    var errorActions = document.getElementById('instructor-agenda-error-actions');
+    var hintEl = document.getElementById('instructor-agenda-week-hint');
+    if (!grid) return;
+    if (__instructorAgendaBusy && !opts.force) return;
+
+    var weekStartYmd = ensureInstructorAgendaWeekStart();
+    var tenantId = window.SA_TENANT && typeof window.SA_TENANT.getSelectedTenantId === 'function'
+        ? String(window.SA_TENANT.getSelectedTenantId() || '').trim()
+        : '';
+    var token = ++__instructorAgendaRequestToken;
+    __instructorAgendaBusy = true;
+    setInstructorAgendaWeekNavDisabled(true);
+    if (errorActions) errorActions.classList.remove('is-visible');
+    if (hintEl) hintEl.classList.remove('is-visible');
+    setInstructorAgendaStatus('Ajandanız yükleniyor...', false);
+    var rangeEl = document.getElementById('instructor-agenda-week-range');
+    if (rangeEl) rangeEl.textContent = formatInstructorAgendaWeekRange(weekStartYmd);
+
+    try {
+        if (!tenantId || typeof firebase === 'undefined' || !firebase.app) {
+            throw new Error('tenant_or_firebase_missing');
+        }
+        var callable = firebase.app().functions('us-central1').httpsCallable('listDrivingLessonsForInstructor');
+        var result = await callable({ tenantId: tenantId, weekStart: weekStartYmd });
+        if (token !== __instructorAgendaRequestToken) return;
+        var payload = (result && result.data) ? result.data : {};
+        var lessons = Array.isArray(payload.lessons) ? payload.lessons : [];
+        renderInstructorAgendaWeeklyGrid(lessons, weekStartYmd);
+        setInstructorAgendaStatus('', false);
+    } catch (e) {
+        if (token !== __instructorAgendaRequestToken) return;
+        try {
+            console.warn('[InstructorAgenda]', {
+                code: e && e.code ? String(e.code) : null,
+                message: e && e.message ? String(e.message) : String(e)
+            });
+        } catch (_) {}
+        renderInstructorAgendaWeeklyGrid([], weekStartYmd);
+        setInstructorAgendaStatus('Ajandanız yüklenemedi. Lütfen tekrar deneyin.', true);
+        if (errorActions) errorActions.classList.add('is-visible');
+    } finally {
+        if (token === __instructorAgendaRequestToken) {
+            __instructorAgendaBusy = false;
+            setInstructorAgendaWeekNavDisabled(false);
+        }
+    }
+}
+
+function openInstructorNotificationPanel() {
+    var modal = document.getElementById('instructor-notification-panel-modal');
+    var emptyEl = document.getElementById('instructor-notification-panel-empty');
+    var badge = document.getElementById('instructor-notification-badge');
+    if (!modal) return;
+    if (emptyEl) {
+        emptyEl.textContent = 'Henüz yeni bildiriminiz bulunmuyor.';
+        emptyEl.style.display = 'block';
+    }
+    if (badge) {
+        badge.textContent = '0';
+        badge.classList.remove('visible');
+    }
+    modal.classList.add('visible');
+    modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeInstructorNotificationPanel() {
+    var modal = document.getElementById('instructor-notification-panel-modal');
+    if (!modal) return;
+    modal.classList.remove('visible');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
+function bindInstructorShellNavOnce() {
+    if (window.__instructorShellNavBound) return;
+    window.__instructorShellNavBound = true;
+    var root = document.getElementById('instructor-session-screen');
+    if (!root) return;
+    root.addEventListener('click', function (ev) {
+        var t = ev.target;
+        if (!t || !t.closest) return;
+        var btn = t.closest('[data-instructor-target]');
+        if (!btn || !root.contains(btn)) return;
+        var target = btn.getAttribute('data-instructor-target');
+        if (!target) return;
+        ev.preventDefault();
+        try { closeInstructorNotificationPanel(); } catch (_) {}
+        showInstructorPane(target);
+    });
+}
+
+async function populateInstructorShell(user, personaPayload) {
+    var userData = (personaPayload && personaPayload.userData) ? personaPayload.userData : null;
+    var membership = (personaPayload && personaPayload.membership) ? personaPayload.membership : null;
+    if (!userData && user && user.uid && firebase.firestore) {
+        try {
+            var snap = await firebase.firestore().collection('users').doc(user.uid).get();
+            userData = snap.exists ? (snap.data() || {}) : {};
+        } catch (_) {
+            userData = {};
+        }
+    }
+    userData = userData || {};
+    membership = membership || {};
+
+    var fullName = String(userData.fullName || userData.displayName || '').trim() || 'Usta Öğretici';
+    var username = String(userData.username || '').trim();
+    if (!username && user && user.email) {
+        username = String(user.email).split('@')[0] || '';
+    }
+    var photoUrl = String(userData.photoUrl || userData.photoURL || '').trim();
+    var phone = String(userData.phone || userData.phoneNumber || '').trim();
+    var contactEmail = String(userData.contactEmail || userData.email || (user && user.email) || '').trim();
+    var statusRaw = String(membership.status || userData.status || 'active').trim().toLowerCase();
+    var statusLabel = (statusRaw === 'active') ? 'Aktif' : String(membership.status || '—');
+    var initials = instructorInitialsFromName(fullName, username);
+
+    var tenantId = window.SA_TENANT && typeof window.SA_TENANT.getSelectedTenantId === 'function'
+        ? window.SA_TENANT.getSelectedTenantId()
+        : null;
+    var profile = null;
+    try {
+        profile = await loadTenantProfile(tenantId || DEFAULT_BRAND_TENANT_ID);
+    } catch (_) {}
+    var institutionName = (profile && profile.name) ? String(profile.name).trim() : '';
+    if (!institutionName) institutionName = 'Sürücü Akademisi';
+
+    var logoImg = document.getElementById('instructor-home-logo-img');
+    applyTenantLogo(logoImg, tenantId || DEFAULT_BRAND_TENANT_ID, profile);
+
+    var instNameEl = document.getElementById('instructor-home-institution-name');
+    if (instNameEl) instNameEl.textContent = institutionName;
+
+    var homeName = document.getElementById('instructor-home-full-name');
+    var homeUser = document.getElementById('instructor-home-username');
+    var homeStatus = document.getElementById('instructor-home-status');
+    if (homeName) homeName.textContent = fullName;
+    if (homeUser) homeUser.textContent = username ? ('@' + username.replace(/^@/, '')) : '—';
+    if (homeStatus) homeStatus.textContent = statusLabel;
+    setInstructorAvatarEl(document.getElementById('instructor-home-avatar'), photoUrl, initials);
+
+    var pName = document.getElementById('instructor-profile-full-name');
+    var pUser = document.getElementById('instructor-profile-username');
+    if (pName) pName.textContent = fullName;
+    if (pUser) pUser.textContent = username ? ('@' + username.replace(/^@/, '')) : '—';
+    setInstructorAvatarEl(document.getElementById('instructor-profile-avatar'), photoUrl, initials);
+
+    var setVal = function (id, val) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = val || '—';
+    };
+    setVal('instructor-profile-name-value', fullName);
+    setVal('instructor-profile-username-value', username ? ('@' + username.replace(/^@/, '')) : '—');
+    setVal('instructor-profile-phone-value', phone || '—');
+    setVal('instructor-profile-email-value', contactEmail || '—');
+    setVal('instructor-profile-tenant-value', institutionName);
+    setVal('instructor-profile-status-value', statusLabel);
+
+    // PHASE 2C-2A — notification badge remains UI hook only (hidden/zero).
+    try {
+        var badge = document.getElementById('instructor-notification-badge');
+        if (badge) {
+            badge.textContent = '0';
+            badge.classList.remove('visible');
+        }
+    } catch (_) {}
+}
+
+async function showInstructorApp(personaPayload) {
+    hideAuthPreparingOverlay();
+    closePasswordResetModal();
+    currentEntryProgram = null;
+    clearMachineCandidateSession();
+    clearMachineSessionHintSafe();
+    try { stopDuelPresenceHeartbeat(); } catch (_) {}
+    try { stopIncomingInviteWatch(); } catch (_) {}
+    bindInstructorShellNavOnce();
+    setRootScreenVisible('instructor-session-screen');
+    showInstructorHomePane();
+    var user = firebase && firebase.auth && firebase.auth().currentUser;
+    try {
+        await populateInstructorShell(user, personaPayload || null);
+    } catch (e) {
+        try { console.warn('[InstructorShell] populate failed', e); } catch (_) {}
+    }
+}
+
+async function enterInstructorSessionFromAuth(user, options) {
+    options = options || {};
+    clearMachineSessionHintSafe();
+    clearMachineCandidateSession();
+    if (window.SA_LOGIN && typeof window.SA_LOGIN.restoreTenantSession === 'function') {
+        try { await window.SA_LOGIN.restoreTenantSession(user); } catch (_) {}
+    }
+    var tid = window.SA_TENANT && typeof window.SA_TENANT.getSelectedTenantId === 'function'
+        ? window.SA_TENANT.getSelectedTenantId()
+        : null;
+    var personaPayload = options.personaPayload || null;
+    if (!personaPayload && tid && window.SA_LOGIN && typeof window.SA_LOGIN.resolveInstitutionSessionPersona === 'function') {
+        personaPayload = await window.SA_LOGIN.resolveInstitutionSessionPersona(user, tid);
+        if (!personaPayload || !personaPayload.ok || personaPayload.persona !== 'instructor') {
+            var msg = (personaPayload && personaPayload.userMessage)
+                ? String(personaPayload.userMessage)
+                : 'Hesap rolü doğrulanamadı. Lütfen kurum yöneticinizle iletişime geçin.';
+            showLogin();
+            var err = document.getElementById('login-error');
+            if (err) {
+                err.style.color = '#ffb3b3';
+                err.textContent = msg;
+                err.style.display = 'block';
+            }
+            try {
+                markDrivingInstitutionLoginAuthNullRoute();
+                if (firebase.auth().currentUser) await firebase.auth().signOut();
+            } catch (_) {}
+            return false;
+        }
+    }
+    await showInstructorApp(personaPayload);
+    return true;
+}
+
 // #region agent log
 function _debugLogIndex(payload) {
     fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2a11cc'},body:JSON.stringify(payload)}).catch(function(){});
@@ -20201,10 +22254,26 @@ async function handleLogin() {
             return;
         }
 
+        // AUTH CORRECTIVE — pre-auth tenant guard (no Firebase Auth without kurum).
+        if (!selectedTenantId) {
+            if (err) {
+                err.textContent = 'Lütfen giriş yapmadan önce kurumunuzu seçin.';
+                err.style.display = 'block';
+                err.style.color = '#ffb3b3';
+            }
+            return;
+        }
+
         showAuthPreparingOverlay(300);
-        await window.SA_LOGIN.signIn(username, password, selectedTenantId || null);
+        var signInResult = await window.SA_LOGIN.signIn(username, password, selectedTenantId || null);
+        var persona = (signInResult && signInResult.persona) ? String(signInResult.persona) : 'student';
         var beforeShow = window.SA_TENANT && window.SA_TENANT.getSelectedTenantId ? window.SA_TENANT.getSelectedTenantId() : null;
-        try { console.log('[TenantDebug] login success selected tenant before showApp=', beforeShow); } catch (_) {}
+        try { console.log('[TenantDebug] login success selected tenant before showApp=', beforeShow, 'persona=', persona); } catch (_) {}
+        if (persona === 'instructor') {
+            var user = firebase && firebase.auth && firebase.auth().currentUser;
+            await enterInstructorSessionFromAuth(user, {});
+            return;
+        }
         await showApp();
         var afterShow = window.SA_TENANT && window.SA_TENANT.getSelectedTenantId ? window.SA_TENANT.getSelectedTenantId() : null;
         try { console.log('[TenantDebug] login success selected tenant after showApp=', afterShow); } catch (_) {}
@@ -20638,6 +22707,8 @@ async function clearDuelPresenceOnLogout() {
 
 async function handleLogout() {
     try {
+        // Real logout must never inherit a controlled login-validation route intent.
+        try { window.__saAuthNullRouteIntent = null; } catch (_) {}
         hideAuthPreparingOverlay();
         closePasswordResetModal();
         clearObsoleteGoogleAuthDebugKeys();
@@ -20849,10 +22920,47 @@ async function continueNormalAuthRestore(user) {
             });
             return;
         }
+        if (check.mode === 'instructor' || check.mode === 'instructor_pending_tenant') {
+            clearMachineSessionHintSafe();
+            await enterInstructorSessionFromAuth(user, {});
+            return;
+        }
     }
     if (window.SA_LOGIN && typeof window.SA_LOGIN.restoreTenantSession === 'function') {
         try { await window.SA_LOGIN.restoreTenantSession(user); } catch (_) {}
     }
+    // After tenant bootstrap, re-check instructor persona to avoid student-home flash.
+    try {
+        var tidAfter = window.SA_TENANT && typeof window.SA_TENANT.getSelectedTenantId === 'function'
+            ? window.SA_TENANT.getSelectedTenantId()
+            : null;
+        if (tidAfter && window.SA_LOGIN && typeof window.SA_LOGIN.resolveInstitutionSessionPersona === 'function') {
+            var resolvedAfter = await window.SA_LOGIN.resolveInstitutionSessionPersona(user, tidAfter);
+            if (resolvedAfter && resolvedAfter.ok && resolvedAfter.persona === 'instructor') {
+                clearMachineSessionHintSafe();
+                await showInstructorApp(resolvedAfter);
+                return;
+            }
+            if (resolvedAfter && !resolvedAfter.ok && (
+                resolvedAfter.code === 'inactive_instructor'
+                || resolvedAfter.code === 'role_mismatch'
+                || resolvedAfter.code === 'unsupported_role'
+            )) {
+                showLogin();
+                var errEl = document.getElementById('login-error');
+                if (errEl) {
+                    errEl.style.color = '#ffb3b3';
+                    errEl.textContent = resolvedAfter.userMessage || 'Giriş başarısız.';
+                    errEl.style.display = 'block';
+                }
+                try {
+                    markDrivingInstitutionLoginAuthNullRoute();
+                    if (firebase.auth().currentUser) await firebase.auth().signOut();
+                } catch (_) {}
+                return;
+            }
+        }
+    } catch (_) {}
     if (window.SA_LOGIN && typeof window.SA_LOGIN.assertRestoredSessionDrivingCompatible === 'function') {
         var drivingCheck = await window.SA_LOGIN.assertRestoredSessionDrivingCompatible(user);
         if (!drivingCheck || drivingCheck.ok === false) {
@@ -20865,6 +22973,11 @@ async function continueNormalAuthRestore(user) {
             try {
                 if (firebase.auth().currentUser) await firebase.auth().signOut();
             } catch (_) {}
+            return;
+        }
+        if (drivingCheck.kind === 'INSTRUCTOR_MEMBERSHIP') {
+            clearMachineSessionHintSafe();
+            await enterInstructorSessionFromAuth(user, {});
             return;
         }
     }
@@ -20915,6 +23028,13 @@ async function initAuthGate() {
             }
             if (__suppressAuthGateForMachineSignOut || __pendingMachineRestoreError) {
                 presentPendingMachineRestoreError();
+                return;
+            }
+            // AUTH CORRECTIVE — controlled institution-login validation signOut stays on Driving login.
+            if (typeof consumeDrivingInstitutionLoginAuthNullRoute === 'function'
+                && consumeDrivingInstitutionLoginAuthNullRoute()) {
+                try { console.log('[AuthGate] controlled institution-login signOut: stay on Driving login'); } catch (_) {}
+                stayOnDrivingInstitutionLoginAfterControlledSignOut();
                 return;
             }
             try { console.log('[AuthGate] onAuthStateChanged: user yok, program seçimi gösteriliyor.'); } catch (_) {}

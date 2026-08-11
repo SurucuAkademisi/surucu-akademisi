@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+  <script src="../assets/js/canonical-host.js"></script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex" />
@@ -180,6 +181,166 @@
         padding: 24px 18px 22px;
       }
     }
+
+    /* Akademiye Katılım Talebi — page-scoped premium CTA */
+    .page-panel .panel-institution-cta {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.15rem 1.5rem;
+      width: 100%;
+      margin: 1.15rem 0 0;
+      padding: 1.2rem 1.35rem;
+      box-sizing: border-box;
+      border-radius: 18px;
+      overflow: hidden;
+      isolation: isolate;
+      border: 1px solid transparent;
+      background:
+        linear-gradient(158deg, rgba(8, 18, 36, 0.96) 0%, rgba(10, 26, 48, 0.92) 48%, rgba(7, 16, 32, 0.96) 100%) padding-box,
+        linear-gradient(135deg, rgba(34, 211, 238, 0.55), rgba(251, 191, 36, 0.28), rgba(34, 211, 238, 0.45)) border-box;
+      box-shadow:
+        0 0 36px rgba(34, 211, 238, 0.16),
+        0 10px 28px rgba(2, 8, 23, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .page-panel .panel-institution-cta::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 90% at 0% 50%, rgba(34, 211, 238, 0.12), transparent 55%),
+        radial-gradient(ellipse 55% 70% at 100% 0%, rgba(251, 191, 36, 0.08), transparent 50%);
+    }
+
+    .page-panel .panel-institution-cta__body {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.9rem;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+
+    .page-panel .panel-institution-cta__icon {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      color: #67e8f9;
+      background: linear-gradient(145deg, rgba(34, 211, 238, 0.2), rgba(251, 191, 36, 0.08));
+      border: 1px solid rgba(34, 211, 238, 0.4);
+      box-shadow: 0 0 18px rgba(34, 211, 238, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .page-panel .panel-institution-cta__icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .page-panel .panel-institution-cta__copy {
+      min-width: 0;
+    }
+
+    .page-panel .panel-institution-cta__eyebrow {
+      display: block;
+      margin: 0 0 0.3rem;
+      font-size: 0.72rem;
+      font-weight: 750;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: rgba(251, 191, 36, 0.92);
+    }
+
+    .page-panel .panel-institution-cta__title {
+      margin: 0 0 0.4rem;
+      font-size: clamp(1.12rem, 2.2vw, 1.35rem);
+      font-weight: 800;
+      letter-spacing: -0.015em;
+      line-height: 1.25;
+      color: #eef8ff;
+      text-shadow: 0 0 22px rgba(34, 211, 238, 0.18);
+    }
+
+    .page-panel .panel-institution-cta__text {
+      margin: 0 0 0.35rem;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: rgba(186, 230, 253, 0.92);
+    }
+
+    .page-panel .panel-institution-cta__note {
+      margin: 0;
+      font-size: 0.8rem;
+      line-height: 1.45;
+      color: #94a3b8;
+    }
+
+    .page-panel .panel-institution-cta__action {
+      position: relative;
+      z-index: 1;
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      min-width: 200px;
+      padding: 0.7rem 1.2rem;
+      border-radius: 12px;
+      font-size: 0.92rem;
+      font-weight: 800;
+      text-decoration: none;
+      color: #041016;
+      background: linear-gradient(145deg, #67e8f9 0%, #22d3ee 52%, #06b6d4 100%);
+      border: 1px solid rgba(165, 243, 252, 0.8);
+      box-shadow:
+        0 0 20px rgba(34, 211, 238, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+      box-sizing: border-box;
+      white-space: nowrap;
+    }
+
+    .page-panel .panel-institution-cta__action:hover,
+    .page-panel .panel-institution-cta__action:focus-visible {
+      color: #020617;
+      text-decoration: none;
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+      box-shadow:
+        0 0 26px rgba(34, 211, 238, 0.48),
+        inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    }
+
+    .page-panel .panel-institution-cta__action:focus-visible {
+      outline: 2px solid rgba(165, 243, 252, 0.95);
+      outline-offset: 3px;
+    }
+
+    @media (max-width: 820px) {
+      .page-panel .panel-institution-cta {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1.1rem 1.1rem 1.15rem;
+      }
+
+      .page-panel .panel-institution-cta__action {
+        width: 100%;
+        min-width: 0;
+        white-space: normal;
+        text-align: center;
+      }
+    }
   </style>
 </head>
 <body class="page-panel">
@@ -237,7 +398,28 @@
         </article>
       </div>
 
-      <!-- Future panel promotional / advertising content area -->
+      <aside class="panel-institution-cta" aria-labelledby="panel-institution-cta-title">
+        <div class="panel-institution-cta__body">
+          <span class="panel-institution-cta__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3.5 20.5V9.5L12 4.5L20.5 9.5V20.5" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+              <path d="M9 20.5V13.5H15V20.5" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+              <path d="M3.5 20.5H20.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <div class="panel-institution-cta__copy">
+            <span class="panel-institution-cta__eyebrow">Sürücü Kursları ve Eğitim Kurumları İçin</span>
+            <h2 id="panel-institution-cta-title" class="panel-institution-cta__title">Akademiye Katılım Talebi</h2>
+            <p class="panel-institution-cta__text">
+              Sürücü kursunuz veya eğitim kurumunuz için Sürücü Akademisi kurumsal hizmetlerine katılım talebi oluşturun.
+            </p>
+            <p class="panel-institution-cta__note">
+              Başvurunuz değerlendirilir ve kurumunuza uygun hizmet süreci hakkında sizinle iletişime geçilir.
+            </p>
+          </div>
+        </div>
+        <a class="panel-institution-cta__action" href="../kurumsal-basvuru/">Katılım Talebi Oluştur</a>
+      </aside>
     </div>
   </main>
 </body>

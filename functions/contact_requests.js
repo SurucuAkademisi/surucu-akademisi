@@ -11,7 +11,6 @@ const admin = require('firebase-admin');
 
 var SCHEMA_VERSION = 1;
 var NOTICE_VERSION = 'contact-v1';
-var SOURCE_PAGE = 'iletisim';
 var COLLECTION = 'contactRequests';
 var RATE_LIMIT_COLLECTION = 'contactRequestRateLimits';
 
@@ -30,7 +29,8 @@ var REQUEST_TYPES = {
   technical_support: true,
   education_content: true,
   partnership: true,
-  other: true
+  other: true,
+  institution_application: true
 };
 
 var USER_TYPES = {
@@ -40,6 +40,17 @@ var USER_TYPES = {
   other: true
 };
 
+var INTERESTED_PROGRAMS = {
+  driving_license: true,
+  machine_operator: true,
+  both: true
+};
+
+var SOURCE_PAGES = {
+  iletisim: true,
+  'kurumsal-basvuru': true
+};
+
 var LIMITS = {
   fullNameMin: 2,
   fullNameMax: 100,
@@ -47,12 +58,15 @@ var LIMITS = {
   phoneMax: 30,
   institutionNameMax: 160,
   cityMax: 80,
+  districtMax: 80,
+  titleMax: 100,
   messageMin: 10,
   messageMax: 5000,
   adminNoteMax: 2000,
   honeypotMax: 200,
   userAgentMax: 300,
   requestIdMax: 128,
+  estimatedStudentCountMax: 100000,
   rateEmailMax30m: 3,
   rateIpMax30m: 5,
   rateIpMax24h: 20,
@@ -96,6 +110,31 @@ function isValidPhone(phone) {
   if (phone.length > LIMITS.phoneMax) return false;
   if (/[\u0000-\u001F\u007F]/.test(phone)) return false;
   return /^[0-9+\-\s()]+$/.test(phone);
+}
+
+function normalizeEstimatedStudentCount(raw) {
+  if (raw == null || raw === '') return null;
+  if (typeof raw === 'number') {
+    if (!Number.isFinite(raw)) return null;
+    var n = Math.floor(raw);
+    if (n < 1 || n > LIMITS.estimatedStudentCountMax) {
+      throw new HttpsError('invalid-argument', 'estimatedStudentCount is invalid.');
+    }
+    return n;
+  }
+  if (typeof raw !== 'string') {
+    throw new HttpsError('invalid-argument', 'estimatedStudentCount is invalid.');
+  }
+  var s = stripControlChars(raw).trim();
+  if (!s) return null;
+  if (!/^\d{1,6}$/.test(s)) {
+    throw new HttpsError('invalid-argument', 'estimatedStudentCount is invalid.');
+  }
+  var parsed = parseInt(s, 10);
+  if (!Number.isFinite(parsed) || parsed < 1 || parsed > LIMITS.estimatedStudentCountMax) {
+    throw new HttpsError('invalid-argument', 'estimatedStudentCount is invalid.');
+  }
+  return parsed;
 }
 
 function hashKey(prefix, raw) {
@@ -198,7 +237,19 @@ exports.submitContactRequest = onCall(async function (request) {
     return { ok: true };
   }
 
-  var fullName = asCollapsedString(data.fullName, LIMITS.fullNameMax);
+  var requestType = typeof data.requestType === 'string' ? data.requestType.trim() : '';
+  if (!REQUEST_TYPES[requestType]) {
+    throw new HttpsError('invalid-argument', 'requestType is invalid.');
+  }
+
+  var isInstitutionApplication = requestType === 'institution_application';
+
+  var fullName = asCollapsedString(
+    isInstitutionApplication && data.authorizedPersonName != null
+      ? data.authorizedPersonName
+      : data.fullName,
+    LIMITS.fullNameMax
+  );
   var email =
     typeof data.email === 'string'
       ? stripControlChars(data.email).trim().toLowerCase().slice(0, LIMITS.emailMax)
@@ -210,22 +261,39 @@ exports.submitContactRequest = onCall(async function (request) {
   var institutionName = institutionNameRaw || null;
   var cityRaw = asCollapsedString(data.city, LIMITS.cityMax);
   var city = cityRaw || null;
+  var districtRaw = asCollapsedString(data.district, LIMITS.districtMax);
+  var district = districtRaw || null;
+  var authorizedPersonTitleRaw = asCollapsedString(data.authorizedPersonTitle, LIMITS.titleMax);
+  var authorizedPersonTitle = authorizedPersonTitleRaw || null;
   var message = asTrimmedMessage(data.message, LIMITS.messageMax);
   var userType = typeof data.userType === 'string' ? data.userType.trim() : '';
-  var requestType = typeof data.requestType === 'string' ? data.requestType.trim() : '';
   var noticeAcknowledged = data.noticeAcknowledged;
+  var interestedProgram =
+    typeof data.interestedProgram === 'string' ? data.interestedProgram.trim() : '';
+  var estimatedStudentCount = normalizeEstimatedStudentCount(data.estimatedStudentCount);
+
+  var sourcePageRaw = typeof data.sourcePage === 'string' ? data.sourcePage.trim() : '';
+  var sourcePage = SOURCE_PAGES[sourcePageRaw]
+    ? sourcePageRaw
+    : isInstitutionApplication
+      ? 'kurumsal-basvuru'
+      : 'iletisim';
+
+  if (isInstitutionApplication) {
+    userType = 'institution_representative';
+  }
 
   if (fullName.length < LIMITS.fullNameMin) {
-    throw new HttpsError('invalid-argument', 'fullName is required.');
+    throw new HttpsError(
+      'invalid-argument',
+      isInstitutionApplication ? 'authorizedPersonName is required.' : 'fullName is required.'
+    );
   }
   if (!isValidEmail(email)) {
     throw new HttpsError('invalid-argument', 'A valid email is required.');
   }
   if (!USER_TYPES[userType]) {
     throw new HttpsError('invalid-argument', 'userType is invalid.');
-  }
-  if (!REQUEST_TYPES[requestType]) {
-    throw new HttpsError('invalid-argument', 'requestType is invalid.');
   }
   if (message.length < LIMITS.messageMin) {
     throw new HttpsError('invalid-argument', 'message is required.');
@@ -248,6 +316,21 @@ exports.submitContactRequest = onCall(async function (request) {
   if (requestType === 'institution_student_support') {
     if (!institutionName) {
       throw new HttpsError('invalid-argument', 'institutionName is required.');
+    }
+  }
+
+  if (isInstitutionApplication) {
+    if (!institutionName) {
+      throw new HttpsError('invalid-argument', 'institutionName is required.');
+    }
+    if (!phone) {
+      throw new HttpsError('invalid-argument', 'phone is required.');
+    }
+    if (!city) {
+      throw new HttpsError('invalid-argument', 'city is required.');
+    }
+    if (!INTERESTED_PROGRAMS[interestedProgram]) {
+      throw new HttpsError('invalid-argument', 'interestedProgram is invalid.');
     }
   }
 
@@ -285,7 +368,7 @@ exports.submitContactRequest = onCall(async function (request) {
     message: message,
     noticeAcknowledged: true,
     noticeVersion: NOTICE_VERSION,
-    sourcePage: SOURCE_PAGE,
+    sourcePage: sourcePage,
     submitterUid: uid,
     tenantId: null,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -303,6 +386,14 @@ exports.submitContactRequest = onCall(async function (request) {
     ],
     userAgent: clientUserAgent(request)
   };
+
+  if (isInstitutionApplication) {
+    doc.authorizedPersonName = fullName;
+    doc.authorizedPersonTitle = authorizedPersonTitle;
+    doc.district = district;
+    doc.interestedProgram = interestedProgram;
+    doc.estimatedStudentCount = estimatedStudentCount;
+  }
 
   try {
     var ref = await db.collection(COLLECTION).add(doc);
@@ -407,5 +498,49 @@ exports.updateContactRequest = onCall(async function (request) {
     if (e instanceof HttpsError) throw e;
     console.error('[updateContactRequest] failed:', e && e.message ? e.message : e);
     throw new HttpsError('internal', 'Unable to update contact request.');
+  }
+});
+
+/**
+ * Super Admin only — soft-hide a contact request from normal CRM UI.
+ * Does not hard-delete. Does not touch onboarding / logos / payments / tenants.
+ */
+exports.softDeleteContactRequest = onCall(async function (request) {
+  var callerUid = request && request.auth ? request.auth.uid : null;
+  await requireSuperAdmin(callerUid);
+
+  var data = request && request.data && typeof request.data === 'object' ? request.data : {};
+  var requestId =
+    typeof data.requestId === 'string' ? stripControlChars(data.requestId).trim() : '';
+  if (!requestId || requestId.length > LIMITS.requestIdMax || /[\/\.]/.test(requestId)) {
+    throw new HttpsError('invalid-argument', 'requestId is required.');
+  }
+
+  var db = getDb();
+  var ref = db.collection(COLLECTION).doc(requestId);
+
+  try {
+    var alreadyDeleted = false;
+    await db.runTransaction(async function (tx) {
+      var snap = await tx.get(ref);
+      if (!snap.exists) {
+        throw new HttpsError('not-found', 'Contact request not found.');
+      }
+      var existing = snap.data() || {};
+      if (existing.deleted === true) {
+        alreadyDeleted = true;
+        return;
+      }
+      tx.update(ref, {
+        deleted: true,
+        deletedAt: admin.firestore.FieldValue.serverTimestamp(),
+        deletedBy: callerUid
+      });
+    });
+    return { ok: true, requestId: requestId, alreadyDeleted: alreadyDeleted };
+  } catch (e) {
+    if (e instanceof HttpsError) throw e;
+    console.error('[softDeleteContactRequest] failed:', e && e.message ? e.message : e);
+    throw new HttpsError('internal', 'Unable to delete contact request.');
   }
 });

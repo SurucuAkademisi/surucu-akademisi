@@ -5,6 +5,7 @@ export const TENANT_ROLES = Object.freeze({
   SUPER_ADMIN: 'super_admin',
   INSTITUTION_ADMIN: 'institution_admin',
   STUDENT: 'student',
+  INSTRUCTOR: 'instructor',
 });
 
 export const TENANT_MEMBERSHIP_STATUSES = Object.freeze({

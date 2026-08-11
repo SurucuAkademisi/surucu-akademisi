@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <script src="../assets/js/canonical-host.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Sürücü kursunuz veya eğitim kurumunuz için Sürücü Akademisi kurumsal katılım başvurusu oluşturun." />
+  <link rel="canonical" href="https://surucuakademisi.com/kurumsal-basvuru/" />
+  <title>Kurumsal Başvuru | Sürücü Akademisi</title>
+  <script>
+    (function () {
+      try {
+        var raw = sessionStorage.getItem('sa_public_session_v1');
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || typeof s !== 'object') return;
+        var uid = String(s.uid || '').trim();
+        var role = String(s.role || '').trim();
+        if (!uid || role !== 'public_user') return;
+        document.documentElement.classList.add('page-public-header-pending');
+        setTimeout(function () {
+          document.documentElement.classList.remove('page-public-header-pending');
+        }, 8000);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="../assets/css/site.css?v=20260728-landing-navband-boundary-fix-1" />
+  <link rel="stylesheet" href="../iletisim/contact-forms.css?v=20260810-onboarding-b2" />
+</head>
+<body class="page-landing page-institution-application" data-site-page="institution-application">
+  <header class="site-header site-header--landing">
+    <div class="container header-inner header-inner--landing header-inner--public">
+      <div class="header-landing-brand">
+        <a class="brand brand--lockup" href="../" aria-label="Sürücü Akademisi ana sayfa">
+          <img class="brand-logo-img" src="../assets/images/logo.png" width="110" height="110" alt="" />
+          <span class="brand-text">
+            <span class="brand-name"><span class="brand-name__surucu">Sürücü</span> <span class="brand-name__akademisi">Akademisi</span></span>
+            <span class="brand-tagline">Ehliyet Eğitim Portalı</span>
+          </span>
+        </a>
+      </div>
+
+      <div class="header-landing-navband">
+        <nav class="header-landing-infonav" aria-label="Ana menü">
+          <a class="header-landing-infonav__link" href="../">Ana Sayfa</a>
+          <a class="header-landing-infonav__link" href="../hakkimizda/">Hakkımızda</a>
+          <a class="header-landing-infonav__link" href="../hizmetlerimiz/">Hizmetlerimiz</a>
+          <a class="header-landing-infonav__link" href="../iletisim/">İletişim</a>
+        </nav>
+
+        <div class="header-public-actions header-public-actions--account" data-public-header="guest">
+          <a class="btn btn-public-course" href="../panel/" aria-label="Sürücü Kursu Öğrenci / Yönetici Girişi">
+            <span class="btn-public-course__text">
+              Sürücü Kursu
+              <span class="btn-public-course__accent btn-public-course__accent--student">Öğrenci</span>
+              <span class="btn-public-course__sep" aria-hidden="true">/</span>
+              <span class="btn-public-course__accent btn-public-course__accent--org">Yönetici</span>
+              Girişi
+            </span>
+          </a>
+          <a class="btn btn-public-login" href="../uye-giris/">Üye Girişi</a>
+          <a class="btn btn-public-register" href="../kayit/">Kayıt Ol</a>
+        </div>
+
+        <div class="header-public-actions header-public-actions--account header-public-actions--user" data-public-header="user" hidden aria-hidden="true">
+          <span class="btn btn-public-greeting" id="public-header-greeting" aria-live="polite">Merhaba, <span id="public-header-name">Üye</span></span>
+          <button type="button" class="btn btn-public-register btn-public-logout" id="public-header-logout">Çıkış</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <button
+    type="button"
+    id="public-mobile-menu-button"
+    class="public-mobile-menu-button"
+    aria-label="Menüyü aç"
+    aria-expanded="false"
+    aria-controls="public-mobile-menu-panel"
+  >
+    <span class="public-mobile-menu-button__face" aria-hidden="true">
+      <svg
+        class="public-mobile-menu-button__icon"
+        viewBox="0 0 24 24"
+        width="22"
+        height="22"
+        focusable="false"
+      >
+        <path class="public-mobile-menu-button__line public-mobile-menu-button__line--top" d="M4 6h16"></path>
+        <path class="public-mobile-menu-button__line public-mobile-menu-button__line--middle" d="M4 12h16"></path>
+        <path class="public-mobile-menu-button__line public-mobile-menu-button__line--bottom" d="M4 18h16"></path>
+      </svg>
+    </span>
+  </button>
+
+  <div
+    id="public-mobile-menu-panel"
+    class="public-mobile-menu-panel"
+    aria-label="Sayfa menüsü"
+    hidden
+  >
+    <a class="public-mobile-menu-panel__item" href="../hizmetlerimiz/">Hizmetlerimiz</a>
+    <a class="public-mobile-menu-panel__item" href="../hakkimizda/">Hakkımızda</a>
+    <a class="public-mobile-menu-panel__item" href="../iletisim/">İletişim</a>
+  </div>
+
+  <main class="contact-main">
+    <div class="container contact-shell">
+      <h1 class="contact-title">Kurumsal Başvuru</h1>
+      <p class="contact-lead">
+        Sürücü kursunuz veya eğitim kurumunuz için Sürücü Akademisi kurumsal katılım başvurusunu başlatın.
+        Kurum bilgilerinizi doldurun; ödeme ve otomatik kurum açılışı sonraki aşamalarda etkinleştirilecektir.
+      </p>
+
+      <section class="contact-form-card" aria-labelledby="institution-form-heading">
+        <form id="sa-institution-application-form" data-onboarding-draft="1" novalidate>
+          <h2 id="institution-form-heading" class="contact-form-heading">Kurum Bilgileri</h2>
+          <div class="contact-form-grid">
+            <div class="contact-field contact-field--full">
+              <label for="inst-institutionName">Kurum Adı <span class="req" aria-hidden="true">*</span></label>
+              <input id="inst-institutionName" name="institutionName" type="text" maxlength="160" autocomplete="organization" required />
+            </div>
+            <div class="contact-field contact-field--full">
+              <span id="inst-logo-label" class="contact-field-label">Kurum Logosu <span class="req" aria-hidden="true">*</span></span>
+              <div class="inst-logo-upload" data-inst-logo-upload>
+                <input
+                  id="inst-logo"
+                  class="inst-logo-upload__input"
+                  name="institutionLogo"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp"
+                  required
+                />
+                <div class="inst-logo-upload__preview-wrap" aria-hidden="true">
+                  <img id="inst-logo-preview" class="inst-logo-upload__preview" alt="" hidden />
+                  <div id="inst-logo-placeholder" class="inst-logo-upload__placeholder">
+                    <svg class="inst-logo-upload__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path fill="currentColor" d="M12 3.5a1 1 0 0 1 .7.3l3.5 3.5a1 1 0 1 1-1.4 1.4L13 6.9V15a1 1 0 1 1-2 0V6.9L9.2 8.7a1 1 0 1 1-1.4-1.4l3.5-3.5a1 1 0 0 1 .7-.3Zm-6.5 12A2.5 2.5 0 0 0 3 18v.5A2.5 2.5 0 0 0 5.5 21h13a2.5 2.5 0 0 0 2.5-2.5V18a2.5 2.5 0 0 0-2.5-2.5h-2a1 1 0 1 0 0 2h2a.5.5 0 0 1 .5.5v.5a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5V18a.5.5 0 0 1 .5-.5h2a1 1 0 1 0 0-2h-2Z"/>
+                    </svg>
+                    <span class="inst-logo-upload__hint">PNG, JPG veya WEBP · en fazla 2 MB</span>
+                  </div>
+                </div>
+                <div class="inst-logo-upload__actions">
+                  <label for="inst-logo" class="inst-logo-upload__pick">Logo Seç</label>
+                  <p id="inst-logo-file-name" class="inst-logo-upload__file-name">Henüz dosya seçilmedi</p>
+                </div>
+              </div>
+            </div>
+            <div class="contact-field">
+              <label for="inst-authorizedPersonName">Yetkili Ad Soyad <span class="req" aria-hidden="true">*</span></label>
+              <input id="inst-authorizedPersonName" name="authorizedPersonName" type="text" maxlength="100" autocomplete="name" required />
+            </div>
+            <div class="contact-field">
+              <label for="inst-authorizedPersonTitle">Yetkili Görevi / Ünvanı</label>
+              <input id="inst-authorizedPersonTitle" name="authorizedPersonTitle" type="text" maxlength="100" autocomplete="organization-title" />
+            </div>
+            <div class="contact-field">
+              <label for="inst-email">E-posta <span class="req" aria-hidden="true">*</span></label>
+              <input id="inst-email" name="email" type="email" maxlength="160" autocomplete="email" required />
+            </div>
+            <div class="contact-field">
+              <label for="inst-phone">Telefon <span class="req" aria-hidden="true">*</span></label>
+              <input id="inst-phone" name="phone" type="tel" maxlength="30" autocomplete="tel" required />
+            </div>
+            <div class="contact-field">
+              <label for="inst-city">İl <span class="req" aria-hidden="true">*</span></label>
+              <input id="inst-city" name="city" type="text" maxlength="80" autocomplete="address-level1" required />
+            </div>
+            <div class="contact-field">
+              <label for="inst-district">İlçe <span class="req" aria-hidden="true">*</span></label>
+              <input id="inst-district" name="district" type="text" maxlength="80" autocomplete="address-level2" required />
+            </div>
+            <div class="contact-field contact-field--full">
+              <label for="inst-fullAddress">Açık Adres <span class="req" aria-hidden="true">*</span></label>
+              <textarea id="inst-fullAddress" name="fullAddress" maxlength="500" rows="3" autocomplete="street-address" required></textarea>
+            </div>
+            <div class="contact-field contact-field--full contact-field--program">
+              <span id="inst-interestedProgram-label" class="contact-field-label">İlgilenilen Program <span class="req" aria-hidden="true">*</span></span>
+              <div class="sa-premium-select" data-sa-premium-select>
+                <select
+                  id="inst-interestedProgram"
+                  name="interestedProgram"
+                  class="sa-premium-select__native"
+                  required
+                  tabindex="-1"
+                  aria-hidden="true"
+                >
+                  <option value="">Seçiniz</option>
+                  <option value="driving_license">Ehliyet Sınavlarına Hazırlık Modülü</option>
+                  <option value="machine_operator">İş Makineleri Operatörlük Sınavlarına Hazırlık Modülü</option>
+                  <option value="both">Her İkisi</option>
+                </select>
+                <button
+                  type="button"
+                  class="sa-premium-select__trigger"
+                  id="inst-interestedProgram-trigger"
+                  aria-haspopup="listbox"
+                  aria-expanded="false"
+                  aria-controls="inst-interestedProgram-listbox"
+                  aria-labelledby="inst-interestedProgram-label inst-interestedProgram-trigger"
+                >
+                  <span class="sa-premium-select__value" data-sa-premium-select-value>Seçiniz</span>
+                  <span class="sa-premium-select__chevron" aria-hidden="true"></span>
+                </button>
+                <ul
+                  class="sa-premium-select__list"
+                  id="inst-interestedProgram-listbox"
+                  role="listbox"
+                  aria-labelledby="inst-interestedProgram-label"
+                  hidden
+                >
+                  <li class="sa-premium-select__option is-placeholder is-selected" role="option" tabindex="-1" data-value="" aria-selected="true">Seçiniz</li>
+                  <li class="sa-premium-select__option" role="option" tabindex="-1" data-value="driving_license" aria-selected="false">Ehliyet Sınavlarına Hazırlık Modülü</li>
+                  <li class="sa-premium-select__option" role="option" tabindex="-1" data-value="machine_operator" aria-selected="false">İş Makineleri Operatörlük Sınavlarına Hazırlık Modülü</li>
+                  <li class="sa-premium-select__option" role="option" tabindex="-1" data-value="both" aria-selected="false">Her İkisi</li>
+                </ul>
+              </div>
+            </div>
+            <div class="contact-field">
+              <label for="inst-estimatedStudentCount">Tahmini Öğrenci Sayısı</label>
+              <input id="inst-estimatedStudentCount" name="estimatedStudentCount" type="text" inputmode="numeric" maxlength="6" />
+            </div>
+            <div class="contact-field contact-field--full">
+              <label for="inst-message">Mesaj / Açıklama</label>
+              <textarea id="inst-message" name="message" maxlength="5000"></textarea>
+            </div>
+          </div>
+
+          <div class="contact-hp" aria-hidden="true">
+            <label for="inst-website">Website</label>
+            <input id="inst-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+
+          <label class="contact-notice">
+            <input id="inst-notice" name="noticeAcknowledged" type="checkbox" value="1" required />
+            <span>
+              <a href="/iletisim-formu-aydinlatma/" target="_blank" rel="noopener noreferrer">İletişim Formu Aydınlatma Metnini</a> okudum ve bilgi edindim.
+            </span>
+          </label>
+
+          <div class="contact-actions">
+            <button type="submit" class="contact-submit">Başvuru Gönder</button>
+          </div>
+          <p id="institution-form-status" class="contact-form-status" role="status" aria-live="polite" hidden></p>
+        </form>
+        <p class="contact-aside-note">
+          Genel sorularınız için <a href="../iletisim/">iletişim sayfasını</a> kullanabilirsiniz.
+        </p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p class="footer-brand">Sürücü Akademisi</p>
+      <p class="footer-copy">© 2026 Sürücü Akademisi</p>
+      <p class="footer-secondary">
+        <a href="mailto:info@surucuakademisi.com">İletişim: info@surucuakademisi.com</a>
+      </p>
+      <nav class="footer-links" aria-label="Yasal belgeler">
+        <a href="../kvkk-aydinlatma/">KVKK Aydınlatma</a>
+        <a href="../gizlilik-politikasi/">Gizlilik</a>
+        <a href="../cerez-politikasi/">Çerez Politikası</a>
+        <a href="../kullanim-kosullari/">Kullanım Koşulları</a>
+        <a href="../ilgili-kisi-basvurusu/">İlgili Kişi Başvurusu</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
+  <script src="../assets/js/web-firebase.js"></script>
+  <script src="../assets/js/public-session.js"></script>
+  <script src="../assets/js/public-auth.js"></script>
+  <script src="../assets/js/public-landing-auth.js?v=20260728-public-header-fouc-1"></script>
+  <script src="../assets/js/public-landing-mobile-menu.js?v=20260728-mobile-menu-final-2"></script>
+  <script src="../assets/js/institution-onboarding-form.js?v=20260810-onboarding-no-billing"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      var root = document.querySelector('[data-sa-premium-select]');
+      if (!root) return;
+
+      var select = root.querySelector('.sa-premium-select__native');
+      var trigger = root.querySelector('.sa-premium-select__trigger');
+      var valueEl = root.querySelector('[data-sa-premium-select-value]');
+      var list = root.querySelector('.sa-premium-select__list');
+      var options = list ? list.querySelectorAll('[role="option"]') : [];
+      if (!select || !trigger || !valueEl || !list) return;
+
+      var form = select.closest('form');
+      var open = false;
+
+      function syncFromSelect() {
+        var val = String(select.value || '');
+        var matched = null;
+        options.forEach(function (opt) {
+          var isMatch = String(opt.getAttribute('data-value') || '') === val;
+          opt.classList.toggle('is-selected', isMatch);
+          opt.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+          if (isMatch) matched = opt;
+        });
+        valueEl.textContent = matched
+          ? String(matched.textContent || '').trim()
+          : 'Seçiniz';
+        trigger.classList.toggle('is-placeholder', !val);
+      }
+
+      function setOpen(next) {
+        open = !!next;
+        trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+        list.hidden = !open;
+        root.classList.toggle('is-open', open);
+        if (open) {
+          var selected = list.querySelector('[aria-selected="true"]') || options[0];
+          if (selected && typeof selected.focus === 'function') selected.focus();
+        }
+      }
+
+      function choose(opt) {
+        if (!opt) return;
+        select.value = String(opt.getAttribute('data-value') || '');
+        syncFromSelect();
+        setOpen(false);
+        trigger.focus();
+        try {
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+        } catch (e) {}
+      }
+
+      trigger.addEventListener('click', function () {
+        setOpen(!open);
+      });
+
+      trigger.addEventListener('keydown', function (e) {
+        var key = e.key;
+        if (key === 'ArrowDown' || key === 'Enter' || key === ' ') {
+          e.preventDefault();
+          setOpen(true);
+        }
+      });
+
+      list.addEventListener('click', function (e) {
+        var opt = e.target && e.target.closest ? e.target.closest('[role="option"]') : null;
+        if (!opt || !list.contains(opt)) return;
+        choose(opt);
+      });
+
+      list.addEventListener('keydown', function (e) {
+        var current = document.activeElement;
+        var items = Array.prototype.slice.call(options);
+        var idx = items.indexOf(current);
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          setOpen(false);
+          trigger.focus();
+          return;
+        }
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (idx < items.length - 1) items[idx + 1].focus();
+          return;
+        }
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (idx > 0) items[idx - 1].focus();
+          return;
+        }
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (current && current.getAttribute('role') === 'option') choose(current);
+          return;
+        }
+        if (e.key === 'Home') {
+          e.preventDefault();
+          if (items[0]) items[0].focus();
+          return;
+        }
+        if (e.key === 'End') {
+          e.preventDefault();
+          if (items.length) items[items.length - 1].focus();
+        }
+      });
+
+      document.addEventListener('click', function (e) {
+        if (!open) return;
+        if (root.contains(e.target)) return;
+        setOpen(false);
+      });
+
+      if (form) {
+        form.addEventListener('reset', function () {
+          window.setTimeout(function () {
+            syncFromSelect();
+            setOpen(false);
+          }, 0);
+        });
+      }
+
+      syncFromSelect();
+    })();
+  </script>
+</body>
+</html>
