@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const admin = require('firebase-admin');
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 
@@ -6,6 +7,46 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
+
+const INSTITUTION_CHAT_IDEMPOTENCY_SCOPE = 'institution_chat';
+
+/**
+ * Optional clientRequestId for optimistic send idempotency.
+ * Mirrors Instructor messaging validation: omit = legacy; supply = 16–100 [A-Za-z0-9_-]+.
+ */
+function parseOptionalInstitutionChatClientRequestId(data) {
+  if (!data || data.clientRequestId == null || data.clientRequestId === undefined) {
+    return '';
+  }
+  if (typeof data.clientRequestId !== 'string') {
+    throw new HttpsError('invalid-argument', 'clientRequestId must be a string.');
+  }
+  const id = data.clientRequestId;
+  if (!id) return '';
+  if (id.length < 16 || id.length > 100) {
+    throw new HttpsError('invalid-argument', 'clientRequestId is invalid.');
+  }
+  if (!/^[A-Za-z0-9_-]+$/.test(id)) {
+    throw new HttpsError('invalid-argument', 'clientRequestId is invalid.');
+  }
+  return id;
+}
+
+function buildInstitutionChatMessageIdempotentDocId(callerUid, provinceId, clientRequestId) {
+  const digest = crypto
+    .createHash('sha256')
+    .update(
+      [
+        String(callerUid || ''),
+        String(provinceId || ''),
+        INSTITUTION_CHAT_IDEMPOTENCY_SCOPE,
+        String(clientRequestId || '')
+      ].join('\n'),
+      'utf8'
+    )
+    .digest('hex');
+  return 'req_' + digest;
+}
 
 const INSTITUTION_PROVINCE_ROOMS = Object.freeze([
   { provinceId: 'adana', provinceName: 'Adana', provinceCode: 1 },
@@ -277,6 +318,7 @@ exports.createInstitutionProvinceMessage = onCall(async (request) => {
   const data = request && request.data ? request.data : {};
   const provinceId = (data && data.provinceId ? String(data.provinceId) : '').trim().toLowerCase();
   const textRaw = (data && typeof data.text === 'string') ? data.text : null;
+  const clientRequestId = parseOptionalInstitutionChatClientRequestId(data);
   if (!provinceId || !isAllowedInstitutionRoomId(provinceId)) {
     throw new HttpsError('invalid-argument', 'provinceId is required and must be a known province.');
   }
@@ -343,8 +385,14 @@ exports.createInstitutionProvinceMessage = onCall(async (request) => {
 
     const senderAdminName = normalizeSenderAdminName(callerUser, callerUid);
     const now = admin.firestore.FieldValue.serverTimestamp();
-    const messageRef = roomRef.collection('messages').doc();
-    await messageRef.set({
+    const useIdempotentId = !!clientRequestId;
+    const messageRef = useIdempotentId
+      ? roomRef.collection('messages').doc(
+          buildInstitutionChatMessageIdempotentDocId(callerUid, provinceId, clientRequestId)
+        )
+      : roomRef.collection('messages').doc();
+
+    const messagePayload = {
       roomId: provinceId,
       provinceId: provinceId,
       text,
@@ -364,17 +412,69 @@ exports.createInstitutionProvinceMessage = onCall(async (request) => {
       deletedBy: null,
       deletedReason: '',
       ...replyMetadata,
-    });
+    };
+    if (useIdempotentId) {
+      messagePayload.clientRequestId = clientRequestId;
+    }
 
     const preview = text.length > 180 ? text.slice(0, 180) : text;
-    await roomRef.set({
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      lastMessageAt: admin.firestore.FieldValue.serverTimestamp(),
-      lastMessagePreview: preview,
-      messageCount: admin.firestore.FieldValue.increment(1),
-    }, { merge: true });
+    let deduplicated = false;
 
-    return { ok: true, messageId: messageRef.id };
+    if (useIdempotentId) {
+      await db.runTransaction(async (tx) => {
+        const existingMessageSnap = await tx.get(messageRef);
+        if (existingMessageSnap.exists) {
+          const existingMsg = existingMessageSnap.data() || {};
+          const existingSender = String(existingMsg.senderUid || '').trim();
+          const existingProvince = String(existingMsg.provinceId || existingMsg.roomId || '').trim().toLowerCase();
+          const existingReq = String(existingMsg.clientRequestId || '').trim();
+          if (
+            existingSender !== callerUid ||
+            existingProvince !== provinceId ||
+            (existingReq && existingReq !== clientRequestId)
+          ) {
+            throw new HttpsError('failed-precondition', 'Idempotent message collision.');
+          }
+          deduplicated = true;
+          return;
+        }
+
+        const liveRoomSnap = await tx.get(roomRef);
+        if (!liveRoomSnap.exists) {
+          throw new HttpsError('not-found', 'Province room not found.');
+        }
+        const liveRoomData = liveRoomSnap.data() || {};
+        if (liveRoomData.isActive === false) {
+          throw new HttpsError('failed-precondition', 'Province room is inactive.');
+        }
+
+        tx.set(messageRef, messagePayload);
+        tx.set(roomRef, {
+          updatedAt: now,
+          lastMessageAt: now,
+          lastMessagePreview: preview,
+          messageCount: admin.firestore.FieldValue.increment(1),
+        }, { merge: true });
+      });
+    } else {
+      await messageRef.set(messagePayload);
+      await roomRef.set({
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        lastMessageAt: admin.firestore.FieldValue.serverTimestamp(),
+        lastMessagePreview: preview,
+        messageCount: admin.firestore.FieldValue.increment(1),
+      }, { merge: true });
+    }
+
+    const result = {
+      ok: true,
+      messageId: messageRef.id,
+      deduplicated: deduplicated,
+    };
+    if (useIdempotentId) {
+      result.clientRequestId = clientRequestId;
+    }
+    return result;
   } catch (e) {
     if (e instanceof HttpsError) throw e;
     throw new HttpsError('internal', (e && e.message) ? e.message : 'Failed to create province message.');

@@ -87,6 +87,60 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/tenantMemberships/$(request.auth.uid + '_' + tenantId)).data.get('status', '') == 'active';
     }
 
+    // Direksiyon usta öğretici: tenantMemberships/{uid}_{tenantId} role==instructor, status==active
+    function isInstructorForTenant(tenantId) {
+      return request.auth != null
+        && tenantId != null
+        && tenantId is string
+        && tenantId != ''
+        && exists(/databases/$(database)/documents/tenantMemberships/$(request.auth.uid + '_' + tenantId))
+        && get(/databases/$(database)/documents/tenantMemberships/$(request.auth.uid + '_' + tenantId)).data.get('role', '') == 'instructor'
+        && get(/databases/$(database)/documents/tenantMemberships/$(request.auth.uid + '_' + tenantId)).data.get('status', '') == 'active';
+    }
+
+    function canReadDrivingLessonNotification() {
+      return request.auth != null
+        && resource.data.recipientUid == request.auth.uid;
+    }
+
+    function canMarkOwnDrivingLessonNotificationRead() {
+      return request.auth != null
+        && resource.data.recipientUid == request.auth.uid
+        && request.resource.data.recipientUid == resource.data.recipientUid
+        && request.resource.data.tenantId == resource.data.tenantId
+        && resource.data.unread == true
+        && request.resource.data.unread == false
+        && !(resource.data.readAt is timestamp)
+        && request.resource.data.readAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'unread',
+          'readAt'
+        ]);
+    }
+
+    // Phase 3A — Admin Activity Center: own feed only; active institution_admin for same tenant
+    function canReadOwnTenantAdminActivity(tenantId, recipientUid) {
+      return request.auth != null
+        && request.auth.uid == recipientUid
+        && isInstitutionAdminForTenant(tenantId);
+    }
+
+    function canMarkOwnTenantAdminActivityRead(tenantId, recipientUid) {
+      return canReadOwnTenantAdminActivity(tenantId, recipientUid)
+        && resource.data.recipientUid == request.auth.uid
+        && resource.data.tenantId == tenantId
+        && request.resource.data.recipientUid == resource.data.recipientUid
+        && request.resource.data.tenantId == resource.data.tenantId
+        && resource.data.unread == true
+        && request.resource.data.unread == false
+        && !(resource.data.readAt is timestamp)
+        && request.resource.data.readAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'unread',
+          'readAt'
+        ]);
+    }
+
     // ROOM-B1: Usta Öğreticiler İletişim Odası — active same-tenant institution_admin OR instructor
     function isActiveInstructorRoomParticipant(tenantId) {
       return request.auth != null
@@ -647,6 +701,14 @@ service cloud.firestore {
       allow delete: if isSuperAdmin() || canDeleteOwnTenantNotification();
     }
 
+    // N2 — Admin ↔ Instructor driving lesson activity events (server-created)
+    match /drivingLessonNotifications/{notificationId} {
+      allow read: if canReadDrivingLessonNotification();
+      allow create: if false;
+      allow update: if canMarkOwnDrivingLessonNotificationRead();
+      allow delete: if false;
+    }
+
     // Kurumlar-İletişim oda metadata
     match /institutionProvinceRooms/{provinceId} {
       allow read: if isSuperAdmin() || isElevatedInstitutionAdminRole();
@@ -697,6 +759,98 @@ service cloud.firestore {
         match /likes/{likeUid} {
           allow read: if isActiveInstructorRoomParticipant(tenantId);
           allow create, update, delete: if false;
+        }
+      }
+
+      // Group Room — own history-clear memberState read only; writes via Admin SDK callable
+      match /memberState/{uid} {
+        allow read: if request.auth != null
+          && request.auth.uid == uid
+          && isActiveInstructorRoomParticipant(tenantId);
+        allow create, update, delete: if false;
+      }
+
+      // ROOM-P2 — own presence heartbeat only; identity remains participant directory
+      match /presence/{uid} {
+        allow read: if isActiveInstructorRoomParticipant(tenantId);
+        allow create: if isActiveInstructorRoomParticipant(tenantId)
+          && request.auth.uid == uid
+          && request.resource.data.uid == uid
+          && request.resource.data.keys().hasOnly(['uid', 'state', 'lastSeenAt', 'updatedAt'])
+          && request.resource.data.state in ['online', 'offline']
+          && request.resource.data.lastSeenAt is timestamp
+          && request.resource.data.updatedAt is timestamp;
+        allow update: if isActiveInstructorRoomParticipant(tenantId)
+          && request.auth.uid == uid
+          && resource.data.uid == uid
+          && request.resource.data.uid == uid
+          && request.resource.data.keys().hasOnly(['uid', 'state', 'lastSeenAt', 'updatedAt'])
+          && request.resource.data.state in ['online', 'offline']
+          && request.resource.data.lastSeenAt is timestamp
+          && request.resource.data.updatedAt is timestamp;
+        allow delete: if false;
+      }
+    }
+
+    // DM1 — Private 1:1 threads (callable writes; client read + own readState only)
+    function isPrivateThreadParticipant(tenantId, threadId) {
+      return isActiveInstructorRoomParticipant(tenantId)
+        && exists(/databases/$(database)/documents/tenantInstructorPrivateThreads/$(tenantId)/threads/$(threadId))
+        && request.auth.uid in get(/databases/$(database)/documents/tenantInstructorPrivateThreads/$(tenantId)/threads/$(threadId)).data.get('participantUids', []);
+    }
+
+    function canWritePrivateThreadReadState(tenantId, threadId, uid) {
+      return request.auth != null
+        && request.auth.uid == uid
+        && isPrivateThreadParticipant(tenantId, threadId)
+        && request.resource.data.keys().hasOnly(['uid', 'lastReadAt', 'updatedAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.lastReadAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
+    }
+
+    match /tenantInstructorPrivateThreads/{tenantId} {
+      allow read, write: if false;
+
+      match /threads/{threadId} {
+        allow read: if isActiveInstructorRoomParticipant(tenantId)
+          && request.auth.uid in resource.data.get('participantUids', []);
+        allow create, update, delete: if false;
+
+        match /messages/{messageId} {
+          allow read: if isPrivateThreadParticipant(tenantId, threadId);
+          allow create, update, delete: if false;
+
+          // DM1 — liked-by-me reads only; all writes via Admin SDK callable
+          match /likes/{likeUid} {
+            allow read: if isPrivateThreadParticipant(tenantId, threadId);
+            allow create, update, delete: if false;
+          }
+        }
+
+        match /readState/{uid} {
+          allow read: if isPrivateThreadParticipant(tenantId, threadId);
+          allow create: if canWritePrivateThreadReadState(tenantId, threadId, uid);
+          allow update: if canWritePrivateThreadReadState(tenantId, threadId, uid)
+            && resource.data.uid == request.auth.uid
+            && request.resource.data.uid == resource.data.uid;
+          allow delete: if false;
+        }
+      }
+    }
+
+    // Phase 3A — Admin Activity Center (server-created; client own-read + read-state only)
+    match /tenantAdminActivities/{tenantId} {
+      allow read, write: if false;
+
+      match /recipients/{recipientUid} {
+        allow read, write: if false;
+
+        match /activities/{activityId} {
+          allow read: if canReadOwnTenantAdminActivity(tenantId, recipientUid);
+          allow create: if false;
+          allow update: if canMarkOwnTenantAdminActivityRead(tenantId, recipientUid);
+          allow delete: if false;
         }
       }
     }

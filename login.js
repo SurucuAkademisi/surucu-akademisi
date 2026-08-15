@@ -1,3 +1,7 @@
+/*
+DEPRECATED COPY
+Not used by runtime. Canonical version is in mobile_app/src.
+*/
 /* Login + backend helpers (Firebase v8 global) */
 (function () {
   'use strict';
@@ -44,27 +48,11 @@
   }
 
   function setRemainingDaysBadge(days) {
-    const host = document.querySelector('.header-actions');
-    if (!host) return;
-
-    let badge = document.getElementById('student-remaining-days');
-    if (!badge) {
-      badge = document.createElement('div');
-      badge.id = 'student-remaining-days';
-      badge.style.fontSize = '0.85rem';
-      badge.style.color = '#fff';
-      badge.style.background = 'rgba(0,0,0,0.35)';
-      badge.style.border = '1px solid rgba(255,255,255,0.2)';
-      badge.style.borderRadius = '999px';
-      badge.style.padding = '6px 10px';
-      host.appendChild(badge);
-    }
-    badge.textContent = 'Kalan gün: ' + Math.max(0, Number(days || 0));
+    // Kalan g�n badge'i kald�r�ld�
   }
 
   function clearRemainingDaysBadge() {
-    const badge = document.getElementById('student-remaining-days');
-    if (badge) badge.remove();
+    // Badge kald�r�ld�
   }
 
   function studentAuthErrorMessage(error) {

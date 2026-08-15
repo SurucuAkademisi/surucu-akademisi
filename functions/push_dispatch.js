@@ -477,11 +477,45 @@ function composePushDisplayBody(originalTitle, originalMessage) {
 function classifyPushBrandSource(type, tenantId) {
   const normalizedType = String(type || '').trim().toLowerCase();
   const tid = String(tenantId || '').trim();
-  if ((normalizedType === 'tenant' || normalizedType === 'mailbox') && tid && tid !== '__all__') {
+  if (
+    (normalizedType === 'tenant'
+      || normalizedType === 'mailbox'
+      || normalizedType === 'private_message'
+      || normalizedType === 'group_message'
+      || normalizedType === 'lesson_assigned')
+    && tid
+    && tid !== '__all__'
+  ) {
     return 'tenant';
   }
   return 'platform';
 }
+
+/** Code-point-safe truncation (emoji / Turkish-safe). No Buffer / encodeURIComponent. */
+function truncateByCodePoints(value, maxCodePoints) {
+  const max = Number.isFinite(maxCodePoints) && maxCodePoints > 0 ? Math.floor(maxCodePoints) : 0;
+  const text = String(value == null ? '' : value);
+  if (!max) return '';
+  const chars = Array.from(text);
+  if (chars.length <= max) return chars.join('');
+  return chars.slice(0, max).join('');
+}
+
+function normalizePushMessageSnippet(value, maxCodePoints) {
+  const collapsed = String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
+  if (!collapsed) return '';
+  return truncateByCodePoints(collapsed, maxCodePoints);
+}
+
+const PRIVATE_MESSAGE_PUSH_SNIPPET_MAX = 180;
+const PRIVATE_MESSAGE_PUSH_TYPE = 'private_message';
+const GROUP_MESSAGE_PUSH_SNIPPET_MAX = 180;
+const GROUP_MESSAGE_PUSH_TYPE = 'group_message';
+const GROUP_MESSAGE_ROOM_TYPE = 'instructor_group';
+const ROLE_INSTRUCTOR = 'instructor';
+const LESSON_ASSIGNED_PUSH_TYPE = 'lesson_assigned';
+const LESSON_ASSIGNED_BODY_TITLE = 'Yeni Direksiyon Dersi';
+const LESSON_ASSIGNED_PREVIEW_MAX = 180;
 
 function isPrivateOrLocalHostname(hostname) {
   const h = String(hostname || '').trim().toLowerCase();
@@ -600,7 +634,13 @@ function isNativeCapableToken(entry) {
 
 function isNativeRoutableNotificationType(type) {
   const normalizedType = String(type || '').trim().toLowerCase();
-  return normalizedType === 'tenant' || normalizedType === 'mailbox';
+  return (
+    normalizedType === 'tenant'
+    || normalizedType === 'mailbox'
+    || normalizedType === 'private_message'
+    || normalizedType === 'group_message'
+    || normalizedType === 'lesson_assigned'
+  );
 }
 
 function partitionTokenEntriesForDispatch(entries, type) {
@@ -627,6 +667,12 @@ function buildNativeAndroidDataPayload({
   type,
   targetType,
   audienceScope,
+  threadId,
+  messageId,
+  senderUid,
+  roomType,
+  lessonId,
+  agendaWeekStart,
 }) {
   const data = {
     notificationId: String(notificationId || ''),
@@ -639,6 +685,18 @@ function buildNativeAndroidDataPayload({
     brandSource: String(brandSource || ''),
     pushFormat: 'native_v2',
   };
+  const safeThreadId = String(threadId || '').trim();
+  const safeMessageId = String(messageId || '').trim();
+  const safeSenderUid = String(senderUid || '').trim();
+  const safeRoomType = String(roomType || '').trim();
+  const safeLessonId = String(lessonId || '').trim();
+  const safeAgendaWeekStart = String(agendaWeekStart || '').trim();
+  if (safeThreadId) data.threadId = safeThreadId;
+  if (safeMessageId) data.messageId = safeMessageId;
+  if (safeSenderUid) data.senderUid = safeSenderUid;
+  if (safeRoomType) data.roomType = safeRoomType;
+  if (safeLessonId) data.lessonId = safeLessonId;
+  if (safeAgendaWeekStart) data.agendaWeekStart = safeAgendaWeekStart;
   const safeImageUrl = brandImageUrl ? resolveSafePushImageUrl(brandImageUrl) : null;
   if (safeImageUrl) {
     data.brandImageUrl = safeImageUrl;
@@ -684,21 +742,48 @@ function mergeSendResults(legacyResult, nativeResult) {
   };
 }
 
-function buildMulticastPayload({ displayTitle, displayBody, brandImageUrl, notificationId, tenantId, type, targetType, audienceScope, tokens }) {
+function buildMulticastPayload({
+  displayTitle,
+  displayBody,
+  brandImageUrl,
+  notificationId,
+  tenantId,
+  type,
+  targetType,
+  audienceScope,
+  threadId,
+  messageId,
+  senderUid,
+  roomType,
+  lessonId,
+  agendaWeekStart,
+}) {
   const notification = {
     title: String(displayTitle || ''),
     body: String(displayBody || ''),
   };
+  const data = {
+    notificationId: String(notificationId || ''),
+    tenantId: String(tenantId || ''),
+    type: String(type || ''),
+    targetType: String(targetType || ''),
+    audienceScope: String(audienceScope || ''),
+  };
+  const safeThreadId = String(threadId || '').trim();
+  const safeMessageId = String(messageId || '').trim();
+  const safeSenderUid = String(senderUid || '').trim();
+  const safeRoomType = String(roomType || '').trim();
+  const safeLessonId = String(lessonId || '').trim();
+  const safeAgendaWeekStart = String(agendaWeekStart || '').trim();
+  if (safeThreadId) data.threadId = safeThreadId;
+  if (safeMessageId) data.messageId = safeMessageId;
+  if (safeSenderUid) data.senderUid = safeSenderUid;
+  if (safeRoomType) data.roomType = safeRoomType;
+  if (safeLessonId) data.lessonId = safeLessonId;
+  if (safeAgendaWeekStart) data.agendaWeekStart = safeAgendaWeekStart;
   const payload = {
     notification,
-    data: {
-      notificationId: String(notificationId || ''),
-      tenantId: String(tenantId || ''),
-      type: String(type || ''),
-      targetType: String(targetType || ''),
-      audienceScope: String(audienceScope || ''),
-    },
-    tokens,
+    data,
   };
   const safeImageUrl = brandImageUrl ? resolveSafePushImageUrl(brandImageUrl) : null;
   if (safeImageUrl) {
@@ -1085,12 +1170,766 @@ async function dispatchNotificationPush({ db, messaging, admin, notificationId, 
   };
 }
 
+/**
+ * DM2 — Private instructor message push (native_v2 preferred).
+ * Does not create notifications docs. Does not throw to reverse message writes.
+ * Never logs full private message text.
+ */
+async function dispatchPrivateMessagePush({
+  db,
+  messaging,
+  admin,
+  tenantId,
+  threadId,
+  messageId,
+  messageData,
+  threadData,
+}) {
+  const type = PRIVATE_MESSAGE_PUSH_TYPE;
+  const tid = String(tenantId || '').trim();
+  const tidThread = String(threadId || '').trim();
+  const mid = String(messageId || '').trim();
+  const msg = messageData && typeof messageData === 'object' ? messageData : {};
+  const thread = threadData && typeof threadData === 'object' ? threadData : {};
+
+  const notificationId = mid ? `private_message:${mid}` : '';
+  const logBase = {
+    notificationId: notificationId || null,
+    tenantId: tid || null,
+    threadId: tidThread || null,
+    messageId: mid || null,
+    type,
+  };
+
+  if (!tid || !tidThread || !mid) {
+    console.log('[push_dispatch] private_message skipped', { ...logBase, reason: 'missing_ids' });
+    return { ok: false, reason: 'missing_ids' };
+  }
+  if (msg.isDeleted === true) {
+    console.log('[push_dispatch] private_message skipped', { ...logBase, reason: 'message_deleted' });
+    return { ok: true, reason: 'message_deleted' };
+  }
+
+  const msgTenantId = String(msg.tenantId || '').trim();
+  if (msgTenantId && msgTenantId !== tid) {
+    console.log('[push_dispatch] private_message skipped', { ...logBase, reason: 'message_tenant_mismatch' });
+    return { ok: false, reason: 'message_tenant_mismatch' };
+  }
+  const msgThreadId = String(msg.threadId || '').trim();
+  if (msgThreadId && msgThreadId !== tidThread) {
+    console.log('[push_dispatch] private_message skipped', { ...logBase, reason: 'message_thread_mismatch' });
+    return { ok: false, reason: 'message_thread_mismatch' };
+  }
+
+  const senderUid = String(msg.senderUid || '').trim();
+  if (!senderUid) {
+    console.log('[push_dispatch] private_message skipped', { ...logBase, reason: 'missing_senderUid' });
+    return { ok: false, reason: 'missing_senderUid' };
+  }
+
+  const participantsRaw = Array.isArray(thread.participantUids) ? thread.participantUids : [];
+  const participants = [...new Set(
+    participantsRaw.map((u) => String(u || '').trim()).filter(Boolean)
+  )];
+  if (participants.length !== 2) {
+    console.log('[push_dispatch] private_message skipped', {
+      ...logBase,
+      reason: 'invalid_participant_count',
+      participantCount: participants.length,
+    });
+    return { ok: false, reason: 'invalid_participant_count' };
+  }
+  if (!participants.includes(senderUid)) {
+    console.log('[push_dispatch] private_message skipped', { ...logBase, reason: 'sender_not_participant' });
+    return { ok: false, reason: 'sender_not_participant' };
+  }
+
+  const recipientUid = participants.find((uid) => uid !== senderUid) || '';
+  if (!recipientUid || recipientUid === senderUid) {
+    console.log('[push_dispatch] private_message skipped', { ...logBase, reason: 'recipient_unresolved' });
+    return { ok: false, reason: 'recipient_unresolved' };
+  }
+
+  const textRaw = typeof msg.text === 'string' ? msg.text : '';
+  const snippet = normalizePushMessageSnippet(textRaw, PRIVATE_MESSAGE_PUSH_SNIPPET_MAX);
+  if (!snippet) {
+    console.log('[push_dispatch] private_message skipped', { ...logBase, reason: 'empty_snippet' });
+    return { ok: true, reason: 'empty_snippet' };
+  }
+
+  const senderNameRaw = String(msg.senderName || '').trim();
+  const senderName = truncateByCodePoints(senderNameRaw || 'Eğitmen', 80);
+
+  let branding;
+  try {
+    branding = await loadTenantBranding(db, tid);
+  } catch (e) {
+    console.error('[push_dispatch] private_message branding_failed', {
+      ...logBase,
+      message: e && e.message ? e.message : String(e),
+    });
+    branding = { displayName: tid, logoUrl: null };
+  }
+
+  const brandSource = classifyPushBrandSource(type, tid);
+  const displayTitle = String(branding.displayName || tid || 'Kurum').trim() || 'Kurum';
+  const displayBody = `${senderName}\n${snippet}`;
+  const brandImageUrl = brandSource === 'tenant' ? (branding.logoUrl || null) : null;
+
+  let eligibleUids = [];
+  try {
+    eligibleUids = await filterEligibleUserUids(db, [recipientUid]);
+  } catch (e) {
+    console.error('[push_dispatch] private_message recipient_eligibility_failed', {
+      ...logBase,
+      recipientUid,
+      message: e && e.message ? e.message : String(e),
+    });
+    return { ok: false, reason: 'recipient_eligibility_failed' };
+  }
+  if (!eligibleUids.length) {
+    console.log('[push_dispatch] private_message skipped', {
+      ...logBase,
+      recipientUid,
+      reason: 'recipient_not_eligible',
+    });
+    return { ok: true, reason: 'recipient_not_eligible' };
+  }
+
+  let tokenEntries = [];
+  try {
+    tokenEntries = await loadActiveTokensForUids(db, eligibleUids);
+  } catch (e) {
+    console.error('[push_dispatch] private_message token_lookup_failed', {
+      ...logBase,
+      recipientUid,
+      message: e && e.message ? e.message : String(e),
+    });
+    return { ok: false, reason: 'token_lookup_failed' };
+  }
+
+  const { entries: dedupedEntries, duplicateCount } = dedupeTokenEntries(tokenEntries);
+  if (!dedupedEntries.length) {
+    console.log('[push_dispatch] private_message no_tokens', {
+      ...logBase,
+      recipientUid,
+      duplicateTokenCount: duplicateCount,
+    });
+    return { ok: true, reason: 'no_tokens' };
+  }
+
+  const { nativeTokenEntries, legacyTokenEntries } = partitionTokenEntriesForDispatch(dedupedEntries, type);
+  const nativePayloadEnabled = isNativeRoutableNotificationType(type) && nativeTokenEntries.length > 0;
+
+  const legacyBasePayload = buildMulticastPayload({
+    displayTitle,
+    displayBody,
+    brandImageUrl,
+    notificationId,
+    tenantId: tid,
+    type,
+    targetType: '',
+    audienceScope: '',
+    threadId: tidThread,
+    messageId: mid,
+    senderUid,
+  });
+
+  const nativeBasePayload = nativePayloadEnabled
+    ? buildNativeAndroidDataPayload({
+      displayTitle,
+      displayBody,
+      brandImageUrl,
+      brandSource,
+      notificationId,
+      tenantId: tid,
+      type,
+      targetType: '',
+      audienceScope: '',
+      threadId: tidThread,
+      messageId: mid,
+      senderUid,
+    })
+    : null;
+
+  let legacySendResult = null;
+  let nativeSendResult = null;
+  try {
+    if (legacyTokenEntries.length) {
+      legacySendResult = await sendTokensInBatches(messaging, legacyBasePayload, legacyTokenEntries, {
+        notificationId,
+        scenario: 'private_message',
+        payloadKind: 'legacy',
+      });
+    }
+    if (nativeBasePayload && nativeTokenEntries.length) {
+      nativeSendResult = await sendTokensInBatches(messaging, nativeBasePayload, nativeTokenEntries, {
+        notificationId,
+        scenario: 'private_message',
+        payloadKind: 'native_v2',
+      });
+    }
+  } catch (e) {
+    console.error('[push_dispatch] private_message fcm_send_failed', {
+      ...logBase,
+      recipientUid,
+      message: e && e.message ? e.message : String(e),
+    });
+    return { ok: false, reason: 'fcm_send_failed' };
+  }
+
+  const sendResult = mergeSendResults(legacySendResult, nativeSendResult);
+
+  let deactivatedCount = 0;
+  try {
+    deactivatedCount = await deactivateInvalidTokenDocs(db, admin, sendResult.failures);
+  } catch (e) {
+    console.error('[push_dispatch] private_message token_deactivation_failed', {
+      ...logBase,
+      message: e && e.message ? e.message : String(e),
+    });
+  }
+
+  console.log('[PushDispatch] private_message completed', {
+    ...logBase,
+    recipientUid,
+    senderUid,
+    brandSource,
+    hasBrandImage: !!brandImageUrl,
+    snippetCodePointLength: Array.from(snippet).length,
+    nativePayloadEnabled,
+    nativeTokenCount: nativeTokenEntries.length,
+    legacyTokenCount: legacyTokenEntries.length,
+    deduplicatedTokenCount: dedupedEntries.length,
+    duplicateTokenCount: duplicateCount,
+    successCount: sendResult.successCount,
+    failureCount: sendResult.failureCount,
+    permanentlyInvalidTokenCount: sendResult.permanentInvalidCount,
+    deactivatedTokenCount: deactivatedCount,
+    stoppedEarly: sendResult.stopRemaining,
+  });
+
+  return {
+    ok: true,
+    scenario: 'private_message',
+    recipientUid,
+    tokenCount: dedupedEntries.length,
+    successCount: sendResult.successCount,
+    failureCount: sendResult.failureCount,
+  };
+}
+
+/**
+ * Resolve active instructor UIDs for a tenant from canonical tenantMemberships.
+ * Server-side only — does not trust client recipient lists.
+ */
+async function resolveActiveInstructorUidsForTenant(db, tenantId) {
+  const tid = String(tenantId || '').trim();
+  if (!tid) return [];
+  const membershipDocs = filterActiveMemberships(
+    await queryTenantMemberships(db, tid),
+    ROLE_INSTRUCTOR
+  );
+  const uids = [...new Set(
+    membershipDocs
+      .map((d) => membershipUid(d.data ? d.data() : d))
+      .map((u) => String(u || '').trim())
+      .filter(Boolean)
+  )];
+  if (!uids.length) return [];
+
+  const eligible = [];
+  for (let i = 0; i < uids.length; i += USER_DOC_BATCH_SIZE) {
+    const chunk = uids.slice(i, i + USER_DOC_BATCH_SIZE);
+    const refs = chunk.map((uid) => db.collection('users').doc(uid));
+    const snaps = await db.getAll(...refs);
+    snaps.forEach((snap, idx) => {
+      if (!snap.exists) return;
+      const data = snap.data() || {};
+      if (!isUserEligible(data)) return;
+      if (normalizeRole(data.role || data.globalRole) !== ROLE_INSTRUCTOR) return;
+      eligible.push(chunk[idx]);
+    });
+  }
+  return eligible;
+}
+
+/**
+ * Group Room instructor message push (native_v2 preferred).
+ * Recipients: other active instructors in the tenant only (not institution_admin).
+ * Does not create notifications docs. Does not throw to reverse message writes.
+ * Never logs full group message text.
+ */
+async function dispatchGroupMessagePush({
+  db,
+  messaging,
+  admin,
+  tenantId,
+  messageId,
+  messageData,
+}) {
+  const type = GROUP_MESSAGE_PUSH_TYPE;
+  const tid = String(tenantId || '').trim();
+  const mid = String(messageId || '').trim();
+  const msg = messageData && typeof messageData === 'object' ? messageData : {};
+
+  const notificationId = mid ? `group_message:${mid}` : '';
+  const logBase = {
+    notificationId: notificationId || null,
+    tenantId: tid || null,
+    messageId: mid || null,
+    type,
+    roomType: GROUP_MESSAGE_ROOM_TYPE,
+  };
+
+  if (!tid || !mid) {
+    console.log('[push_dispatch] group_message skipped', { ...logBase, reason: 'missing_ids' });
+    return { ok: false, reason: 'missing_ids' };
+  }
+  if (msg.isDeleted === true) {
+    console.log('[push_dispatch] group_message skipped', { ...logBase, reason: 'message_deleted' });
+    return { ok: true, reason: 'message_deleted' };
+  }
+
+  const msgTenantId = String(msg.tenantId || '').trim();
+  if (msgTenantId && msgTenantId !== tid) {
+    console.log('[push_dispatch] group_message skipped', { ...logBase, reason: 'message_tenant_mismatch' });
+    return { ok: false, reason: 'message_tenant_mismatch' };
+  }
+
+  const senderUid = String(msg.senderUid || '').trim();
+  if (!senderUid) {
+    console.log('[push_dispatch] group_message skipped', { ...logBase, reason: 'missing_senderUid' });
+    return { ok: false, reason: 'missing_senderUid' };
+  }
+
+  const textRaw = typeof msg.text === 'string' ? msg.text : '';
+  const snippet = normalizePushMessageSnippet(textRaw, GROUP_MESSAGE_PUSH_SNIPPET_MAX);
+  if (!snippet) {
+    console.log('[push_dispatch] group_message skipped', { ...logBase, reason: 'empty_snippet' });
+    return { ok: true, reason: 'empty_snippet' };
+  }
+
+  const senderNameRaw = String(msg.senderName || '').trim();
+  const senderName = truncateByCodePoints(senderNameRaw || 'Eğitmen', 80);
+
+  let branding;
+  try {
+    branding = await loadTenantBranding(db, tid);
+  } catch (e) {
+    console.error('[push_dispatch] group_message branding_failed', {
+      ...logBase,
+      message: e && e.message ? e.message : String(e),
+    });
+    branding = { displayName: tid, logoUrl: null };
+  }
+
+  const brandSource = classifyPushBrandSource(type, tid);
+  const displayTitle = String(branding.displayName || tid || 'Kurum').trim() || 'Kurum';
+  const displayBody = `${senderName}\n${snippet}`;
+  const brandImageUrl = brandSource === 'tenant' ? (branding.logoUrl || null) : null;
+
+  let instructorUids = [];
+  try {
+    instructorUids = await resolveActiveInstructorUidsForTenant(db, tid);
+  } catch (e) {
+    console.error('[push_dispatch] group_message recipient_resolution_failed', {
+      ...logBase,
+      message: e && e.message ? e.message : String(e),
+    });
+    return { ok: false, reason: 'recipient_resolution_failed' };
+  }
+
+  const recipientUids = instructorUids.filter((uid) => uid !== senderUid);
+  if (!recipientUids.length) {
+    console.log('[push_dispatch] group_message skipped', {
+      ...logBase,
+      senderUid,
+      instructorCount: instructorUids.length,
+      reason: 'no_eligible_recipients',
+    });
+    return { ok: true, reason: 'no_eligible_recipients' };
+  }
+
+  let tokenEntries = [];
+  try {
+    tokenEntries = await loadActiveTokensForUids(db, recipientUids);
+  } catch (e) {
+    console.error('[push_dispatch] group_message token_lookup_failed', {
+      ...logBase,
+      recipientCount: recipientUids.length,
+      message: e && e.message ? e.message : String(e),
+    });
+    return { ok: false, reason: 'token_lookup_failed' };
+  }
+
+  const { entries: dedupedEntries, duplicateCount } = dedupeTokenEntries(tokenEntries);
+  if (!dedupedEntries.length) {
+    console.log('[push_dispatch] group_message no_tokens', {
+      ...logBase,
+      senderUid,
+      recipientCount: recipientUids.length,
+      duplicateTokenCount: duplicateCount,
+    });
+    return { ok: true, reason: 'no_tokens' };
+  }
+
+  const { nativeTokenEntries, legacyTokenEntries } = partitionTokenEntriesForDispatch(dedupedEntries, type);
+  const nativePayloadEnabled = isNativeRoutableNotificationType(type) && nativeTokenEntries.length > 0;
+
+  const legacyBasePayload = buildMulticastPayload({
+    displayTitle,
+    displayBody,
+    brandImageUrl,
+    notificationId,
+    tenantId: tid,
+    type,
+    targetType: '',
+    audienceScope: '',
+    messageId: mid,
+    senderUid,
+    roomType: GROUP_MESSAGE_ROOM_TYPE,
+  });
+
+  const nativeBasePayload = nativePayloadEnabled
+    ? buildNativeAndroidDataPayload({
+      displayTitle,
+      displayBody,
+      brandImageUrl,
+      brandSource,
+      notificationId,
+      tenantId: tid,
+      type,
+      targetType: '',
+      audienceScope: '',
+      messageId: mid,
+      senderUid,
+      roomType: GROUP_MESSAGE_ROOM_TYPE,
+    })
+    : null;
+
+  let legacySendResult = null;
+  let nativeSendResult = null;
+  try {
+    if (legacyTokenEntries.length) {
+      legacySendResult = await sendTokensInBatches(messaging, legacyBasePayload, legacyTokenEntries, {
+        notificationId,
+        scenario: 'group_message',
+        payloadKind: 'legacy',
+      });
+    }
+    if (nativeBasePayload && nativeTokenEntries.length) {
+      nativeSendResult = await sendTokensInBatches(messaging, nativeBasePayload, nativeTokenEntries, {
+        notificationId,
+        scenario: 'group_message',
+        payloadKind: 'native_v2',
+      });
+    }
+  } catch (e) {
+    console.error('[push_dispatch] group_message fcm_send_failed', {
+      ...logBase,
+      recipientCount: recipientUids.length,
+      message: e && e.message ? e.message : String(e),
+    });
+    return { ok: false, reason: 'fcm_send_failed' };
+  }
+
+  const sendResult = mergeSendResults(legacySendResult, nativeSendResult);
+
+  let deactivatedCount = 0;
+  try {
+    deactivatedCount = await deactivateInvalidTokenDocs(db, admin, sendResult.failures);
+  } catch (e) {
+    console.error('[push_dispatch] group_message token_deactivation_failed', {
+      ...logBase,
+      message: e && e.message ? e.message : String(e),
+    });
+  }
+
+  console.log('[PushDispatch] group_message completed', {
+    ...logBase,
+    senderUid,
+    recipientCount: recipientUids.length,
+    brandSource,
+    hasBrandImage: !!brandImageUrl,
+    snippetCodePointLength: Array.from(snippet).length,
+    historyGeneration: msg.historyGeneration != null ? msg.historyGeneration : null,
+    nativePayloadEnabled,
+    nativeTokenCount: nativeTokenEntries.length,
+    legacyTokenCount: legacyTokenEntries.length,
+    deduplicatedTokenCount: dedupedEntries.length,
+    duplicateTokenCount: duplicateCount,
+    successCount: sendResult.successCount,
+    failureCount: sendResult.failureCount,
+    permanentlyInvalidTokenCount: sendResult.permanentInvalidCount,
+    deactivatedTokenCount: deactivatedCount,
+    stoppedEarly: sendResult.stopRemaining,
+  });
+
+  return {
+    ok: true,
+    scenario: 'group_message',
+    recipientCount: recipientUids.length,
+    tokenCount: dedupedEntries.length,
+    successCount: sendResult.successCount,
+    failureCount: sendResult.failureCount,
+  };
+}
+
+/**
+ * Prove recipientUid is an active instructor for the given tenant.
+ * Membership + users.role must both be instructor/active.
+ */
+async function isActiveInstructorForTenant(db, tenantId, uid) {
+  const tid = String(tenantId || '').trim();
+  const u = String(uid || '').trim();
+  if (!tid || !u) return false;
+
+  const memSnap = await db.collection('tenantMemberships').doc(u + '_' + tid).get();
+  if (!memSnap.exists) return false;
+  const mem = memSnap.data() || {};
+  if (String(mem.tenantId || '').trim() !== tid) return false;
+  if (String(mem.uid || '').trim() && String(mem.uid || '').trim() !== u) return false;
+  if (normalizeRole(mem.role) !== ROLE_INSTRUCTOR) return false;
+  if (normalizeRole(mem.status) !== 'active') return false;
+
+  const userSnap = await db.collection('users').doc(u).get();
+  if (!userSnap.exists) return false;
+  const user = userSnap.data() || {};
+  if (!isUserEligible(user)) return false;
+  if (normalizeRole(user.role || user.globalRole) !== ROLE_INSTRUCTOR) return false;
+  return true;
+}
+
+/**
+ * Agenda assignment push (native_v2 preferred).
+ * Source: drivingLessonNotifications create with type=lesson_assigned.
+ * Does not mutate notification unread/readAt. Fail-safe only.
+ */
+async function dispatchLessonAssignedPush({
+  db,
+  messaging,
+  admin,
+  notificationId,
+  notificationData,
+}) {
+  const type = LESSON_ASSIGNED_PUSH_TYPE;
+  const nid = String(notificationId || '').trim();
+  const data = notificationData && typeof notificationData === 'object' ? notificationData : {};
+
+  const tid = String(data.tenantId || '').trim();
+  const recipientUid = String(data.recipientUid || '').trim();
+  const lessonId = String(data.lessonId || '').trim();
+  const agendaWeekStart = String(data.agendaWeekStart || '').trim();
+  const recipientRole = String(data.recipientRole || '').trim().toLowerCase();
+  const notifType = String(data.type || '').trim().toLowerCase();
+
+  const logBase = {
+    notificationId: nid || null,
+    tenantId: tid || null,
+    recipientUid: recipientUid || null,
+    lessonId: lessonId || null,
+    type,
+  };
+
+  if (!nid || !tid || !recipientUid) {
+    console.log('[push_dispatch] lesson_assigned skipped', { ...logBase, reason: 'missing_ids' });
+    return { ok: false, reason: 'missing_ids' };
+  }
+  if (notifType !== LESSON_ASSIGNED_PUSH_TYPE) {
+    console.log('[push_dispatch] lesson_assigned skipped', { ...logBase, reason: 'type_mismatch', notifType });
+    return { ok: true, reason: 'type_mismatch' };
+  }
+  if (recipientRole !== ROLE_INSTRUCTOR) {
+    console.log('[push_dispatch] lesson_assigned skipped', {
+      ...logBase,
+      reason: 'recipient_role_not_instructor',
+      recipientRole,
+    });
+    return { ok: true, reason: 'recipient_role_not_instructor' };
+  }
+
+  let instructorOk = false;
+  try {
+    instructorOk = await isActiveInstructorForTenant(db, tid, recipientUid);
+  } catch (e) {
+    console.error('[push_dispatch] lesson_assigned recipient_validation_failed', {
+      ...logBase,
+      message: e && e.message ? e.message : String(e),
+    });
+    return { ok: false, reason: 'recipient_validation_failed' };
+  }
+  if (!instructorOk) {
+    console.log('[push_dispatch] lesson_assigned skipped', {
+      ...logBase,
+      reason: 'recipient_not_active_instructor',
+    });
+    return { ok: true, reason: 'recipient_not_active_instructor' };
+  }
+
+  const titleLine = String(data.title || '').trim() || LESSON_ASSIGNED_BODY_TITLE;
+  const previewRaw = String(data.preview || '').trim();
+  const preview = normalizePushMessageSnippet(previewRaw, LESSON_ASSIGNED_PREVIEW_MAX);
+  const displayBody = preview
+    ? `${titleLine}\n${preview}`
+    : titleLine;
+
+  let branding;
+  try {
+    branding = await loadTenantBranding(db, tid);
+  } catch (e) {
+    console.error('[push_dispatch] lesson_assigned branding_failed', {
+      ...logBase,
+      message: e && e.message ? e.message : String(e),
+    });
+    branding = { displayName: tid, logoUrl: null };
+  }
+
+  const brandSource = classifyPushBrandSource(type, tid);
+  const displayTitle = String(branding.displayName || tid || 'Kurum').trim() || 'Kurum';
+  const brandImageUrl = brandSource === 'tenant' ? (branding.logoUrl || null) : null;
+
+  let eligibleUids = [];
+  try {
+    eligibleUids = await filterEligibleUserUids(db, [recipientUid]);
+  } catch (e) {
+    console.error('[push_dispatch] lesson_assigned recipient_eligibility_failed', {
+      ...logBase,
+      message: e && e.message ? e.message : String(e),
+    });
+    return { ok: false, reason: 'recipient_eligibility_failed' };
+  }
+  if (!eligibleUids.length || !eligibleUids.includes(recipientUid)) {
+    console.log('[push_dispatch] lesson_assigned skipped', {
+      ...logBase,
+      reason: 'recipient_not_eligible',
+    });
+    return { ok: true, reason: 'recipient_not_eligible' };
+  }
+
+  let tokenEntries = [];
+  try {
+    tokenEntries = await loadActiveTokensForUids(db, [recipientUid]);
+  } catch (e) {
+    console.error('[push_dispatch] lesson_assigned token_lookup_failed', {
+      ...logBase,
+      message: e && e.message ? e.message : String(e),
+    });
+    return { ok: false, reason: 'token_lookup_failed' };
+  }
+
+  const { entries: dedupedEntries, duplicateCount } = dedupeTokenEntries(tokenEntries);
+  if (!dedupedEntries.length) {
+    console.log('[push_dispatch] lesson_assigned no_tokens', {
+      ...logBase,
+      duplicateTokenCount: duplicateCount,
+    });
+    return { ok: true, reason: 'no_tokens' };
+  }
+
+  const { nativeTokenEntries, legacyTokenEntries } = partitionTokenEntriesForDispatch(dedupedEntries, type);
+  const nativePayloadEnabled = isNativeRoutableNotificationType(type) && nativeTokenEntries.length > 0;
+
+  const legacyBasePayload = buildMulticastPayload({
+    displayTitle,
+    displayBody,
+    brandImageUrl,
+    notificationId: nid,
+    tenantId: tid,
+    type,
+    targetType: '',
+    audienceScope: '',
+    lessonId,
+    agendaWeekStart,
+  });
+
+  const nativeBasePayload = nativePayloadEnabled
+    ? buildNativeAndroidDataPayload({
+      displayTitle,
+      displayBody,
+      brandImageUrl,
+      brandSource,
+      notificationId: nid,
+      tenantId: tid,
+      type,
+      targetType: '',
+      audienceScope: '',
+      lessonId,
+      agendaWeekStart,
+    })
+    : null;
+
+  let legacySendResult = null;
+  let nativeSendResult = null;
+  try {
+    if (legacyTokenEntries.length) {
+      legacySendResult = await sendTokensInBatches(messaging, legacyBasePayload, legacyTokenEntries, {
+        notificationId: nid,
+        scenario: 'lesson_assigned',
+        payloadKind: 'legacy',
+      });
+    }
+    if (nativeBasePayload && nativeTokenEntries.length) {
+      nativeSendResult = await sendTokensInBatches(messaging, nativeBasePayload, nativeTokenEntries, {
+        notificationId: nid,
+        scenario: 'lesson_assigned',
+        payloadKind: 'native_v2',
+      });
+    }
+  } catch (e) {
+    console.error('[push_dispatch] lesson_assigned fcm_send_failed', {
+      ...logBase,
+      message: e && e.message ? e.message : String(e),
+    });
+    return { ok: false, reason: 'fcm_send_failed' };
+  }
+
+  const sendResult = mergeSendResults(legacySendResult, nativeSendResult);
+
+  let deactivatedCount = 0;
+  try {
+    deactivatedCount = await deactivateInvalidTokenDocs(db, admin, sendResult.failures);
+  } catch (e) {
+    console.error('[push_dispatch] lesson_assigned token_deactivation_failed', {
+      ...logBase,
+      message: e && e.message ? e.message : String(e),
+    });
+  }
+
+  console.log('[PushDispatch] lesson_assigned completed', {
+    ...logBase,
+    brandSource,
+    hasBrandImage: !!brandImageUrl,
+    nativePayloadEnabled,
+    nativeTokenCount: nativeTokenEntries.length,
+    legacyTokenCount: legacyTokenEntries.length,
+    deduplicatedTokenCount: dedupedEntries.length,
+    duplicateTokenCount: duplicateCount,
+    successCount: sendResult.successCount,
+    failureCount: sendResult.failureCount,
+    permanentlyInvalidTokenCount: sendResult.permanentInvalidCount,
+    deactivatedTokenCount: deactivatedCount,
+    stoppedEarly: sendResult.stopRemaining,
+  });
+
+  return {
+    ok: true,
+    scenario: 'lesson_assigned',
+    recipientUid,
+    tokenCount: dedupedEntries.length,
+    successCount: sendResult.successCount,
+    failureCount: sendResult.failureCount,
+  };
+}
+
 module.exports = {
   FCM_BATCH_SIZE,
   PLATFORM_DISPLAY_NAME,
   maskToken,
   composePushDisplayBody,
   classifyPushBrandSource,
+  truncateByCodePoints,
+  normalizePushMessageSnippet,
   resolveSafePushImageUrl,
   loadTenantBranding,
   resolvePushDisplayBranding,
@@ -1101,10 +1940,14 @@ module.exports = {
   loadActiveTokensForUids,
   dedupeTokenEntries,
   isNativeCapableToken,
+  isNativeRoutableNotificationType,
   partitionTokenEntriesForDispatch,
   buildNativeAndroidDataPayload,
   mergeSendResults,
   sendTokensInBatches,
   deactivateInvalidTokenDocs,
   dispatchNotificationPush,
+  dispatchPrivateMessagePush,
+  dispatchGroupMessagePush,
+  dispatchLessonAssignedPush,
 };

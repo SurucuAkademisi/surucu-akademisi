@@ -26,6 +26,20 @@
   </script>
   <link rel="stylesheet" href="../assets/css/site.css?v=20260728-landing-navband-boundary-fix-1" />
   <link rel="stylesheet" href="./contact-forms.css?v=20260809-contact-cta-1" />
+  <style>
+    /* Contact Academy Join CTA — guest only, no auth flash */
+    .contact-institution-cta[data-academy-join-cta] {
+      display: none !important;
+    }
+    body.academy-join-ctas-visible .contact-institution-cta[data-academy-join-cta] {
+      display: flex !important;
+    }
+    body.academy-join-ctas-visible .contact-institution-cta[data-academy-join-cta] .contact-institution-cta__title {
+      text-transform: uppercase;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+    }
+  </style>
 </head>
 <body class="page-landing page-contact" data-site-page="contact">
   <header class="site-header site-header--landing">
@@ -108,8 +122,8 @@
     <div class="container contact-shell">
       <div class="contact-hero-row">
         <h1 class="contact-title">İletişim</h1>
-        <a class="contact-institution-cta" href="../kurumsal-basvuru/" aria-label="Akademiye Katılım Formu — kurumsal katılım talebi oluştur">
-          <span class="contact-institution-cta__title">Akademiye Katılım Formu</span>
+        <a class="contact-institution-cta" href="../kurumsal-basvuru/" data-academy-join-cta="contact" aria-label="Akademiye Katılım Formu — kurumsal katılım talebi oluştur" hidden aria-hidden="true">
+          <span class="contact-institution-cta__title">AKADEMİYE KATILIM FORMU</span>
           <span class="contact-institution-cta__text">Sürücü kursunuz veya eğitim kurumunuz için kurumsal katılım talebi oluşturun.</span>
         </a>
       </div>
@@ -224,6 +238,93 @@
   <script src="../assets/js/public-session.js"></script>
   <script src="../assets/js/public-auth.js"></script>
   <script src="../assets/js/public-landing-auth.js?v=20260728-public-header-fouc-1"></script>
+  <script>
+    (function () {
+      'use strict';
+      var SELECTOR = '[data-academy-join-cta]';
+      var VISIBLE_CLASS = 'academy-join-ctas-visible';
+      var PENDING_CLASS = 'page-public-header-pending';
+      var syncTimer = null;
+
+      function isAuthUnresolved() {
+        if (document.documentElement.classList.contains(PENDING_CLASS)) return true;
+        try {
+          if (window.SA_WEB_STUDENT_HEADER
+              && typeof window.SA_WEB_STUDENT_HEADER.isPending === 'function'
+              && window.SA_WEB_STUDENT_HEADER.isPending()) {
+            return true;
+          }
+        } catch (e) {}
+        return false;
+      }
+
+      function isAuthenticatedUser() {
+        if (document.body.classList.contains('page-landing--public-user')) return true;
+        if (document.body.classList.contains('page-cikmis-sorular--public-user')) return true;
+        try {
+          if (window.SA_WEB_STUDENT_HEADER
+              && typeof window.SA_WEB_STUDENT_HEADER.isActive === 'function'
+              && window.SA_WEB_STUDENT_HEADER.isActive()) {
+            return true;
+          }
+        } catch (e) {}
+        try {
+          var session = window.SA_PUBLIC_SESSION
+            && typeof window.SA_PUBLIC_SESSION.getPublicSession === 'function'
+            && window.SA_PUBLIC_SESSION.getPublicSession();
+          if (session && String(session.uid || '').trim()) return true;
+        } catch (e) {}
+        try {
+          var fb = window.SA_WEB_FIREBASE;
+          if (fb && fb.ready && fb.auth && fb.auth.currentUser) return true;
+        } catch (e) {}
+        return false;
+      }
+
+      function syncAcademyJoinCtaVisibility() {
+        var show = !isAuthUnresolved() && !isAuthenticatedUser();
+        document.body.classList.toggle(VISIBLE_CLASS, show);
+        document.querySelectorAll(SELECTOR).forEach(function (el) {
+          el.hidden = !show;
+          el.setAttribute('aria-hidden', show ? 'false' : 'true');
+        });
+      }
+
+      function scheduleSync() {
+        if (syncTimer) clearTimeout(syncTimer);
+        syncTimer = setTimeout(function () {
+          syncTimer = null;
+          syncAcademyJoinCtaVisibility();
+        }, 0);
+      }
+
+      window.syncAcademyJoinCtaVisibility = syncAcademyJoinCtaVisibility;
+
+      var obs = new MutationObserver(scheduleSync);
+      if (document.body) {
+        obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+      }
+      obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+      var logoutBtn = document.getElementById('public-header-logout');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', function () {
+          setTimeout(scheduleSync, 0);
+          setTimeout(scheduleSync, 250);
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', scheduleSync);
+      } else {
+        scheduleSync();
+      }
+      setTimeout(scheduleSync, 50);
+      setTimeout(scheduleSync, 300);
+      setTimeout(scheduleSync, 1000);
+    })();
+  </script>
+
   <script src="../assets/js/public-landing-mobile-menu.js?v=20260728-mobile-menu-final-2"></script>
   <script src="../assets/js/public-contact-forms.js?v=20260809-contact-1"></script>
 </body>

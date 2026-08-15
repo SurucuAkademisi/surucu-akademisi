@@ -175,6 +175,35 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
+    .user-actions {
+      display: grid;
+      gap: 8px;
+      min-width: 290px;
+    }
+
+    .user-actions-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-days-input {
+      width: 74px;
+      flex: 0 0 74px;
+    }
+
+    .btn-extend {
+      min-width: 96px;
+      justify-content: center;
+    }
+
+    .btn-toggle,
+    .btn-delete {
+      flex: 1 1 0;
+      justify-content: center;
+      min-width: 120px;
+    }
+
     .content-section-title {
       display: flex;
       align-items: center;
@@ -305,10 +334,6 @@
             <label>Şifre</label>
             <input id="student-password" type="password" autocomplete="new-password" placeholder="Şifre" />
           </div>
-          <div class="field">
-            <label>Süre (gün)</label>
-            <input id="student-days" type="number" inputmode="numeric" min="1" value="30" placeholder="30" />
-          </div>
         </div>
         <div class="row" style="margin-top:12px;">
           <button class="btn" id="btn-create"><i class="fa-solid fa-user-plus"></i> Kullanıcı Oluştur</button>
@@ -319,7 +344,7 @@
       <div class="card">
         <h2>Öğrenci Kullanıcıları</h2>
         <div class="row" style="justify-content:space-between;">
-          <span class="muted">Süre yönetimi kullanıcı bazındadır.</span>
+          <span class="muted">Kullanıcı listesi</span>
           <button class="btn" id="btn-refresh"><i class="fa-solid fa-rotate"></i> Yenile</button>
         </div>
         <div style="margin-top:10px; overflow:auto;">
@@ -328,9 +353,9 @@
               <tr>
                 <th>Kullanıcı adı</th>
                 <th>E-posta</th>
-                <th>Kalan Gün</th>
-                <th>Bitiş Tarihi</th>
-                <th>İşlem</th>
+                <th>Kayıt Tipi</th>
+                <th>Oluşturulma</th>
+                <th>İşlemler</th>
               </tr>
             </thead>
             <tbody id="users-tbody"></tbody>
@@ -414,22 +439,6 @@
       return normalized ? (normalized + '@surucu.app') : '';
     }
 
-    function daysFromNow(days) {
-      const totalDays = Math.max(1, Number(days || 1));
-      return firebase.firestore.Timestamp.fromMillis(Date.now() + totalDays * 24 * 60 * 60 * 1000);
-    }
-
-    function remainingDays(expiresAt) {
-      if (!expiresAt || typeof expiresAt.toMillis !== 'function') return 0;
-      const diff = expiresAt.toMillis() - Date.now();
-      return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-    }
-
-    function toDateInputValue(expiresAt) {
-      if (!expiresAt || typeof expiresAt.toMillis !== 'function') return '-';
-      return new Date(expiresAt.toMillis()).toLocaleString('tr-TR');
-    }
-
     function adminErrorMessage(e, fallback) {
       const code = String((e && e.code) || '');
       if (code === 'auth/email-already-in-use') return 'Bu kullanıcı adı zaten kullanılıyor.';
@@ -462,21 +471,22 @@
       }
 
       for (const user of users) {
-        const active = user.isActive !== false;
-        const rDays = remainingDays(user.expiresAt);
         const displayUsername = user.username || (String(user.email || '').split('@')[0] || '-');
+        const signupSourceText = user.signupSource === 'email_password' ? 'Uygulamadan Kayıt' : 'Admin / Özel Kullanıcı';
+        const createdAtText = (user.createdAt && typeof user.createdAt.toMillis === 'function') ? fmtDate(user.createdAt) : 'Yok';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${displayUsername}</strong></td>
           <td>${user.email || '-'}</td>
-          <td>${rDays}</td>
-          <td>${toDateInputValue(user.expiresAt)}</td>
+          <td>${signupSourceText}</td>
+          <td>${createdAtText}</td>
           <td>
-            <input type="number" min="1" value="30" data-days="${user.id}" style="width:74px;" />
-            <button class="btn" data-act="extend" data-id="${user.id}"><i class="fa-solid fa-calendar-plus"></i> Uzat</button>
-            <button class="btn" data-act="toggle" data-id="${user.id}"><i class="fa-solid fa-toggle-${active ? 'on' : 'off'}"></i> ${active ? 'Pasifleştir' : 'Aktifleştir'}</button>
-            <button class="btn danger" data-act="delete" data-id="${user.id}"><i class="fa-solid fa-trash"></i> Sil</button>
+            <div class="user-actions">
+              <div class="user-actions-row">
+                <button class="btn danger btn-delete" data-act="delete" data-id="${user.id}"><i class="fa-solid fa-trash"></i> Sil</button>
+              </div>
+            </div>
           </td>
         `;
 
@@ -484,52 +494,6 @@
           btn.addEventListener('click', async (e) => {
             const act = e.currentTarget.getAttribute('data-act');
             const uid = e.currentTarget.getAttribute('data-id');
-
-            if (act === 'toggle') {
-              try {
-                await firebase.firestore().collection('users').doc(uid).set(
-                  { isActive: !active, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
-                  { merge: true }
-                );
-                await renderStudentUsers();
-              } catch (err) {
-                alert(adminErrorMessage(err, 'Durum güncellenemedi.'));
-              }
-              return;
-            }
-
-            if (act === 'extend') {
-              const daysInput = tr.querySelector('input[data-days="' + uid + '"]');
-              const addDays = Math.max(1, Number((daysInput && daysInput.value) || '30'));
-
-              try {
-                const docRef = firebase.firestore().collection('users').doc(uid);
-                const snap = await docRef.get();
-                if (!snap.exists) {
-                  alert('Kullanıcı bulunamadı.');
-                  return;
-                }
-
-                const data = snap.data() || {};
-                const nowMs = Date.now();
-                const prevMs = data.expiresAt && typeof data.expiresAt.toMillis === 'function' ? data.expiresAt.toMillis() : 0;
-                const baseMs = prevMs > nowMs ? prevMs : nowMs;
-                const nextMs = baseMs + addDays * 24 * 60 * 60 * 1000;
-
-                await docRef.set(
-                  {
-                    expiresAt: firebase.firestore.Timestamp.fromMillis(nextMs),
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                  },
-                  { merge: true }
-                );
-
-                await renderStudentUsers();
-              } catch (err) {
-                alert(adminErrorMessage(err, 'Uzatma işlemi başarısız.'));
-              }
-              return;
-            }
 
             if (act === 'delete') {
               const ok = window.confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?');
@@ -714,11 +678,10 @@
         setMsg(msg, 'Oluşturuluyor...', 'muted');
         const usernameInput = document.getElementById('student-username').value;
         const password = document.getElementById('student-password').value || '';
-        const days = Math.max(1, Number(document.getElementById('student-days').value || '30'));
 
         const username = normalizeStudentUsername(usernameInput);
         const email = studentEmailFromInput(usernameInput);
-        if (!username || !email || !password) throw new Error('Kullanıcı adı, şifre ve süre zorunludur.');
+        if (!username || !email || !password) throw new Error('Kullanıcı adı ve şifre zorunludur.');
 
         const secondaryAuth = getSecondaryAuth();
         const cred = await secondaryAuth.createUserWithEmailAndPassword(email, password);
@@ -730,14 +693,11 @@
           username,
           email,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          expiresAt: daysFromNow(days),
-          isActive: true,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
         document.getElementById('student-username').value = '';
         document.getElementById('student-password').value = '';
-        document.getElementById('student-days').value = '30';
         setMsg(msg, 'Öğrenci kullanıcı oluşturuldu.', 'ok');
         await renderStudentUsers();
       } catch (e) {

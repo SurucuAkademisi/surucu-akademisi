@@ -1,7 +1,7 @@
 ﻿const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
 const { onDocumentCreated, onDocumentWritten } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
-const { dispatchNotificationPush } = require('./push_dispatch');
+const { dispatchNotificationPush, dispatchPrivateMessagePush, dispatchGroupMessagePush, dispatchLessonAssignedPush } = require('./push_dispatch');
 const {
   submitContactRequest,
   updateContactRequest,
@@ -221,6 +221,539 @@ async function evaluateStudentBulkMailboxNotifyEligibility(args) {
 exports.onMailboxMessageCreate = onDocumentCreated('tenantMailbox/{tenantId}/messages/{messageId}', async (event) => {
   return null;
 });
+
+/** Admin Activity Center — messaging events only (Phase 2). */
+const ADMIN_ACTIVITY_PREVIEW_MAX = 180;
+const ADMIN_ACTIVITY_USER_BATCH = 10;
+const ROLE_INSTITUTION_ADMIN_ACTIVITY = 'institution_admin';
+const ADMIN_ACTIVITY_ROOM_TYPE_GROUP = 'instructor_group';
+
+function truncateAdminActivityPreview(value, maxCodePoints) {
+  const max =
+    Number.isFinite(maxCodePoints) && maxCodePoints > 0
+      ? Math.floor(maxCodePoints)
+      : ADMIN_ACTIVITY_PREVIEW_MAX;
+  const collapsed = String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
+  if (!collapsed) return '';
+  const chars = Array.from(collapsed);
+  if (chars.length <= max) return chars.join('');
+  return chars.slice(0, max).join('');
+}
+
+function isFirestoreAlreadyExistsError(err) {
+  if (!err) return false;
+  const code = err.code;
+  if (code === 6 || code === 'already-exists' || code === 'ALREADY_EXISTS') return true;
+  const msg = String(err.message || '');
+  return /ALREADY_EXISTS|already exists/i.test(msg);
+}
+
+function adminActivityDocRef(tenantId, recipientUid, activityId) {
+  return db
+    .collection('tenantAdminActivities')
+    .doc(String(tenantId || '').trim())
+    .collection('recipients')
+    .doc(String(recipientUid || '').trim())
+    .collection('activities')
+    .doc(String(activityId || '').trim());
+}
+
+/**
+ * Idempotent create: retries must not duplicate or reset unread/readAt.
+ */
+async function createAdminActivityIdempotent(tenantId, recipientUid, activityId, fields) {
+  const tid = String(tenantId || '').trim();
+  const rid = String(recipientUid || '').trim();
+  const aid = String(activityId || '').trim();
+  if (!tid || !rid || !aid) {
+    return { ok: false, reason: 'missing_ids' };
+  }
+  const ref = adminActivityDocRef(tid, rid, aid);
+  const payload = Object.assign({}, fields || {}, {
+    type: fields && fields.type != null ? fields.type : '',
+    tenantId: tid,
+    recipientUid: rid,
+    unread: true,
+    readAt: null,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+  try {
+    await ref.create(payload);
+    return { ok: true, created: true };
+  } catch (e) {
+    if (isFirestoreAlreadyExistsError(e)) {
+      return { ok: true, created: false, reason: 'already_exists' };
+    }
+    throw e;
+  }
+}
+
+async function isActiveInstitutionAdminForTenant(tenantId, uid) {
+  const tid = String(tenantId || '').trim();
+  const u = String(uid || '').trim();
+  if (!tid || !u) return false;
+
+  const memSnap = await db
+    .collection('tenantMemberships')
+    .where('tenantId', '==', tid)
+    .where('uid', '==', u)
+    .limit(5)
+    .get();
+  const membershipOk = (memSnap.docs || []).some((d) => {
+    const data = d.data() || {};
+    return (
+      String(data.role || '').trim().toLowerCase() === ROLE_INSTITUTION_ADMIN_ACTIVITY &&
+      String(data.status || '').trim().toLowerCase() === 'active'
+    );
+  });
+  if (!membershipOk) return false;
+
+  const userSnap = await db.collection('users').doc(u).get();
+  if (!userSnap.exists) return false;
+  const user = userSnap.data() || {};
+  if (user.isActive === false) return false;
+  const role = String(user.role || user.globalRole || '')
+    .trim()
+    .toLowerCase();
+  return role === ROLE_INSTITUTION_ADMIN_ACTIVITY;
+}
+
+async function resolveActiveInstitutionAdminUidsForTenant(tenantId, excludeUid) {
+  const tid = String(tenantId || '').trim();
+  const exclude = String(excludeUid || '').trim();
+  if (!tid) return [];
+
+  const memSnap = await db.collection('tenantMemberships').where('tenantId', '==', tid).get();
+  const candidateUids = [];
+  (memSnap.docs || []).forEach((d) => {
+    const data = d.data() || {};
+    if (String(data.role || '').trim().toLowerCase() !== ROLE_INSTITUTION_ADMIN_ACTIVITY) return;
+    if (String(data.status || '').trim().toLowerCase() !== 'active') return;
+    const uid = String(data.uid || '').trim();
+    if (!uid || (exclude && uid === exclude)) return;
+    candidateUids.push(uid);
+  });
+  const unique = [...new Set(candidateUids)];
+  if (!unique.length) return [];
+
+  const eligible = [];
+  for (let i = 0; i < unique.length; i += ADMIN_ACTIVITY_USER_BATCH) {
+    const chunk = unique.slice(i, i + ADMIN_ACTIVITY_USER_BATCH);
+    const refs = chunk.map((uid) => db.collection('users').doc(uid));
+    const snaps = await db.getAll(...refs);
+    snaps.forEach((snap, idx) => {
+      if (!snap.exists) return;
+      const data = snap.data() || {};
+      if (data.isActive === false) return;
+      const role = String(data.role || data.globalRole || '')
+        .trim()
+        .toLowerCase();
+      if (role !== ROLE_INSTITUTION_ADMIN_ACTIVITY) return;
+      eligible.push(chunk[idx]);
+    });
+  }
+  return eligible;
+}
+
+/**
+ * MESSAGE_PRIVATE activity for the OTHER participant when they are an active institution_admin.
+ * Instructor recipients are handled by native push only — no Admin activity for them.
+ */
+async function writePrivateMessageAdminActivity({
+  tenantId,
+  threadId,
+  messageId,
+  messageData,
+  threadData,
+}) {
+  const tid = String(tenantId || '').trim();
+  const tidThread = String(threadId || '').trim();
+  const mid = String(messageId || '').trim();
+  const msg = messageData && typeof messageData === 'object' ? messageData : {};
+  const thread = threadData && typeof threadData === 'object' ? threadData : {};
+
+  if (!tid || !tidThread || !mid) {
+    console.log('[admin_activity] MESSAGE_PRIVATE skipped', { reason: 'missing_ids', tenantId: tid, threadId: tidThread, messageId: mid });
+    return { ok: false, reason: 'missing_ids' };
+  }
+  if (msg.isDeleted === true) {
+    console.log('[admin_activity] MESSAGE_PRIVATE skipped', { reason: 'message_deleted', tenantId: tid, messageId: mid });
+    return { ok: true, reason: 'message_deleted' };
+  }
+
+  const senderUid = String(msg.senderUid || '').trim();
+  if (!senderUid) {
+    console.log('[admin_activity] MESSAGE_PRIVATE skipped', { reason: 'missing_senderUid', tenantId: tid, messageId: mid });
+    return { ok: false, reason: 'missing_senderUid' };
+  }
+
+  const participantsRaw = Array.isArray(thread.participantUids) ? thread.participantUids : [];
+  const participants = [
+    ...new Set(participantsRaw.map((u) => String(u || '').trim()).filter(Boolean)),
+  ];
+  if (participants.length !== 2) {
+    console.log('[admin_activity] MESSAGE_PRIVATE skipped', {
+      reason: 'invalid_participant_count',
+      tenantId: tid,
+      messageId: mid,
+      participantCount: participants.length,
+    });
+    return { ok: false, reason: 'invalid_participant_count' };
+  }
+
+  const recipientUid = participants.find((uid) => uid !== senderUid) || '';
+  if (!recipientUid || recipientUid === senderUid) {
+    console.log('[admin_activity] MESSAGE_PRIVATE skipped', { reason: 'recipient_unresolved', tenantId: tid, messageId: mid });
+    return { ok: false, reason: 'recipient_unresolved' };
+  }
+
+  const adminOk = await isActiveInstitutionAdminForTenant(tid, recipientUid);
+  if (!adminOk) {
+    console.log('[admin_activity] MESSAGE_PRIVATE skipped', {
+      reason: 'recipient_not_active_institution_admin',
+      tenantId: tid,
+      messageId: mid,
+      recipientUid,
+    });
+    return { ok: true, reason: 'recipient_not_active_institution_admin' };
+  }
+
+  const preview = truncateAdminActivityPreview(msg.text, ADMIN_ACTIVITY_PREVIEW_MAX);
+  const actorNameRaw = String(msg.senderName || '').trim();
+  const actorName = truncateAdminActivityPreview(actorNameRaw || 'Kullanıcı', 80);
+  const activityId = `MESSAGE_PRIVATE_${mid}`;
+  const sourcePath = `tenantInstructorPrivateThreads/${tid}/threads/${tidThread}/messages/${mid}`;
+
+  const result = await createAdminActivityIdempotent(tid, recipientUid, activityId, {
+    type: 'MESSAGE_PRIVATE',
+    actorUid: senderUid,
+    actorName,
+    title: 'Yeni özel mesaj',
+    preview,
+    messageId: mid,
+    threadId: tidThread,
+    peerUid: senderUid,
+    sourcePath,
+  });
+
+  console.log('[admin_activity] MESSAGE_PRIVATE written', {
+    tenantId: tid,
+    messageId: mid,
+    recipientUid,
+    activityId,
+    created: result.created === true,
+    reason: result.reason || null,
+  });
+  return { ok: true, recipientUid, activityId, ...result };
+}
+
+/**
+ * MESSAGE_GROUP activities for other active institution_admin recipients in the tenant.
+ */
+async function writeGroupMessageAdminActivities({ tenantId, messageId, messageData }) {
+  const tid = String(tenantId || '').trim();
+  const mid = String(messageId || '').trim();
+  const msg = messageData && typeof messageData === 'object' ? messageData : {};
+
+  if (!tid || !mid) {
+    console.log('[admin_activity] MESSAGE_GROUP skipped', { reason: 'missing_ids', tenantId: tid, messageId: mid });
+    return { ok: false, reason: 'missing_ids' };
+  }
+  if (msg.isDeleted === true) {
+    console.log('[admin_activity] MESSAGE_GROUP skipped', { reason: 'message_deleted', tenantId: tid, messageId: mid });
+    return { ok: true, reason: 'message_deleted' };
+  }
+
+  const senderUid = String(msg.senderUid || '').trim();
+  if (!senderUid) {
+    console.log('[admin_activity] MESSAGE_GROUP skipped', { reason: 'missing_senderUid', tenantId: tid, messageId: mid });
+    return { ok: false, reason: 'missing_senderUid' };
+  }
+
+  const recipientUids = await resolveActiveInstitutionAdminUidsForTenant(tid, senderUid);
+  if (!recipientUids.length) {
+    console.log('[admin_activity] MESSAGE_GROUP skipped', {
+      reason: 'no_eligible_admin_recipients',
+      tenantId: tid,
+      messageId: mid,
+      senderUid,
+    });
+    return { ok: true, reason: 'no_eligible_admin_recipients' };
+  }
+
+  const preview = truncateAdminActivityPreview(msg.text, ADMIN_ACTIVITY_PREVIEW_MAX);
+  const actorNameRaw = String(msg.senderName || '').trim();
+  const actorName = truncateAdminActivityPreview(actorNameRaw || 'Kullanıcı', 80);
+  const activityId = `MESSAGE_GROUP_${mid}`;
+  const sourcePath = `tenantInstructorRooms/${tid}/messages/${mid}`;
+
+  const settled = await Promise.allSettled(
+    recipientUids.map((recipientUid) =>
+      createAdminActivityIdempotent(tid, recipientUid, activityId, {
+        type: 'MESSAGE_GROUP',
+        actorUid: senderUid,
+        actorName,
+        title: 'Yeni grup mesajı',
+        preview,
+        messageId: mid,
+        roomType: ADMIN_ACTIVITY_ROOM_TYPE_GROUP,
+        sourcePath,
+      }).then((result) => ({ recipientUid, ...result }))
+    )
+  );
+
+  let successCount = 0;
+  let failureCount = 0;
+  settled.forEach((entry, idx) => {
+    if (entry.status === 'fulfilled' && entry.value && entry.value.ok) {
+      successCount += 1;
+      return;
+    }
+    failureCount += 1;
+    const reason =
+      entry.status === 'rejected'
+        ? entry.reason && entry.reason.message
+          ? entry.reason.message
+          : String(entry.reason)
+        : entry.value && entry.value.reason
+          ? entry.value.reason
+          : 'unknown';
+    console.error('[admin_activity] MESSAGE_GROUP recipient_failed', {
+      tenantId: tid,
+      messageId: mid,
+      recipientUid: recipientUids[idx],
+      reason,
+    });
+  });
+
+  console.log('[admin_activity] MESSAGE_GROUP fanout_completed', {
+    tenantId: tid,
+    messageId: mid,
+    senderUid,
+    recipientCount: recipientUids.length,
+    successCount,
+    failureCount,
+    activityId,
+  });
+
+  return {
+    ok: true,
+    recipientCount: recipientUids.length,
+    successCount,
+    failureCount,
+    activityId,
+  };
+}
+
+/**
+ * DM2-1: Private instructor message CREATE → native_v2 push to recipient devices.
+ * Path: tenantInstructorPrivateThreads/{tenantId}/threads/{threadId}/messages/{messageId}
+ * Edit/delete do not fire onCreate. Push failure never reverses the message write.
+ * Phase 2: also writes MESSAGE_PRIVATE Admin Activity Center docs for active institution_admin recipients.
+ */
+exports.onTenantInstructorPrivateMessageCreate = onDocumentCreated(
+  'tenantInstructorPrivateThreads/{tenantId}/threads/{threadId}/messages/{messageId}',
+  async (event) => {
+    const tenantId = event.params && event.params.tenantId ? String(event.params.tenantId) : '';
+    const threadId = event.params && event.params.threadId ? String(event.params.threadId) : '';
+    const messageId = event.params && event.params.messageId ? String(event.params.messageId) : '';
+    const snap = event.data;
+    if (!snap) {
+      console.log('[onTenantInstructorPrivateMessageCreate] Event data yok, çıkılıyor.');
+      return null;
+    }
+    const messageData = snap.data() || {};
+
+    console.log('[onTenantInstructorPrivateMessageCreate] Triggered', {
+      tenantId,
+      threadId,
+      messageId,
+      senderUid: messageData.senderUid ? String(messageData.senderUid) : null,
+    });
+
+    let threadData = null;
+    try {
+      const threadRef = db
+        .collection('tenantInstructorPrivateThreads')
+        .doc(tenantId)
+        .collection('threads')
+        .doc(threadId);
+      const threadSnap = await threadRef.get();
+      if (!threadSnap.exists) {
+        console.log('[onTenantInstructorPrivateMessageCreate] thread missing', {
+          tenantId,
+          threadId,
+          messageId,
+        });
+        return null;
+      }
+      threadData = threadSnap.data() || {};
+    } catch (e) {
+      console.error(
+        '[onTenantInstructorPrivateMessageCreate] thread load failed:',
+        e && e.message ? e.message : e
+      );
+      return null;
+    }
+
+    try {
+      await dispatchPrivateMessagePush({
+        db,
+        messaging,
+        admin,
+        tenantId,
+        threadId,
+        messageId,
+        messageData,
+        threadData,
+      });
+    } catch (e) {
+      console.error(
+        '[onTenantInstructorPrivateMessageCreate] dispatch failed:',
+        e && e.message ? e.message : e
+      );
+    }
+
+    try {
+      await writePrivateMessageAdminActivity({
+        tenantId,
+        threadId,
+        messageId,
+        messageData,
+        threadData,
+      });
+    } catch (e) {
+      console.error(
+        '[onTenantInstructorPrivateMessageCreate] admin activity failed:',
+        e && e.message ? e.message : e
+      );
+    }
+
+    return null;
+  }
+);
+
+/**
+ * Group Room message CREATE → native_v2 push to other active Instructors in the tenant.
+ * Path: tenantInstructorRooms/{tenantId}/messages/{messageId}
+ * Edit/delete/history-clear metadata updates do not fire onCreate.
+ * Push failure never reverses the message write.
+ * Phase 2: also writes MESSAGE_GROUP Admin Activity Center docs for other active institution_admins.
+ */
+exports.onTenantInstructorRoomMessageCreate = onDocumentCreated(
+  'tenantInstructorRooms/{tenantId}/messages/{messageId}',
+  async (event) => {
+    const tenantId = event.params && event.params.tenantId ? String(event.params.tenantId) : '';
+    const messageId = event.params && event.params.messageId ? String(event.params.messageId) : '';
+    const snap = event.data;
+    if (!snap) {
+      console.log('[onTenantInstructorRoomMessageCreate] Event data yok, çıkılıyor.');
+      return null;
+    }
+    const messageData = snap.data() || {};
+
+    console.log('[onTenantInstructorRoomMessageCreate] Triggered', {
+      tenantId,
+      messageId,
+      senderUid: messageData.senderUid ? String(messageData.senderUid) : null,
+    });
+
+    try {
+      await dispatchGroupMessagePush({
+        db,
+        messaging,
+        admin,
+        tenantId,
+        messageId,
+        messageData,
+      });
+    } catch (e) {
+      console.error(
+        '[onTenantInstructorRoomMessageCreate] dispatch failed:',
+        e && e.message ? e.message : e
+      );
+    }
+
+    try {
+      await writeGroupMessageAdminActivities({
+        tenantId,
+        messageId,
+        messageData,
+      });
+    } catch (e) {
+      console.error(
+        '[onTenantInstructorRoomMessageCreate] admin activity failed:',
+        e && e.message ? e.message : e
+      );
+    }
+
+    return null;
+  }
+);
+
+/**
+ * Agenda assignment CREATE → native_v2 push to assigned active Instructor.
+ * Path: drivingLessonNotifications/{notificationId}
+ * Only type=lesson_assigned + recipientRole=instructor.
+ * Other lesson notification types ignored. Push failure never mutates the notification/lesson.
+ */
+exports.onDrivingLessonNotificationCreate = onDocumentCreated(
+  'drivingLessonNotifications/{notificationId}',
+  async (event) => {
+    const notificationId = event.params && event.params.notificationId
+      ? String(event.params.notificationId)
+      : '';
+    const snap = event.data;
+    if (!snap) {
+      console.log('[onDrivingLessonNotificationCreate] Event data yok, çıkılıyor.');
+      return null;
+    }
+    const notificationData = snap.data() || {};
+    const type = String(notificationData.type || '').trim().toLowerCase();
+    const recipientRole = String(notificationData.recipientRole || '').trim().toLowerCase();
+
+    console.log('[onDrivingLessonNotificationCreate] Triggered', {
+      notificationId,
+      type: type || null,
+      recipientRole: recipientRole || null,
+      tenantId: notificationData.tenantId ? String(notificationData.tenantId) : null,
+      recipientUid: notificationData.recipientUid ? String(notificationData.recipientUid) : null,
+      lessonId: notificationData.lessonId ? String(notificationData.lessonId) : null,
+    });
+
+    if (type !== 'lesson_assigned') {
+      console.log('[onDrivingLessonNotificationCreate] skipped non-assignment type', {
+        notificationId,
+        type: type || null,
+      });
+      return null;
+    }
+    if (recipientRole !== 'instructor') {
+      console.log('[onDrivingLessonNotificationCreate] skipped non-instructor recipient', {
+        notificationId,
+        recipientRole: recipientRole || null,
+      });
+      return null;
+    }
+
+    try {
+      await dispatchLessonAssignedPush({
+        db,
+        messaging,
+        admin,
+        notificationId,
+        notificationData,
+      });
+    } catch (e) {
+      console.error(
+        '[onDrivingLessonNotificationCreate] dispatch failed:',
+        e && e.message ? e.message : e
+      );
+    }
+
+    return null;
+  }
+);
 
 /**
  * Callable: askLegislationAI
