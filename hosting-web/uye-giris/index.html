@@ -210,6 +210,51 @@
         padding: 16px 14px;
       }
     }
+
+    .page-public-login .public-auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 16px 0 12px;
+      color: #94a3b8;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .page-public-login .public-auth-divider::before,
+    .page-public-login .public-auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(148, 163, 184, 0.22);
+    }
+
+    .page-public-login .public-google-btn {
+      appearance: none;
+      width: 100%;
+      min-height: 48px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      background: rgba(6, 13, 24, 0.75);
+      color: #f1f5f9;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .page-public-login .public-google-btn:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    .page-public-login .public-google-g {
+      color: #ea4335;
+      font-weight: 800;
+    }
   </style>
 </head>
 <body class="page-public-auth page-public-login">
@@ -228,6 +273,11 @@
           <h1>Üye Girişi</h1>
           <p class="public-auth-sub">Sürücü Akademisi public portal hesabınızla giriş yapın.</p>
         </div>
+
+        <button type="button" class="public-google-btn" id="public-google-login">
+          <span><span class="public-google-g">G</span>oogle ile devam et</span>
+        </button>
+        <div class="public-auth-divider" aria-hidden="true">veya e-posta ile</div>
 
         <form class="public-auth-form public-login-form" id="public-login-form" novalidate>
           <div class="public-auth-field public-login-field">
@@ -291,6 +341,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
   <script src="../assets/js/web-firebase.js"></script>
   <script src="../assets/js/public-session.js"></script>
   <script src="../assets/js/public-auth.js"></script>

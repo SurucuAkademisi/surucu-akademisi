@@ -298,18 +298,28 @@
       try {
         var uid = fb.auth.currentUser.uid;
         var doc = await window.SA_PUBLIC_AUTH.loadPublicUserDoc(uid);
-        var check = window.SA_PUBLIC_AUTH.assertPublicUserRole(doc);
-        if (check.ok && window.SA_PUBLIC_SESSION) {
+        var restore = null;
+        if (typeof window.SA_PUBLIC_AUTH.resolvePublicEhliyetRestore === 'function') {
+          restore = await window.SA_PUBLIC_AUTH.resolvePublicEhliyetRestore(doc, uid);
+        } else if (typeof window.SA_PUBLIC_AUTH.assertPublicUserRole === 'function') {
+          restore = window.SA_PUBLIC_AUTH.assertPublicUserRole(doc);
+        }
+        if (restore && restore.ok && window.SA_PUBLIC_SESSION) {
           var email = fb.auth.currentUser.email || (doc && doc.email) || '';
-          window.SA_PUBLIC_SESSION.savePublicSession({
-            uid: uid,
-            email: email,
-            firstName: doc.firstName,
-            lastName: doc.lastName,
-            displayName: doc.displayName,
-            role: 'public_user',
-            savedAt: Date.now()
-          });
+          var payload = typeof window.SA_PUBLIC_AUTH.buildSessionPayload === 'function'
+            ? window.SA_PUBLIC_AUTH.buildSessionPayload(uid, email, doc)
+            : {
+                uid: uid,
+                email: email,
+                firstName: doc && doc.firstName,
+                lastName: doc && doc.lastName,
+                displayName: doc && doc.displayName,
+                role: 'public_user',
+                authRole: restore.authRole || 'public_user',
+                ehliyetEntitlement: 'public',
+                savedAt: Date.now()
+              };
+          window.SA_PUBLIC_SESSION.savePublicSession(payload);
           session = getSession();
           isPublicUserMode = true;
           setHeaderMode(true, session);

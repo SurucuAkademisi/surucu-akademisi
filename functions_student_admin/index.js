@@ -756,6 +756,349 @@ async function cleanupDeletedStudentOwnedData(params) {
   return counts;
 }
 
+/** Display label already used by forum/mailbox readers when a name is missing. */
+const PUBLIC_DELETED_ACCOUNT_DISPLAY_NAME = 'Silinmiş üye';
+
+/** Forum/mailbox readers already coerce missing identity with String(x || '').trim(). */
+const PUBLIC_DELETED_ACCOUNT_UID = '';
+
+const PUBLIC_SELF_DELETE_ALLOWED_ROLES = {
+  student: true,
+  public_user: true
+};
+
+const PUBLIC_SELF_DELETE_FORBIDDEN_ROLES = {
+  super_admin: true,
+  institution_admin: true,
+  instructor: true,
+  admin: true
+};
+
+/**
+ * @param {*} err
+ * @returns {boolean}
+ */
+function isAuthUserNotFoundError(err) {
+  return String((err && err.code) || '') === 'auth/user-not-found';
+}
+
+/**
+ * @param {string} uid
+ * @returns {Promise<admin.auth.UserRecord|null>}
+ */
+async function getAuthUserOrNull(uid) {
+  try {
+    return await admin.auth().getUser(uid);
+  } catch (e) {
+    if (isAuthUserNotFoundError(e)) return null;
+    throw e;
+  }
+}
+
+/**
+ * Storage path must be under this uid's profile prefix (instructor pattern).
+ * @param {string} path
+ * @param {string} uid
+ * @returns {boolean}
+ */
+function isOwnedUserProfileStoragePath(path, uid) {
+  const p = String(path || '').trim();
+  const id = String(uid || '').trim();
+  if (!p || !id) return false;
+  if (p.indexOf('..') !== -1) return false;
+  const prefix = 'user-profiles/' + id + '/';
+  return p.indexOf(prefix) === 0;
+}
+
+/**
+ * @param {FirebaseFirestore.Query} queryRef
+ * @param {(doc: FirebaseFirestore.QueryDocumentSnapshot) => object|null} buildPatch
+ * @returns {Promise<number>}
+ */
+async function updateQueryDocsPaginated(queryRef, buildPatch) {
+  const limit = STUDENT_CLEANUP_BATCH_SIZE;
+  let updated = 0;
+  while (true) {
+    const snap = await queryRef.limit(limit).get();
+    if (!snap || snap.empty) break;
+    const batch = db.batch();
+    let writes = 0;
+    snap.docs.forEach((doc) => {
+      const patch = buildPatch(doc);
+      if (!patch || typeof patch !== 'object' || !Object.keys(patch).length) return;
+      batch.update(doc.ref, patch);
+      writes += 1;
+    });
+    if (writes > 0) await batch.commit();
+    updated += writes;
+    if (snap.size < limit) break;
+  }
+  return updated;
+}
+
+/**
+ * @param {object} data
+ * @returns {boolean}
+ */
+function forumIdentityNeedsAnonymize(data) {
+  const d = data || {};
+  const name = String(d.userName || '').trim();
+  const uidField = Object.prototype.hasOwnProperty.call(d, 'userId') ? d.userId : undefined;
+  if (uidField !== PUBLIC_DELETED_ACCOUNT_UID && String(uidField || '').trim() !== '') return true;
+  if (name && name !== PUBLIC_DELETED_ACCOUNT_DISPLAY_NAME) return true;
+  if (d.imageUrl != null && String(d.imageUrl).trim() !== '') return true;
+  return false;
+}
+
+/**
+ * @param {FirebaseFirestore.CollectionReference} parentRef
+ * @param {string} uid
+ * @returns {Promise<boolean>}
+ */
+async function deleteUidKeyedChildIfExists(parentRef, uid) {
+  const ref = parentRef.doc(uid);
+  const snap = await ref.get();
+  if (!snap.exists) return false;
+  await ref.delete();
+  return true;
+}
+
+/**
+ * Identity-only forum cleanup. Does not delete posts/comments or change counters.
+ * @param {string} uid
+ * @returns {Promise<void>}
+ */
+async function anonymizeForumContentForDeletedPublicUser(uid) {
+  const id = String(uid || '').trim();
+  if (!id) return;
+
+  await updateQueryDocsPaginated(
+    db.collection('forum_posts').where('userId', '==', id),
+    (doc) => {
+      const data = doc.data() || {};
+      if (!forumIdentityNeedsAnonymize(data) && String(data.userId || '') === PUBLIC_DELETED_ACCOUNT_UID) {
+        return null;
+      }
+      return {
+        userId: PUBLIC_DELETED_ACCOUNT_UID,
+        userName: PUBLIC_DELETED_ACCOUNT_DISPLAY_NAME,
+        imageUrl: null
+      };
+    }
+  );
+
+  let lastPost = null;
+  while (true) {
+    let postQuery = db.collection('forum_posts').orderBy(admin.firestore.FieldPath.documentId()).limit(STUDENT_CLEANUP_BATCH_SIZE);
+    if (lastPost) postQuery = postQuery.startAfter(lastPost);
+    const postSnap = await postQuery.get();
+    if (!postSnap || postSnap.empty) break;
+
+    for (const postDoc of postSnap.docs) {
+      await deleteUidKeyedChildIfExists(postDoc.ref.collection('likes'), id);
+
+      let lastComment = null;
+      while (true) {
+        let commentQuery = postDoc.ref.collection('comments').orderBy(admin.firestore.FieldPath.documentId()).limit(STUDENT_CLEANUP_BATCH_SIZE);
+        if (lastComment) commentQuery = commentQuery.startAfter(lastComment);
+        const commentSnap = await commentQuery.get();
+        if (!commentSnap || commentSnap.empty) break;
+
+        for (const commentDoc of commentSnap.docs) {
+          const cdata = commentDoc.data() || {};
+          const patch = {};
+          if (String(cdata.userId || '').trim() === id) {
+            patch.userId = PUBLIC_DELETED_ACCOUNT_UID;
+            patch.userName = PUBLIC_DELETED_ACCOUNT_DISPLAY_NAME;
+          }
+          if (String(cdata.replyToUserId || '').trim() === id) {
+            patch.replyToUserId = PUBLIC_DELETED_ACCOUNT_UID;
+            patch.replyToUserName = PUBLIC_DELETED_ACCOUNT_DISPLAY_NAME;
+          }
+          if (Object.keys(patch).length) {
+            await commentDoc.ref.update(patch);
+          }
+          await deleteUidKeyedChildIfExists(commentDoc.ref.collection('reactions'), id);
+
+          let lastReply = null;
+          while (true) {
+            let replyQuery = commentDoc.ref.collection('replies').orderBy(admin.firestore.FieldPath.documentId()).limit(STUDENT_CLEANUP_BATCH_SIZE);
+            if (lastReply) replyQuery = replyQuery.startAfter(lastReply);
+            const replySnap = await replyQuery.get();
+            if (!replySnap || replySnap.empty) break;
+            for (const replyDoc of replySnap.docs) {
+              const rdata = replyDoc.data() || {};
+              if (String(rdata.userId || '').trim() !== id) continue;
+              await replyDoc.ref.update({
+                userId: PUBLIC_DELETED_ACCOUNT_UID,
+                userName: PUBLIC_DELETED_ACCOUNT_DISPLAY_NAME
+              });
+            }
+            lastReply = replySnap.docs[replySnap.docs.length - 1];
+            if (replySnap.size < STUDENT_CLEANUP_BATCH_SIZE) break;
+          }
+        }
+
+        lastComment = commentSnap.docs[commentSnap.docs.length - 1];
+        if (commentSnap.size < STUDENT_CLEANUP_BATCH_SIZE) break;
+      }
+    }
+
+    lastPost = postSnap.docs[postSnap.docs.length - 1];
+    if (postSnap.size < STUDENT_CLEANUP_BATCH_SIZE) break;
+  }
+}
+
+/**
+ * @param {string} uid
+ * @returns {Promise<number>}
+ */
+async function deleteDuelInvitesForUid(uid) {
+  const id = String(uid || '').trim();
+  if (!id) return 0;
+  const asSender = await deleteQueryDocsPaginated(
+    db.collection('duelInvites').where('senderId', '==', id)
+  );
+  const asReceiver = await deleteQueryDocsPaginated(
+    db.collection('duelInvites').where('receiverId', '==', id)
+  );
+  return asSender + asReceiver;
+}
+
+/**
+ * @param {object} data
+ * @param {string} uid
+ * @returns {object|null}
+ */
+function buildPublicMailboxIdentityPatch(data, uid) {
+  const d = data || {};
+  const id = String(uid || '').trim();
+  if (!id) return null;
+  const patch = {};
+  if (String(d.senderUid || '').trim() === id) {
+    patch.senderUid = PUBLIC_DELETED_ACCOUNT_UID;
+    patch.senderName = PUBLIC_DELETED_ACCOUNT_DISPLAY_NAME;
+    patch.senderEmail = '';
+  }
+  if (String(d.recipientId || '').trim() === id) {
+    patch.recipientId = PUBLIC_DELETED_ACCOUNT_UID;
+  }
+  return Object.keys(patch).length ? patch : null;
+}
+
+/**
+ * Identity fields only. Does not change body/content.
+ * @param {FirebaseFirestore.CollectionReference} messagesRef
+ * @param {string} uid
+ * @returns {Promise<number>}
+ */
+async function anonymizeMailboxMessagesForUid(messagesRef, uid) {
+  const id = String(uid || '').trim();
+  if (!id || !messagesRef) return 0;
+  const asSender = await updateQueryDocsPaginated(
+    messagesRef.where('senderUid', '==', id),
+    (doc) => buildPublicMailboxIdentityPatch(doc.data() || {}, id)
+  );
+  const asRecipient = await updateQueryDocsPaginated(
+    messagesRef.where('recipientId', '==', id),
+    (doc) => buildPublicMailboxIdentityPatch(doc.data() || {}, id)
+  );
+  return asSender + asRecipient;
+}
+
+/**
+ * Prefix delete is non-fatal (instructor photo cleanup pattern).
+ * @param {string} uid
+ * @param {string} [photoStoragePath]
+ * @returns {Promise<void>}
+ */
+async function cleanupPublicUserProfileStorage(uid, photoStoragePath) {
+  const id = String(uid || '').trim();
+  if (!id) return;
+  try {
+    const bucket = admin.storage().bucket();
+    const ownedPath = isOwnedUserProfileStoragePath(photoStoragePath, id)
+      ? String(photoStoragePath).trim()
+      : '';
+    if (ownedPath) {
+      try {
+        await bucket.file(ownedPath).delete({ ignoreNotFound: true });
+      } catch (pathErr) {
+        console.warn('[deleteOwnPublicAccount] photoStoragePath cleanup failed', {
+          error: pathErr && pathErr.message ? pathErr.message : String(pathErr)
+        });
+      }
+    }
+    try {
+      await bucket.deleteFiles({
+        prefix: 'user-profiles/' + id + '/',
+        force: true
+      });
+    } catch (prefixErr) {
+      console.warn('[deleteOwnPublicAccount] user-profiles prefix cleanup failed', {
+        error: prefixErr && prefixErr.message ? prefixErr.message : String(prefixErr)
+      });
+    }
+  } catch (cleanupErr) {
+    console.warn('[deleteOwnPublicAccount] storage cleanup failed', {
+      error: cleanupErr && cleanupErr.message ? cleanupErr.message : String(cleanupErr)
+    });
+  }
+}
+
+/**
+ * Eligibility only. No writes.
+ * @param {string} uid
+ * @param {FirebaseFirestore.DocumentSnapshot|null} userSnap
+ * @returns {Promise<{ publicTenantIds: string[], membershipDocs: FirebaseFirestore.QueryDocumentSnapshot[] }>}
+ */
+async function assertEligiblePublicSelfDelete(uid, userSnap) {
+  if (!userSnap || !userSnap.exists) {
+    throw new HttpsError('failed-precondition', 'User profile could not be verified.');
+  }
+  const userData = userSnap.data() || {};
+  const role = normalizeRole(userData.role || userData.globalRole);
+  if (PUBLIC_SELF_DELETE_FORBIDDEN_ROLES[role]) {
+    throw new HttpsError('permission-denied', 'This account cannot be deleted from the app.');
+  }
+  if (!PUBLIC_SELF_DELETE_ALLOWED_ROLES[role]) {
+    throw new HttpsError('permission-denied', 'This account cannot be deleted from the app.');
+  }
+  if (userData.isSuperAdmin === true || userData.isAdmin === true) {
+    throw new HttpsError('permission-denied', 'This account cannot be deleted from the app.');
+  }
+
+  const membershipSnap = await db.collection('tenantMemberships').where('uid', '==', uid).get();
+  const membershipDocs = membershipSnap && membershipSnap.docs ? membershipSnap.docs : [];
+  const publicTenantIds = [];
+  const seenTenant = {};
+
+  for (let i = 0; i < membershipDocs.length; i++) {
+    const mem = membershipDocs[i].data() || {};
+    const memRole = normalizeRole(mem.role);
+    if (PUBLIC_SELF_DELETE_FORBIDDEN_ROLES[memRole]) {
+      throw new HttpsError('permission-denied', 'This account cannot be deleted from the app.');
+    }
+    if (memRole && memRole !== 'student') {
+      throw new HttpsError('permission-denied', 'This account cannot be deleted from the app.');
+    }
+    const tenantId = String(mem.tenantId || '').trim();
+    const enrollment = normalizeEnrollmentSource(mem.enrollmentSource, tenantId, mem.programType);
+    if (enrollment !== ENROLLMENT_SOURCE_PUBLIC) {
+      throw new HttpsError(
+        'failed-precondition',
+        'Kurum hesabı uygulama içinden silinemez.'
+      );
+    }
+    if (tenantId && !seenTenant[tenantId]) {
+      seenTenant[tenantId] = true;
+      publicTenantIds.push(tenantId);
+    }
+  }
+
+  return { publicTenantIds: publicTenantIds, membershipDocs: membershipDocs };
+}
+
 /** Temporary duration-only diagnostics for deactivateTenantStudentForInstitutionAdmin. */
 function saTpServerPerfNowMs() {
   try {
@@ -9241,5 +9584,331 @@ exports.listMyDrivingLessonsForStudent = onCall(
       tenantId: tenantId,
       lessons: lessons
     };
+  }
+);
+
+/**
+ * Phase A1 — attach Public Ehliyet (driving_license public) entitlement to an eligible
+ * Public Machine student under the same Auth UID. Does not change users.role.
+ * Does not bootstrap first-time Ehliyet accounts. Client-supplied identity fields ignored.
+ */
+exports.ensurePublicEhliyetAccess = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const uid = request && request.auth ? String(request.auth.uid || '').trim() : '';
+    if (!uid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const userRef = db.collection('users').doc(uid);
+    const userSnap = await userRef.get();
+    if (!userSnap.exists) {
+      throw new HttpsError(
+        'failed-precondition',
+        'Hesap profili bulunamadı.',
+        { code: 'PUBLIC_EHLIYET_PROFILE_REQUIRED' }
+      );
+    }
+
+    const userData = userSnap.data() || {};
+    const role = normalizeRole(userData.role || userData.globalRole);
+
+    if (PUBLIC_SELF_DELETE_FORBIDDEN_ROLES[role]) {
+      throw new HttpsError(
+        'permission-denied',
+        'Bu hesap public portal üyeliği için uygun değil.',
+        { code: 'PUBLIC_EHLIYET_NOT_ELIGIBLE' }
+      );
+    }
+    if (userData.isSuperAdmin === true || userData.isAdmin === true) {
+      throw new HttpsError(
+        'permission-denied',
+        'Bu hesap public portal üyeliği için uygun değil.',
+        { code: 'PUBLIC_EHLIYET_NOT_ELIGIBLE' }
+      );
+    }
+
+    if (role === 'public_user') {
+      return {
+        ok: true,
+        uid: uid,
+        authRole: 'public_user',
+        ehliyetEntitlement: 'public',
+        attached: false
+      };
+    }
+
+    if (role !== 'student') {
+      throw new HttpsError(
+        'failed-precondition',
+        'Bu hesap public portal üyeliği için uygun değil.',
+        { code: 'PUBLIC_EHLIYET_NOT_ELIGIBLE' }
+      );
+    }
+
+    if (userData.isActive === false) {
+      throw new HttpsError(
+        'failed-precondition',
+        'Bu hesap public portal üyeliği için uygun değil.',
+        { code: 'PUBLIC_EHLIYET_NOT_ELIGIBLE' }
+      );
+    }
+
+    const membershipSnap = await db.collection('tenantMemberships').where('uid', '==', uid).get();
+    const membershipDocs = membershipSnap && membershipSnap.docs ? membershipSnap.docs : [];
+
+    let hasQualifyingPublicMachineMembership = false;
+    for (let i = 0; i < membershipDocs.length; i++) {
+      const mem = membershipDocs[i].data() || {};
+      const memRole = normalizeRole(mem.role);
+      if (PUBLIC_SELF_DELETE_FORBIDDEN_ROLES[memRole]) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Bu hesap public portal üyeliği için uygun değil.',
+          { code: 'PUBLIC_EHLIYET_NOT_ELIGIBLE' }
+        );
+      }
+      if (memRole && memRole !== 'student') {
+        throw new HttpsError(
+          'failed-precondition',
+          'Bu hesap public portal üyeliği için uygun değil.',
+          { code: 'PUBLIC_EHLIYET_NOT_ELIGIBLE' }
+        );
+      }
+
+      const memTenantId = String(mem.tenantId || '').trim();
+      const memEnrollment = normalizeEnrollmentSource(mem.enrollmentSource, memTenantId, mem.programType);
+      if (memEnrollment === ENROLLMENT_SOURCE_INSTITUTION) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Bu hesap public portal üyeliği için uygun değil.',
+          { code: 'PUBLIC_EHLIYET_NOT_ELIGIBLE' }
+        );
+      }
+
+      const memProgram = normalizeProgramType(mem.programType);
+      const memStatus = normalizeRole(mem.status);
+      if (
+        memEnrollment === ENROLLMENT_SOURCE_PUBLIC &&
+        memProgram === MACHINE_PROGRAM_TYPE &&
+        memTenantId === PLATFORM_MACHINE_TENANT_ID &&
+        memRole === 'student' &&
+        memStatus === 'active'
+      ) {
+        hasQualifyingPublicMachineMembership = true;
+      }
+    }
+
+    if (!hasQualifyingPublicMachineMembership) {
+      throw new HttpsError(
+        'failed-precondition',
+        'Bu hesap public portal üyeliği için uygun değil.',
+        { code: 'PUBLIC_EHLIYET_NOT_ELIGIBLE' }
+      );
+    }
+
+    const pe =
+      userData.programEnrollments && typeof userData.programEnrollments === 'object'
+        ? userData.programEnrollments
+        : {};
+    const nestedPrev =
+      pe.driving_license && typeof pe.driving_license === 'object' ? pe.driving_license : null;
+    const literalPrev =
+      userData['programEnrollments.driving_license'] &&
+      typeof userData['programEnrollments.driving_license'] === 'object'
+        ? userData['programEnrollments.driving_license']
+        : null;
+
+    const nestedSource = nestedPrev
+      ? String(nestedPrev.source || '').trim().toLowerCase()
+      : '';
+    const literalSource = literalPrev
+      ? String(literalPrev.source || '').trim().toLowerCase()
+      : '';
+    if (nestedSource === ENROLLMENT_SOURCE_INSTITUTION || literalSource === ENROLLMENT_SOURCE_INSTITUTION) {
+      throw new HttpsError(
+        'failed-precondition',
+        'Bu hesap public portal üyeliği için uygun değil.',
+        { code: 'PUBLIC_EHLIYET_NOT_ELIGIBLE' }
+      );
+    }
+
+    const nestedStatus = nestedPrev ? String(nestedPrev.status || '').trim().toLowerCase() : '';
+    const alreadyAttached =
+      nestedSource === ENROLLMENT_SOURCE_PUBLIC && nestedStatus === 'active';
+
+    if (alreadyAttached) {
+      return {
+        ok: true,
+        uid: uid,
+        authRole: 'student',
+        ehliyetEntitlement: 'public',
+        attached: false
+      };
+    }
+
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    const payload = {
+      status: 'active',
+      source: ENROLLMENT_SOURCE_PUBLIC,
+      updatedAt: now
+    };
+    if (nestedPrev && nestedPrev.enrolledAt != null) {
+      payload.enrolledAt = nestedPrev.enrolledAt;
+    } else if (literalPrev && literalPrev.enrolledAt != null) {
+      payload.enrolledAt = literalPrev.enrolledAt;
+    } else {
+      payload.enrolledAt = now;
+    }
+
+    // Nested FieldPath update — does not replace sibling programEnrollments keys or other user fields.
+    await userRef.update({
+      'programEnrollments.driving_license': payload
+    });
+
+    return {
+      ok: true,
+      uid: uid,
+      authRole: 'student',
+      ehliyetEntitlement: 'public',
+      attached: true
+    };
+  }
+);
+
+/**
+ * App Store 5.1.1(v) — caller may permanently delete only their own eligible public account.
+ * Target uid is always request.auth.uid. Client-supplied uid/tenant/membership fields are ignored.
+ */
+exports.deleteOwnPublicAccount = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const callerUid = request && request.auth ? String(request.auth.uid || '').trim() : '';
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const userRef = db.collection('users').doc(callerUid);
+    const userSnap = await userRef.get();
+    const authUser = await getAuthUserOrNull(callerUid);
+
+    if (!userSnap.exists && !authUser) {
+      return { ok: true, alreadyDeleted: true };
+    }
+
+    if (!userSnap.exists && authUser && authUser.disabled !== true) {
+      throw new HttpsError(
+        'failed-precondition',
+        'Hesap profili bulunamadı. Silme işlemi tamamlanamadı.'
+      );
+    }
+
+    let publicTenantIds = [];
+    let membershipDocs = [];
+
+    if (userSnap.exists) {
+      const eligible = await assertEligiblePublicSelfDelete(callerUid, userSnap);
+      publicTenantIds = eligible.publicTenantIds;
+      membershipDocs = eligible.membershipDocs;
+    } else {
+      const membershipSnap = await db.collection('tenantMemberships').where('uid', '==', callerUid).get();
+      membershipDocs = membershipSnap && membershipSnap.docs ? membershipSnap.docs : [];
+      const seenTenant = {};
+      for (let i = 0; i < membershipDocs.length; i++) {
+        const mem = membershipDocs[i].data() || {};
+        const memRole = normalizeRole(mem.role);
+        if (PUBLIC_SELF_DELETE_FORBIDDEN_ROLES[memRole] || (memRole && memRole !== 'student')) {
+          throw new HttpsError('permission-denied', 'This account cannot be deleted from the app.');
+        }
+        const tenantId = String(mem.tenantId || '').trim();
+        const enrollment = normalizeEnrollmentSource(mem.enrollmentSource, tenantId, mem.programType);
+        if (enrollment !== ENROLLMENT_SOURCE_PUBLIC) {
+          throw new HttpsError(
+            'failed-precondition',
+            'Kurum hesabı uygulama içinden silinemez.'
+          );
+        }
+        if (tenantId && !seenTenant[tenantId]) {
+          seenTenant[tenantId] = true;
+          publicTenantIds.push(tenantId);
+        }
+      }
+    }
+
+    const tenantIdsForCleanup = [];
+    const seenCleanupTenant = {};
+    publicTenantIds.forEach((tid) => {
+      if (!tid || seenCleanupTenant[tid]) return;
+      seenCleanupTenant[tid] = true;
+      tenantIdsForCleanup.push(tid);
+    });
+    if (!seenCleanupTenant[PLATFORM_MACHINE_TENANT_ID]) {
+      tenantIdsForCleanup.push(PLATFORM_MACHINE_TENANT_ID);
+    }
+
+    if (userSnap.exists) {
+      await userRef.set(
+        { accountDeletionStartedAt: admin.firestore.FieldValue.serverTimestamp() },
+        { merge: true }
+      );
+    }
+
+    try {
+      await admin.auth().updateUser(callerUid, { disabled: true });
+    } catch (e) {
+      if (!isAuthUserNotFoundError(e)) throw e;
+    }
+
+    const photoStoragePath = userSnap.exists
+      ? String(((userSnap.data() || {}).photoStoragePath) || '').trim()
+      : '';
+    await cleanupPublicUserProfileStorage(callerUid, photoStoragePath);
+
+    for (let i = 0; i < tenantIdsForCleanup.length; i++) {
+      await cleanupDeletedStudentOwnedData({
+        tenantId: tenantIdsForCleanup[i],
+        uid: callerUid
+      });
+    }
+
+    await anonymizeForumContentForDeletedPublicUser(callerUid);
+    await deleteDuelInvitesForUid(callerUid);
+
+    await anonymizeMailboxMessagesForUid(
+      db.collection('platformMailbox').doc('super_admin').collection('messages'),
+      callerUid
+    );
+    for (let i = 0; i < publicTenantIds.length; i++) {
+      await anonymizeMailboxMessagesForUid(
+        db.collection('tenantMailbox').doc(publicTenantIds[i]).collection('messages'),
+        callerUid
+      );
+    }
+
+    for (let i = 0; i < membershipDocs.length; i++) {
+      const mem = membershipDocs[i].data() || {};
+      const tenantId = String(mem.tenantId || '').trim();
+      const enrollment = normalizeEnrollmentSource(mem.enrollmentSource, tenantId, mem.programType);
+      if (enrollment !== ENROLLMENT_SOURCE_PUBLIC) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Kurum hesabı uygulama içinden silinemez.'
+        );
+      }
+      await membershipDocs[i].ref.delete();
+    }
+
+    const userSnapAfter = await userRef.get();
+    if (userSnapAfter.exists) {
+      await userRef.delete();
+    }
+
+    try {
+      await admin.auth().deleteUser(callerUid);
+    } catch (e) {
+      if (!isAuthUserNotFoundError(e)) throw e;
+    }
+
+    return { ok: true };
   }
 );

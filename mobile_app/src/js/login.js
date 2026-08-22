@@ -7,8 +7,6 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
 
   const SELECTED_TENANT_STORAGE_KEY = 'sa_selected_tenant_id';
   let tenantBootstrapModulesPromise = null;
-  const DEBUG_ENDPOINT = 'http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094';
-  const DEBUG_SESSION_ID = '2a11cc';
 
   /**
    * AUTH CORRECTIVE — mark controlled institution-login validation signOut so
@@ -19,27 +17,6 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
     try {
       window.__saAuthNullRouteIntent = 'driving_institution_login';
     } catch (_) {}
-  }
-
-  const DEBUG_STORAGE_KEY = 'debug_log_2a11cc';
-  const DEBUG_LOG_MAX = 50;
-  function debugLog(runId, hypothesisId, location, message, data) {
-    const payload = { sessionId: DEBUG_SESSION_ID, runId, hypothesisId, location, message, data: data || {}, timestamp: Date.now() };
-    // #region agent log
-    fetch(DEBUG_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': DEBUG_SESSION_ID },
-      body: JSON.stringify(payload)
-    }).catch(() => {});
-    try {
-      let arr = [];
-      try { arr = JSON.parse(localStorage.getItem(DEBUG_STORAGE_KEY) || '[]'); } catch (_) {}
-      if (!Array.isArray(arr)) arr = [];
-      arr.push(payload);
-      if (arr.length > DEBUG_LOG_MAX) arr = arr.slice(-DEBUG_LOG_MAX);
-      localStorage.setItem(DEBUG_STORAGE_KEY, JSON.stringify(arr));
-    } catch (_) {}
-    // #endregion
   }
 
   function getSelectedTenantIdFromStorage() {
@@ -371,6 +348,79 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
     }
   }
 
+  function isAppleSignInCancelled(error) {
+    const code = String((error && error.code) || '').trim().toLowerCase();
+    const message = String((error && error.message) || '').trim().toLowerCase();
+    if (code === 'apple_signin_cancelled' || code === '1001') return true;
+    if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return true;
+    if (message.includes('error 1001') || message.includes('authorizationerror error 1001')) return true;
+    if (message.includes('com.apple.authenticationservices.authorizationerror') && (message.includes('1001') || message.includes('canceled') || message.includes('cancelled'))) return true;
+    if (message.includes('the user canceled') || message.includes('the user cancelled')) return true;
+    return false;
+  }
+
+  function mapAppleAuthErrorToMessage(error) {
+    const code = (error && error.code) ? String(error.code) : '';
+    if (isAppleSignInCancelled(error) || code === 'APPLE_SIGNIN_CANCELLED') return '';
+    if (code === 'auth/account-exists-with-different-credential') return 'Bu e-posta farklı bir giriş yöntemiyle kayıtlı.';
+    if (code === 'auth/network-request-failed' || code === 'auth/unavailable' || code === 'unavailable') {
+      return 'Bağlantı kurulamadı. Lütfen tekrar deneyin.';
+    }
+    return 'Apple ile giriş yapılamadı. Lütfen tekrar deneyin.';
+  }
+
+  function throwAppleCancelled() {
+    const err = new Error('');
+    err.code = 'APPLE_SIGNIN_CANCELLED';
+    err.userMessage = '';
+    throw err;
+  }
+
+  async function ensureAppleUserProfile(user, nativeDisplayName) {
+    if (!user || !user.uid) return;
+
+    const userRef = firebase.firestore().collection('users').doc(user.uid);
+    const snap = await userRef.get();
+    const existing = snap.exists ? (snap.data() || {}) : {};
+    const patch = {
+      uid: user.uid,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (!snap.exists) {
+      patch.role = 'student';
+      patch.isActive = true;
+      patch.signupSource = 'apple';
+      patch.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    }
+
+    const nextEmail = String(user.email || '').trim().toLowerCase();
+    const existingEmail = String(existing.email || '').trim().toLowerCase();
+    if (nextEmail && !existingEmail) {
+      patch.email = nextEmail;
+    }
+
+    const nextName = trimIdentityString(nativeDisplayName) || trimIdentityString(user.displayName);
+    if (nextName) {
+      if (!trimIdentityString(existing.displayName)) patch.displayName = nextName;
+      if (!trimIdentityString(existing.fullName)) patch.fullName = nextName;
+    }
+
+    const slugIdentity = {
+      uid: user.uid,
+      email: nextEmail || existingEmail,
+      displayName: nextName || trimIdentityString(existing.displayName) || trimIdentityString(existing.fullName)
+    };
+    const slug = buildGoogleUsernameSlug(slugIdentity, existing);
+    if (slug) patch.username = slug;
+
+    try {
+      await userRef.set(patch, { merge: true });
+    } catch (e) {
+      console.warn('[UsernameGate] Apple profile merge skipped', e);
+    }
+  }
+
   async function ensureMicrosoftUserProfile(user) {
     if (!user || !user.uid) return;
 
@@ -601,10 +651,6 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
   async function checkTenantMembership(uid, tenantId) {
     const membership = await getActiveMembershipForTenant(uid, tenantId);
     const hasActive = !!membership;
-    debugLog('tenant-login-1', 'H3', 'mobile_app/src/js/login.js:checkTenantMembership', 'membership evaluation result', {
-      tenantId: String(tenantId || '').trim(),
-      hasActive
-    });
     return hasActive;
   }
 
@@ -1065,11 +1111,6 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
 
     const email = usernameOrEmailToEmail(usernameOrEmail);
     const pass = String(password || '');
-    debugLog('tenant-login-1', 'H1', 'mobile_app/src/js/login.js:signIn', 'signIn called', {
-      usernameRawLength: String(usernameOrEmail || '').length,
-      emailDerived: email,
-      selectedTenantId: selectedTenantId || null
-    });
 
     if (window.SA_PUBLIC_USER_SESSION && window.SA_PUBLIC_USER_SESSION.clearPublicUserSession) {
       window.SA_PUBLIC_USER_SESSION.clearPublicUserSession();
@@ -1090,35 +1131,17 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
     try {
       await firebase.auth().signInWithEmailAndPassword(email, pass);
       const user = firebase.auth().currentUser;
-      debugLog('tenant-login-1', 'H2', 'mobile_app/src/js/login.js:signIn', 'firebase auth succeeded', {
-        uidPresent: Boolean(user && user.uid),
-        uid: user && user.uid ? String(user.uid) : null
-      });
       const access = await validateStudentAccess(user);
-      debugLog('tenant-login-1', 'H5', 'mobile_app/src/js/login.js:signIn', 'validateStudentAccess result', {
-        ok: Boolean(access && access.ok),
-        userMessage: access && access.userMessage ? String(access.userMessage) : null
-      });
       if (!access.ok) {
         const err = new Error(access.userMessage || 'Giriş başarısız.');
         err.userMessage = access.userMessage || 'Giriş başarısız.';
         throw err;
       }
       const effectiveTenantId = selectedTenantId || getSelectedTenantIdFromStorage();
-      debugLog('tenant-login-1', 'H1', 'mobile_app/src/js/login.js:signIn', 'effective tenant resolved', {
-        effectiveTenantId: effectiveTenantId || null,
-        selectedTenantId: selectedTenantId || null
-      });
 
       // Role resolution BEFORE student-only Driving programType assumptions.
       if (effectiveTenantId) {
         const resolved = await resolveInstitutionSessionPersona(user, effectiveTenantId);
-        debugLog('tenant-login-1', 'H3', 'mobile_app/src/js/login.js:signIn', 'persona resolved', {
-          tenantId: effectiveTenantId,
-          ok: Boolean(resolved && resolved.ok),
-          persona: resolved && resolved.persona ? String(resolved.persona) : null,
-          code: resolved && resolved.code ? String(resolved.code) : null
-        });
         if (!resolved.ok) {
           markDrivingInstitutionLoginAuthNullRoute();
           await firebase.auth().signOut();
@@ -1176,11 +1199,6 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
       return { ok: true, persona: 'student' };
     } catch (e) {
       const message = e && e.userMessage ? String(e.userMessage) : mapAuthErrorToMessage(e);
-      debugLog('tenant-login-1', 'H4', 'mobile_app/src/js/login.js:signIn', 'signIn failed', {
-        errorCode: e && e.code ? String(e.code) : null,
-        errorMessage: e && e.message ? String(e.message) : null,
-        mappedMessage: message
-      });
       const err = new Error(message);
       err.userMessage = message;
       if (e && e.code) err.code = String(e.code);
@@ -1326,8 +1344,9 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
         throw err;
       }
 
-      await firebase.auth().signOut();
-      return { ok: true, pendingApproval: true };
+      await tryBootstrapTenantSessionFromUser(user, null);
+      await ensureDrivingProgramEnrollment(user, { source: 'public' });
+      return { ok: true, persona: 'student' };
     } catch (e) {
       const message = (e && e.userMessage) ? String(e.userMessage) : mapSignupErrorToMessage(e);
       const err = new Error(message);
@@ -1467,6 +1486,143 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
     }
   }
 
+  async function signInWithApple() {
+    if (typeof firebase === 'undefined' || !firebase || !firebase.auth || !firebase.firestore) {
+      const err = new Error('Apple ile giriş yapılamadı. Lütfen tekrar deneyin.');
+      err.userMessage = 'Apple ile giriş yapılamadı. Lütfen tekrar deneyin.';
+      throw err;
+    }
+
+    const nativeAuth = getNativeFirebaseAuthPlugin();
+    if (!nativeAuth || typeof nativeAuth.signInWithApple !== 'function') {
+      const err = new Error('Apple ile giriş yapılamadı. Lütfen tekrar deneyin.');
+      err.userMessage = 'Apple ile giriş yapılamadı. Lütfen tekrar deneyin.';
+      throw err;
+    }
+
+    let nativeDisplayName = '';
+    try {
+      const nativeResult = await nativeAuth.signInWithApple({
+        skipNativeAuth: true
+      });
+
+      const credential = (nativeResult && nativeResult.credential) ? nativeResult.credential : null;
+      const idToken = (credential && credential.idToken) ? String(credential.idToken) : '';
+      const nonce = (credential && credential.nonce) ? String(credential.nonce) : '';
+      nativeDisplayName = trimIdentityString(nativeResult && nativeResult.user && nativeResult.user.displayName);
+
+      if (!idToken || !nonce) {
+        try {
+          console.error('[AppleAuth] Native signInWithApple credential incomplete:', {
+            hasCredential: Boolean(credential),
+            hasIdToken: Boolean(idToken),
+            hasNonce: Boolean(nonce)
+          });
+        } catch (_) {}
+        const err = new Error('Apple kimlik doğrulama bilgisi alınamadı. Lütfen tekrar deneyin.');
+        err.userMessage = 'Apple kimlik doğrulama bilgisi alınamadı. Lütfen tekrar deneyin.';
+        throw err;
+      }
+
+      try {
+        if (window.SA_AUTH_PREPARING && typeof window.SA_AUTH_PREPARING.show === 'function') {
+          window.SA_AUTH_PREPARING.show(300);
+        }
+      } catch (_) {}
+
+      if (!firebase.auth.OAuthProvider) {
+        const err = new Error('Apple ile giriş yapılamadı. Lütfen tekrar deneyin.');
+        err.userMessage = 'Apple ile giriş yapılamadı. Lütfen tekrar deneyin.';
+        throw err;
+      }
+
+      const provider = new firebase.auth.OAuthProvider('apple.com');
+      const firebaseCredential = provider.credential({
+        idToken: idToken,
+        rawNonce: nonce
+      });
+      await firebase.auth().signInWithCredential(firebaseCredential);
+    } catch (e) {
+      if (isAppleSignInCancelled(e) || (e && e.code === 'APPLE_SIGNIN_CANCELLED')) {
+        throwAppleCancelled();
+      }
+      try {
+        console.error('[AppleAuth] Native sign-in stage failed:', {
+          code: e && e.code ? String(e.code) : null,
+          message: e && e.message ? String(e.message) : null,
+          name: e && e.name ? String(e.name) : null
+        });
+      } catch (_) {}
+      if (e && e.userMessage) {
+        const err = new Error(String(e.userMessage));
+        err.userMessage = String(e.userMessage);
+        if (e.code) err.code = String(e.code);
+        throw err;
+      }
+      const message = mapAppleAuthErrorToMessage(e);
+      const err = new Error(message);
+      err.userMessage = message;
+      if (e && e.code) err.code = String(e.code);
+      throw err;
+    }
+
+    try {
+      const user = firebase.auth().currentUser;
+      await ensureAppleUserProfile(user, nativeDisplayName);
+      const access = await validateStudentAccess(user);
+      if (!access.ok) {
+        const err = new Error(access.userMessage || 'Giriş başarısız.');
+        err.userMessage = access.userMessage || 'Giriş başarısız.';
+        throw err;
+      }
+      const tenantResolution = await resolveDrivingTenantSelectionOrThrow(user);
+      if (!tenantResolution.selectedTenantId) {
+        if (tenantResolution.drivingTenantIds && tenantResolution.drivingTenantIds.length > 0) {
+          markDrivingInstitutionLoginAuthNullRoute();
+          await firebase.auth().signOut();
+          const err = new Error('Lütfen giriş yapmadan önce kurumunuzu seçin.');
+          err.userMessage = 'Lütfen giriş yapmadan önce kurumunuzu seçin.';
+          throw err;
+        }
+      }
+      await tryBootstrapTenantSessionFromUser(user);
+      await ensureDrivingProgramEnrollment(user, {
+        source: (tenantResolution.kind === 'DRIVING_MEMBERSHIP' && tenantResolution.selectedTenantId)
+          ? 'institution'
+          : 'public'
+      });
+      return { ok: true };
+    } catch (e) {
+      const code = (e && e.code) ? String(e.code) : '';
+      try {
+        console.error('[AppleAuth] Post-login finalize failed:', {
+          code: code || null,
+          userMessage: e && e.userMessage ? String(e.userMessage) : null,
+          uid: firebase && firebase.auth && firebase.auth().currentUser && firebase.auth().currentUser.uid ? String(firebase.auth().currentUser.uid) : null
+        });
+      } catch (_) {}
+
+      let message = (e && e.userMessage) ? String(e.userMessage) : '';
+      if (!message) {
+        if (code === 'MACHINE_ACCOUNT_REQUIRES_MACHINE_ENTRY') message = MSG_MACHINE_REQUIRES_MACHINE_ENTRY;
+        else if (code === 'permission-denied') message = 'Apple girişi tamamlanamadı: erişim izni yok.';
+        else if (code === 'unauthenticated') message = 'Apple girişi tamamlanamadı: oturum doğrulanamadı.';
+        else if (code === 'unavailable' || code === 'auth/unavailable' || code === 'auth/network-request-failed') {
+          message = 'Bağlantı kurulamadı. Lütfen tekrar deneyin.';
+        } else {
+          message = 'Apple ile giriş yapılamadı. Lütfen tekrar deneyin.';
+        }
+      }
+
+      const err = new Error(message);
+      err.userMessage = message;
+      if (code) err.code = code;
+      if (e && e.machineCode) err.machineCode = String(e.machineCode);
+      err.cause = e;
+      throw err;
+    }
+  }
+
   async function signInWithMicrosoft() {
     try {
       const clientId = getMicrosoftOAuthClientId();
@@ -1588,9 +1744,6 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
         data.token ||
         data.firebaseToken ||
         null;
-      // #region agent log
-      fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a445ba'},body:JSON.stringify({sessionId:'a445ba',runId:'ms-debug-v1',hypothesisId:'H2',location:'mobile_app/src/js/login.js:exchangeMicrosoftCodeForFirebaseToken',message:'ms_exchange_response',data:{status:resp.status,respOk:Boolean(resp.ok),dataOk:Boolean(data&&data.ok===true),hasFirebaseCustomToken:Boolean(data&&data.firebaseCustomToken),errorCode:data&&data.errorCode?String(data.errorCode):null,responseKeys:data&&typeof data==='object'?Object.keys(data).slice(0,8):[]},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       if (!resp.ok || !data || data.ok !== true) {
         return {
           ok: false,
@@ -1624,9 +1777,6 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
       const state = callbackPayload.state ? String(callbackPayload.state).trim() : '';
       const error = callbackPayload.error ? String(callbackPayload.error).trim() : '';
       const errorDescription = callbackPayload.errorDescription ? String(callbackPayload.errorDescription).trim() : '';
-      // #region agent log
-      fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a445ba'},body:JSON.stringify({sessionId:'a445ba',runId:'ms-debug-v1',hypothesisId:'H1',location:'mobile_app/src/js/login.js:consumeMicrosoftAuthCallbackPayload',message:'ms_consume_entry',data:{hasPayload:Boolean(callbackPayload),hasCode:Boolean(code),hasState:Boolean(state),hasError:Boolean(error)},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
 
       try {
         console.info('[MicrosoftAuth] Callback consume started', {
@@ -1662,9 +1812,6 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
 
       const exchange = await exchangeMicrosoftCodeForFirebaseToken(code, state);
       if (!exchange.ok || !exchange.firebaseCustomToken) {
-        // #region agent log
-        fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a445ba'},body:JSON.stringify({sessionId:'a445ba',runId:'ms-debug-v1',hypothesisId:'H2',location:'mobile_app/src/js/login.js:consumeMicrosoftAuthCallbackPayload',message:'ms_exchange_rejected_before_signin',data:{errorCode:exchange&&exchange.errorCode?String(exchange.errorCode):null,hasToken:Boolean(exchange&&exchange.firebaseCustomToken)},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         clearMicrosoftAuthPending();
         clearMicrosoftCallbackPayload();
         try { console.warn('[MicrosoftAuth] Backend exchange failed', { errorCode: exchange.errorCode || null }); } catch (_) {}
@@ -1676,9 +1823,6 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
       }
       try { console.info('[MicrosoftAuth] Backend exchange success'); } catch (_) {}
 
-      // #region agent log
-      fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a445ba'},body:JSON.stringify({sessionId:'a445ba',runId:'ms-debug-v1',hypothesisId:'H3',location:'mobile_app/src/js/login.js:consumeMicrosoftAuthCallbackPayload',message:'ms_signin_with_custom_token_start',data:{tokenLength:exchange&&exchange.firebaseCustomToken?String(exchange.firebaseCustomToken).length:0},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       const token = exchange.firebaseCustomToken;
       const credential = await firebase.auth().signInWithCustomToken(token);
       const user = credential && credential.user ? credential.user : null;
@@ -1752,17 +1896,11 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
       }
       await tryBootstrapTenantSessionFromUser(user);
       await ensureDrivingProgramEnrollment(user, { source: msDrivingEnrollmentSource });
-      // #region agent log
-      fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a445ba'},body:JSON.stringify({sessionId:'a445ba',runId:'ms-debug-v1',hypothesisId:'H4',location:'mobile_app/src/js/login.js:consumeMicrosoftAuthCallbackPayload',message:'ms_finalize_chain_success',data:{uid:user&&user.uid?String(user.uid):null},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
 
       clearMicrosoftAuthPending();
       clearMicrosoftCallbackPayload();
       return { ok: true, user };
     } catch (e) {
-      // #region agent log
-      fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a445ba'},body:JSON.stringify({sessionId:'a445ba',runId:'ms-debug-v1',hypothesisId:'H3',location:'mobile_app/src/js/login.js:consumeMicrosoftAuthCallbackPayload.catch',message:'ms_consume_catch',data:{errorCode:e&&e.code?String(e.code):null,errorMessage:e&&e.message?String(e.message):null,userMessage:e&&e.userMessage?String(e.userMessage):null},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       clearMicrosoftAuthPending();
       clearMicrosoftCallbackPayload();
       return {
@@ -1874,6 +2012,7 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
     signUp,
     sendIndividualPasswordResetEmail,
     signInWithGoogle,
+    signInWithApple,
     signInWithMicrosoft,
     exchangeMicrosoftCodeForFirebaseToken,
     consumeMicrosoftAuthCallbackPayload,
@@ -1888,6 +2027,7 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
     getActiveMembershipForTenant: getActiveMembershipForTenant,
     resolveInstitutionSessionPersona: resolveInstitutionSessionPersona,
     markDrivingInstitutionLoginAuthNullRoute: markDrivingInstitutionLoginAuthNullRoute,
+    clearInstitutionTenantState: clearInstitutionTenantState,
     MSG_MACHINE_REQUIRES_MACHINE_ENTRY: MSG_MACHINE_REQUIRES_MACHINE_ENTRY,
     MSG_MACHINE_REQUIRES_RELOGIN: MSG_MACHINE_REQUIRES_RELOGIN
   };
@@ -2290,6 +2430,68 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
     }
   }
 
+  async function signInPublicWithAppleCredential() {
+    if (typeof firebase === 'undefined' || !firebase || !firebase.auth || !firebase.firestore) {
+      const err = new Error('Apple ile giriş yapılamadı. Lütfen tekrar deneyin.');
+      err.userMessage = 'Apple ile giriş yapılamadı. Lütfen tekrar deneyin.';
+      throw err;
+    }
+    const nativeAuth = getNativeFirebaseAuthPlugin();
+    if (!nativeAuth || typeof nativeAuth.signInWithApple !== 'function') {
+      const err = new Error('Apple ile giriş yapılamadı. Lütfen tekrar deneyin.');
+      err.userMessage = 'Apple ile giriş yapılamadı. Lütfen tekrar deneyin.';
+      throw err;
+    }
+    try {
+      const nativeResult = await nativeAuth.signInWithApple({
+        skipNativeAuth: true
+      });
+      const credential = (nativeResult && nativeResult.credential) ? nativeResult.credential : null;
+      const idToken = (credential && credential.idToken) ? String(credential.idToken) : '';
+      const nonce = (credential && credential.nonce) ? String(credential.nonce) : '';
+      const nativeDisplayName = trimIdentityString(nativeResult && nativeResult.user && nativeResult.user.displayName);
+      if (!idToken || !nonce) {
+        try {
+          console.error('[AppleAuth] Native signInWithApple credential incomplete:', {
+            hasCredential: Boolean(credential),
+            hasIdToken: Boolean(idToken),
+            hasNonce: Boolean(nonce)
+          });
+        } catch (_) {}
+        const err = new Error('Apple kimlik doğrulama bilgisi alınamadı. Lütfen tekrar deneyin.');
+        err.userMessage = 'Apple kimlik doğrulama bilgisi alınamadı. Lütfen tekrar deneyin.';
+        throw err;
+      }
+      if (!firebase.auth.OAuthProvider) {
+        const err = new Error('Apple ile giriş yapılamadı. Lütfen tekrar deneyin.');
+        err.userMessage = 'Apple ile giriş yapılamadı. Lütfen tekrar deneyin.';
+        throw err;
+      }
+      const provider = new firebase.auth.OAuthProvider('apple.com');
+      const firebaseCredential = provider.credential({
+        idToken: idToken,
+        rawNonce: nonce
+      });
+      await firebase.auth().signInWithCredential(firebaseCredential);
+      const user = firebase.auth().currentUser;
+      await ensureAppleUserProfile(user, nativeDisplayName);
+      return {
+        ok: true,
+        user: user
+      };
+    } catch (e) {
+      if (isAppleSignInCancelled(e) || (e && e.code === 'APPLE_SIGNIN_CANCELLED')) {
+        throwAppleCancelled();
+      }
+      const message = (e && e.userMessage) ? String(e.userMessage) : mapAppleAuthErrorToMessage(e);
+      const err = new Error(message || 'Apple ile giriş yapılamadı. Lütfen tekrar deneyin.');
+      err.userMessage = message || 'Apple ile giriş yapılamadı. Lütfen tekrar deneyin.';
+      err.code = e && e.code ? String(e.code) : '';
+      err.cause = e;
+      throw err;
+    }
+  }
+
   window.SA_MACHINE_AUTH = {
     PLATFORM_MACHINE_TENANT_ID: PLATFORM_MACHINE_TENANT_ID,
     signInInstitutionCredentials: signInInstitutionCredentials,
@@ -2300,6 +2502,7 @@ Tenant selection foundation: selectedTenantId, storage fallback, bootstrap after
     bootstrapPublicCandidate: bootstrapPublicCandidate,
     resolveOrBootstrapPublicSession: resolveOrBootstrapPublicSession,
     signInPublicWithGoogleCredential: signInPublicWithGoogleCredential,
+    signInPublicWithAppleCredential: signInPublicWithAppleCredential,
     extractMachineErrorCode: extractMachineErrorCode,
     usernameOrEmailToEmail: usernameOrEmailToEmail,
     MACHINE_SESSION_HINT_KEY: MACHINE_SESSION_HINT_KEY,

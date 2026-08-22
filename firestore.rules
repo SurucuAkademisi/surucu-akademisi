@@ -222,6 +222,26 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') == 'public_user';
     }
 
+    // Phase A2: Public Ehliyet mailbox eligibility.
+    // Legacy public_user OR student with server-granted public driving_license entitlement.
+    // role == 'student' alone is never enough.
+    function isPublicPortalEligible() {
+      return isPublicUser()
+        || (
+          request.auth != null
+          && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') == 'student'
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data
+              .get('programEnrollments', {})
+              .get('driving_license', {})
+              .get('status', '') == 'active'
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data
+              .get('programEnrollments', {})
+              .get('driving_license', {})
+              .get('source', '') == 'public'
+        );
+    }
+
     // Patch 1A: owner may update profile fields, but must not change/add privileged keys.
     function hasNoPrivilegedUserFieldChanges() {
       return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
@@ -315,7 +335,7 @@ service cloud.firestore {
     }
 
     function canPublicUserCreatePlatformMailboxReply() {
-      return isPublicUser()
+      return isPublicPortalEligible()
         && request.resource.data.senderType == 'public_user'
         && request.resource.data.senderUid == request.auth.uid
         && request.resource.data.recipientType == 'super_admin'
@@ -346,7 +366,7 @@ service cloud.firestore {
     // Delivery to Super Admin remains on platformMailbox; this only allows a narrow
     // self-mailbox copy so the public client can show "Sen" after refresh.
     function canPublicUserCreateOwnUserMailboxSentMirror(userId) {
-      return isPublicUser()
+      return isPublicPortalEligible()
         && request.auth.uid == userId
         && request.resource.data.senderType == 'public_user'
         && request.resource.data.senderUid == request.auth.uid
@@ -1108,7 +1128,7 @@ service cloud.firestore {
 
     // Public soft-hide (D0): owner may set only deletedFor* fields on own userMailbox messages.
     function canPublicUserSoftDeleteOwnUserMailboxMessage(userId) {
-      return isPublicUser()
+      return isPublicPortalEligible()
         && request.auth.uid == userId
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'deletedForPublicUser',
@@ -1122,7 +1142,7 @@ service cloud.firestore {
 
     // Public conversation hide (D0): own threadStates under userMailbox.
     function canPublicUserWriteOwnThreadState(userId, threadId) {
-      return isPublicUser()
+      return isPublicPortalEligible()
         && request.auth.uid == userId
         && request.resource.data.threadId == threadId
         && request.resource.data.hidden is bool
@@ -1240,7 +1260,7 @@ service cloud.firestore {
     match /userMailbox/{userId}/threadStates/{threadId} {
       allow read: if isAuthenticated() && request.auth.uid == userId;
       allow create, update: if canPublicUserWriteOwnThreadState(userId, threadId);
-      allow delete: if isAuthenticated() && request.auth.uid == userId && isPublicUser();
+      allow delete: if isAuthenticated() && request.auth.uid == userId && isPublicPortalEligible();
     }
 
     // Student conversation hide (D2): users/{uid}/mailboxThreadStates/{threadId}

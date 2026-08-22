@@ -7,7 +7,7 @@
 
   var firebaseConfig = {
     apiKey: 'AIzaSyCpOESMP9HOvjY_Z-fv0w5G0MC-UVI5D_0',
-    authDomain: 'surucuakademisi-f5e1f.firebaseapp.com',
+    authDomain: 'surucuakademisi.com',
     projectId: 'surucuakademisi-f5e1f',
     storageBucket: 'surucuakademisi-f5e1f.firebasestorage.app',
     messagingSenderId: '268662659371',

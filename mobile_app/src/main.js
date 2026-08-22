@@ -4,12 +4,15 @@ const App = Plugins?.App ?? window.Capacitor?.App;
 const ActionSheet = Plugins?.ActionSheet ?? window.Capacitor?.ActionSheet;
 const AdMob = Plugins?.AdMob ?? window.Capacitor?.AdMob;
 
+/** Keep true for simulator/dev. Set false only for final iOS App Store/TestFlight live ads. */
+const IOS_ADMOB_TEST_MODE = true;
+
 const TEST_BANNER_ANDROID = 'ca-app-pub-3940256099942544/6300978111';
-const TEST_BANNER_IOS = 'ca-app-pub-3940256099942544/2934735716';
+const PROD_BANNER_IOS = 'ca-app-pub-6007683702307529/2939488056';
 const TEST_INTERSTITIAL_ANDROID = 'ca-app-pub-3940256099942544/1033173712';
-const TEST_INTERSTITIAL_IOS = 'ca-app-pub-3940256099942544/4411468910';
+const PROD_INTERSTITIAL_IOS = 'ca-app-pub-6007683702307529/2744046930';
 const TEST_REWARDED_ANDROID = 'ca-app-pub-3940256099942544/5224354917';
-const TEST_REWARDED_IOS = 'ca-app-pub-3940256099942544/1712485313';
+const PROD_REWARDED_IOS = 'ca-app-pub-6007683702307529/3865556913';
 
 const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000;
 let lastInterstitialAt = 0;
@@ -24,16 +27,26 @@ function isNative() {
   return platform === 'android' || platform === 'ios';
 }
 
+function isIosPlatform() {
+  return Capacitor?.getPlatform?.() === 'ios';
+}
+
+/** Android always test-safe; iOS follows IOS_ADMOB_TEST_MODE. */
+function shouldUseAdMobTesting() {
+  if (!isIosPlatform()) return true;
+  return IOS_ADMOB_TEST_MODE === true;
+}
+
 function getBannerAdUnitId() {
-  return Capacitor?.getPlatform?.() === 'ios' ? TEST_BANNER_IOS : TEST_BANNER_ANDROID;
+  return isIosPlatform() ? PROD_BANNER_IOS : TEST_BANNER_ANDROID;
 }
 
 function getInterstitialAdUnitId() {
-  return Capacitor?.getPlatform?.() === 'ios' ? TEST_INTERSTITIAL_IOS : TEST_INTERSTITIAL_ANDROID;
+  return isIosPlatform() ? PROD_INTERSTITIAL_IOS : TEST_INTERSTITIAL_ANDROID;
 }
 
 function getRewardedAdUnitId() {
-  return Capacitor?.getPlatform?.() === 'ios' ? TEST_REWARDED_IOS : TEST_REWARDED_ANDROID;
+  return isIosPlatform() ? PROD_REWARDED_IOS : TEST_REWARDED_ANDROID;
 }
 
 function canShowInterstitial() {
@@ -46,7 +59,7 @@ async function showBannerBottom() {
     adSize: 'BANNER',
     position: 'BOTTOM_CENTER',
     margin: 0,
-    isTesting: true,
+    isTesting: shouldUseAdMobTesting(),
   });
 }
 
@@ -60,7 +73,7 @@ async function ensureInterstitialReady() {
     console.log('[AdMob] Interstitial prepare start.');
     await AdMob.prepareInterstitial({
       adId: getInterstitialAdUnitId(),
-      isTesting: true,
+      isTesting: shouldUseAdMobTesting(),
     });
     console.log('[AdMob] Interstitial prepare success.');
 
@@ -136,7 +149,7 @@ async function ensureRewardedReadyAndShow(reason) {
     console.log('[AdsGate] Rewarded prepare start:', reason);
     await AdMob.prepareRewardVideoAd({
       adId: getRewardedAdUnitId(),
-      isTesting: true,
+      isTesting: shouldUseAdMobTesting(),
     });
     console.log('[AdsGate] Rewarded prepare success:', reason);
 
@@ -493,7 +506,7 @@ async function bootstrap() {
   try {
     await AdMob.initialize({
       requestTrackingAuthorization: true,
-      initializeForTesting: true,
+      initializeForTesting: shouldUseAdMobTesting(),
       testingDevices: [],
     });
 

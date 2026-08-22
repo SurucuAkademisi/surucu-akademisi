@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>268662659371-hhvnlcvurf8v55b8oivj9gc5g44a5d9p.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.268662659371-hhvnlcvurf8v55b8oivj9gc5g44a5d9p</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>268662659371-f2plf7f7sk7ij3vc5n1c8vm3sdnvh9nq.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBU0V7Fo7SxD-nnVGj6j4GM01i2AlO31-U</string>
+	<key>GCM_SENDER_ID</key>
+	<string>268662659371</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>io.surucuakademisi.app</string>
+	<key>PROJECT_ID</key>
+	<string>surucuakademisi-f5e1f</string>
+	<key>STORAGE_BUCKET</key>
+	<string>surucuakademisi-f5e1f.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:268662659371:ios:230af2498a8a5365e74d6e</string>
+</dict>
+</plist>

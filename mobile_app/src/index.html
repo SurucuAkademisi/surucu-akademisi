@@ -64,6 +64,9 @@ All other login/auth files are deprecated and must not be imported.
         html, body {
             height: 100%;
         }
+        html {
+            background-color: #050812;
+        }
         body { 
             font-family: 'Segoe UI', sans-serif; 
             margin: 0; overflow: hidden; color: #ecf0f1;
@@ -131,7 +134,7 @@ All other login/auth files are deprecated and must not be imported.
         /* Parçacıkların bulunduğu kapsayıcı */
         .particles {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            overflow: hidden; z-index: -1; /* İçeriğin arkasında kal */
+            overflow: hidden; z-index: 0; /* İçeriğin arkasında kal */
             pointer-events: none; /* Tıklamayı engelleme */
         }
 
@@ -1135,6 +1138,10 @@ All other login/auth files are deprecated and must not be imported.
         #home-screen .home-menu-stack > .menu-btn:nth-child(6) i {
             color: #fdba74;
             text-shadow: 0 0 8px rgba(230, 126, 34, 0.8), 0 0 20px rgba(253, 186, 116, 0.6);
+        }
+        /* Institution-only: keep Driving Program card out of layout until eligibility is proven. */
+        #home-screen #btn-home-driving-program[hidden] {
+            display: none !important;
         }
         @media (max-width: 420px) {
             /* Home logo/slogan sizing is owned by HOME FIT CORRECTIVE (always-on). Do not enlarge to 208px. */
@@ -2705,6 +2712,11 @@ All other login/auth files are deprecated and must not be imported.
             display: flex;
             flex-direction: column;
             align-items: stretch;
+        }
+        #special-lesson-request-screen .slr-week-day-head.is-past-day,
+        #special-lesson-request-screen .slr-week-cell.is-past-day {
+            opacity: 0.48;
+            filter: saturate(0.72) brightness(0.88);
         }
         #special-lesson-request-screen .slr-week-block {
             appearance: none;
@@ -5750,6 +5762,45 @@ All other login/auth files are deprecated and must not be imported.
             box-shadow: var(--glow-soft);
             backdrop-filter: blur(10px);
         }
+        #profile-account-delete-root {
+            border-color: rgba(248, 113, 113, 0.38);
+        }
+        #profile-account-delete-copy,
+        #profile-account-delete-managed {
+            margin: 0 0 12px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            line-height: 1.45;
+            color: #94a3b8;
+        }
+        #btn-profile-account-delete {
+            appearance: none;
+            width: 100%;
+            min-height: 44px;
+            border-radius: 12px;
+            border: 1px solid rgba(248, 113, 113, 0.7);
+            background: linear-gradient(145deg, rgba(127, 29, 29, 0.92), rgba(185, 28, 28, 0.88));
+            color: #fee2e2;
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        #btn-profile-account-delete:disabled {
+            opacity: 0.45;
+            cursor: default;
+        }
+        #account-delete-modal .signup-title {
+            color: #fecaca;
+        }
+        #account-delete-modal #account-delete-confirm-submit:disabled {
+            opacity: 0.45;
+            cursor: default;
+        }
+        #account-delete-modal #account-delete-confirm-submit:not(:disabled) {
+            border-color: rgba(248, 113, 113, 0.85);
+            background: linear-gradient(145deg, #b91c1c, #991b1b);
+            color: #fff;
+        }
         .profile-messages-list { max-height: 320px; overflow-y: auto; }
         .profile-messages-item {
             padding: 12px 14px;
@@ -7041,6 +7092,35 @@ All other login/auth files are deprecated and must not be imported.
         #tab-club .league-sub { color: #a7b6ca; font-size: 0.74rem; letter-spacing: 0.01em; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         #tab-club .league-points { text-align: right; color: #fef3c7; font-size: 1rem; font-weight: 800; white-space: nowrap; border: 1px solid rgba(250, 204, 21, 0.32); background: rgba(146, 64, 14, 0.16); border-radius: 10px; padding: 4px 8px 3px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 0 10px rgba(234, 179, 8, 0.16); }
         #tab-club .league-points small { display: block; color: #b6c4d6; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.01em; margin-top: 1px; }
+        #tab-club .league-avatar {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: rgba(30, 41, 59, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #tab-club .league-avatar-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        #tab-club .league-avatar-fallback {
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: #e2e8f0;
+            line-height: 1;
+            text-transform: uppercase;
+            user-select: none;
+        }
 
         /* --- LOGIN GATE --- */
         #login-screen {
@@ -10751,6 +10831,32 @@ All other login/auth files are deprecated and must not be imported.
             opacity: 0.55;
             pointer-events: none;
         }
+        #machine-session-screen #machine-profile-account-delete-root {
+            border-color: rgba(248, 113, 113, 0.38);
+        }
+        #machine-session-screen #machine-profile-account-delete-copy {
+            margin: 0 0 12px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            line-height: 1.45;
+            color: #94a3b8;
+        }
+        #machine-session-screen #btn-machine-profile-account-delete {
+            appearance: none;
+            width: 100%;
+            min-height: 44px;
+            border-radius: 12px;
+            border: 1px solid rgba(248, 113, 113, 0.7);
+            background: linear-gradient(145deg, rgba(127, 29, 29, 0.92), rgba(185, 28, 28, 0.88));
+            color: #fee2e2;
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        #machine-session-screen #btn-machine-profile-account-delete:disabled {
+            opacity: 0.45;
+            cursor: default;
+        }
         #machine-session-screen #machine-profile-messages-card {
             display: flex;
             align-items: center;
@@ -11865,7 +11971,8 @@ All other login/auth files are deprecated and must not be imported.
                 0 0 14px rgba(34, 211, 238, 0.10),
                 inset 0 1px 0 rgba(255, 255, 255, 0.08);
         }
-        #instructor-session-screen #instructor-home-agenda-unread-badge {
+        #instructor-session-screen #instructor-home-agenda-unread-badge,
+        #instructor-session-screen #instructor-home-room-unread-badge {
             position: absolute;
             right: 14px;
             top: 50%;
@@ -11887,7 +11994,8 @@ All other login/auth files are deprecated and must not be imported.
             pointer-events: none;
             box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 0 10px rgba(225, 29, 72, 0.45);
         }
-        #instructor-session-screen #instructor-home-agenda-unread-badge.is-visible {
+        #instructor-session-screen #instructor-home-agenda-unread-badge.is-visible,
+        #instructor-session-screen #instructor-home-room-unread-badge.is-visible {
             display: inline-flex;
         }
         #instructor-session-screen .instructor-home-menu-btn[data-instructor-target="instructor-agenda-screen"]::before {
@@ -15132,7 +15240,6 @@ All other login/auth files are deprecated and must not be imported.
                 <button type="button" class="login-forgot-btn" id="btn-driving-forgot-password" onclick="handleDrivingForgotPassword()">Şifremi Unuttum</button>
             </div>
             <div id="login-error" class="login-error"></div>
-            <a id="login-debug-copy" href="#" style="display:none;font-size:11px;color:#38bdf8;margin-top:4px;" class="login-error">[Debug log kopyala]</a>
             <div class="menu-btn login-btn" onclick="handleLogin()">
                 <i class="fa-solid fa-right-to-bracket"></i> Giriş Yap
             </div>
@@ -15148,8 +15255,8 @@ All other login/auth files are deprecated and must not be imported.
                 <button type="button" class="social-login-btn microsoft-btn" style="display:none" onclick="handleMicrosoftSignIn()">
                     <i class="fa-brands fa-microsoft"></i> Microsoft ile giriş
                 </button>
-                <button type="button" class="social-login-btn apple-btn">
-                    <i class="fa-brands fa-apple"></i> Apple ile giriş (Yakında)
+                <button type="button" class="social-login-btn apple-btn" onclick="handleAppleSignIn()">
+                    <i class="fa-brands fa-apple"></i> Apple ile giriş
                 </button>
             </div>
             </div>
@@ -15210,7 +15317,7 @@ All other login/auth files are deprecated and must not be imported.
                                 <span class="machine-gmail-text"><span class="machine-gmail-g">G</span>mail ile giriş</span>
                             </button>
                             <button type="button" class="machine-provider-btn" id="btn-machine-apple" onclick="handleMachineAppleClick()">
-                                <i class="fa-brands fa-apple"></i> Apple ile giriş (Yakında)
+                                <i class="fa-brands fa-apple"></i> Apple ile giriş
                             </button>
                         </div>
                     </div>
@@ -15449,6 +15556,11 @@ All other login/auth files are deprecated and must not be imported.
                                 <span id="machine-profile-messages-open-indicator" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
                             </span>
                         </button>
+                        <div id="machine-profile-account-delete-root" class="machine-profile-card machine-profile-card--account-delete" style="display:none;" hidden>
+                            <div class="machine-profile-card-heading">Hesap</div>
+                            <p id="machine-profile-account-delete-copy">Hesabınızı kalıcı olarak silebilirsiniz. Bu işlem geri alınamaz.</p>
+                            <button type="button" id="btn-machine-profile-account-delete" onclick="openMachineProfileAccountDeleteModal()">Hesabımı Sil</button>
+                        </div>
                         <button type="button" id="machine-profile-refresh" class="machine-profile-refresh-btn">Yenile</button>
                     </div>
                 </section>
@@ -15650,6 +15762,7 @@ All other login/auth files are deprecated and must not be imported.
                                 <span class="instructor-home-menu-btn-title">USTA ÖĞRETİCİLER İLETİŞİM ODASI</span>
                                 <span class="instructor-home-menu-btn-subtitle">Kurumunuzdaki direksiyon usta öğreticileriyle grup iletişimi.</span>
                             </div>
+                            <span id="instructor-home-room-unread-badge" class="instructor-home-agenda-unread-badge" hidden>0 yeni</span>
                         </button>
                     </div>
                 </section>
@@ -16051,7 +16164,7 @@ All other login/auth files are deprecated and must not be imported.
             <div class="auth-preparing-busy-card">
                 <div class="auth-preparing-busy-brand" aria-hidden="true">
                     <div class="auth-preparing-busy-logo-wrap">
-                        <img class="auth-preparing-busy-logo" src="./assets/tenant-logos/surucu_akademisi.png" alt="" onerror="this.onerror=null;this.src='./resimler/logo.png'">
+                        <img class="auth-preparing-busy-logo" alt="" style="display:none;">
                         <div class="auth-preparing-busy-loader">
                             <div class="auth-preparing-busy-ring"></div>
                             <div class="auth-preparing-busy-ring auth-preparing-busy-ring--inner"></div>
@@ -16059,7 +16172,7 @@ All other login/auth files are deprecated and must not be imported.
                     </div>
                 </div>
                 <div class="auth-preparing-busy-copy">
-                    <p class="auth-preparing-busy-eyebrow">SÜRÜCÜ AKADEMİSİ</p>
+                    <p class="auth-preparing-busy-eyebrow" style="display:none;"></p>
                     <p class="auth-preparing-busy-title">Oturumunuz hazırlanıyor</p>
                     <p class="auth-preparing-busy-text">Bilgileriniz güvenli biçimde doğrulanıyor</p>
                 </div>
@@ -16074,7 +16187,7 @@ All other login/auth files are deprecated and must not be imported.
             <div class="sa-operation-card">
                 <div class="sa-operation-brand" aria-hidden="true">
                     <div class="sa-operation-logo-wrap">
-                        <img id="sa-operation-logo" src="./resimler/logo.png" alt="" />
+                        <img id="sa-operation-logo" src="./assets/tenant-logos/surucu_akademisi.png" alt="" />
                         <div class="sa-operation-loader">
                             <div class="sa-operation-ring"></div>
                             <div class="sa-operation-ring sa-operation-ring--inner"></div>
@@ -16193,6 +16306,35 @@ justify-content:center;
         </div>
     </div>
 
+    <div id="account-delete-modal" class="signup-modal-overlay" style="display:none;" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="account-delete-title" onclick="closeProfileAccountDeleteModal(event)">
+        <div class="signup-modal" onclick="event.stopPropagation()">
+            <div id="account-delete-step-1">
+                <div class="signup-title" id="account-delete-title">Hesabınızı kalıcı olarak silmek üzeresiniz.</div>
+                <p class="password-reset-help" id="account-delete-step1-body">Girişiniz kapanır. Bu işlem geri alınamaz. Kişisel hesap verileriniz silinir veya anonimleştirilir.</p>
+                <p class="password-reset-help" id="account-delete-step1-machine-note" style="display:none;">Bu işlem yalnızca İş Makineleri kaydını değil, Sürücü Akademisi hesabınızı siler.</p>
+                <div id="account-delete-step1-error" class="login-error" style="display:none;"></div>
+                <div class="signup-actions">
+                    <button type="button" class="menu-btn login-btn" id="account-delete-continue" onclick="advanceProfileAccountDeleteModal()">Devam Et</button>
+                    <button type="button" class="signup-cancel-btn" id="account-delete-cancel-1" onclick="closeProfileAccountDeleteModal()">Vazgeç</button>
+                </div>
+            </div>
+            <div id="account-delete-step-2" style="display:none;">
+                <div class="signup-title" id="account-delete-step2-title">Onaylamak için “sil” yazın.</div>
+                <form id="account-delete-confirm-form" onsubmit="return submitProfileAccountDelete(event)">
+                    <div class="login-field">
+                        <label for="account-delete-confirm-input" class="login-visually-hidden">Onay</label>
+                        <input id="account-delete-confirm-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="SİL" aria-label="Onay metni" oninput="syncProfileAccountDeleteConfirmButton()">
+                    </div>
+                    <div id="account-delete-step2-error" class="login-error" style="display:none;"></div>
+                    <div class="signup-actions">
+                        <button type="submit" class="menu-btn login-btn" id="account-delete-confirm-submit" disabled>Hesabı Sil</button>
+                        <button type="button" class="signup-cancel-btn" id="account-delete-cancel-2" onclick="closeProfileAccountDeleteModal()">Vazgeç</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div id="machine-signup-modal" class="signup-modal-overlay" style="display:none;" onclick="closeMachineSignupModal(event)">
         <div class="signup-modal" onclick="event.stopPropagation()" style="border-color:rgba(234,179,8,0.45);">
             <div class="signup-title">İş Makineleri Bireysel Hesap</div>
@@ -16238,11 +16380,11 @@ justify-content:center;
 
         <div class="home-hero-zone">
             <div class="logoWrap">
-                <img id="home-logo-img" src="resimler/logo.png" alt="Sürücü Akademisi Logo">
+                <img id="home-logo-img" src="./assets/tenant-logos/surucu_akademisi.png" alt="Sürücü Akademisi Logo">
                 <div class="logoHalo"></div>
             </div>
             <div class="home-slogan-wrap">
-                <div id="home-slogan-main" class="home-slogan-main">Ehliyet Yolculuğunda Akıllı Eğitim Rehberin</div>
+                <div id="home-slogan-main" class="home-slogan-main">Ehliyet Yolculuğunun Akıllı Rehberi</div>
                 <div id="home-slogan-sub" class="home-slogan-sub">Sürücü Akademisi</div>
             </div>
         </div>
@@ -16273,7 +16415,7 @@ justify-content:center;
                     <span class="home-menu-btn-subtitle">Dijital Öğrenme Merkezi</span>
                 </div>
             </div>
-            <div class="menu-btn" onclick="openDrivingProgramScreen()">
+            <div class="menu-btn" id="btn-home-driving-program" hidden onclick="openDrivingProgramScreen()">
                 <i class="fa-solid fa-car"></i>
                 <div class="home-menu-btn-copy">
                     <span class="home-menu-btn-title">Direksiyon Ders Programım</span>
@@ -16848,6 +16990,14 @@ justify-content:center;
                     <div id="profile-messages-list" class="profile-messages-list"></div>
                     <div id="profile-messages-empty" class="profile-messages-empty" style="display:none;">Henüz mesajınız yok.</div>
                 </div>
+                <div id="profile-account-delete-root" class="profile-progress-card" style="display:none;" hidden>
+                    <div class="profile-progress-header">
+                        <div class="profile-progress-title"><span>Hesap</span></div>
+                    </div>
+                    <p id="profile-account-delete-copy">Hesabınızı kalıcı olarak silebilirsiniz. Bu işlem geri alınamaz.</p>
+                    <p id="profile-account-delete-managed" style="display:none;">Bu hesap kurumunuz tarafından yönetilir. Uygulama içinden silinemez.</p>
+                    <button type="button" id="btn-profile-account-delete" onclick="openProfileAccountDeleteModal()">Hesabımı Sil</button>
+                </div>
                 <div id="profile-messages-modal-overlay" class="profile-messages-modal-overlay" onclick="closeProfileMessageDetail(event)">
                     <div class="profile-messages-modal" onclick="event.stopPropagation()">
                         <div class="profile-messages-modal__header">
@@ -16907,7 +17057,7 @@ justify-content:center;
             <div id="tab-contact" class="tab-content">
                 <div class="contact-logo-box">
                     <div class="logoWrap" style="width: 160px; height: 160px; margin: 0 auto 10px;">
-                        <img id="contact-logo-img" src="resimler/logo.png" alt="Logo">
+                        <img id="contact-logo-img" src="./assets/tenant-logos/surucu_akademisi.png" alt="Logo">
                         <div class="logoHalo"></div>
                     </div>
                     <div id="contact-slogan" class="contact-slogan">Geleceğin Güvenli Sürücülerini Yetiştiriyoruz</div>
@@ -17199,11 +17349,6 @@ justify-content:center;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
     navigator.serviceWorker.register('sw.js');
 }
-// #region agent log - host for mobile debug (Android emulator: 10.0.2.2 = host localhost)
-(function(){try{var p=(typeof window!=='undefined'&&window.Capacitor&&typeof window.Capacitor.getPlatform==='function')?window.Capacitor.getPlatform():'';window.__DUEL_DBG_HOST=(p==='android')?'10.0.2.2':'127.0.0.1';}catch(e){window.__DUEL_DBG_HOST='127.0.0.1';}})();
-function __duelDbg(p){var h=window.__DUEL_DBG_HOST||'127.0.0.1';fetch('http://'+h+':7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'37abf9'},body:JSON.stringify(Object.assign({sessionId:'37abf9',timestamp:Date.now()},p))}).catch(function(){});
-try{var arr=JSON.parse(localStorage.getItem('duel_debug_37abf9')||'[]');if(!Array.isArray(arr))arr=[];arr.push(p);if(arr.length>80)arr=arr.slice(-80);localStorage.setItem('duel_debug_37abf9',JSON.stringify(arr));}catch(_){}}
-// #endregion
 
 let __signupFlowInProgress = false;
 
@@ -17887,6 +18032,98 @@ function showMachineRestoreBusy() {
 
 var __authPreparingShowTimer = null;
 
+function isAuthPreparingSaBrandSrc(src) {
+    var s = String(src || '').trim().toLowerCase();
+    if (!s) return true;
+    if (s.indexOf('surucu_akademisi.png') !== -1) return true;
+    if (s.indexOf('resimler/logo.png') !== -1) return true;
+    return false;
+}
+
+function hideAuthPreparingBrandVisuals(img, kicker) {
+    if (img) {
+        img.onload = null;
+        img.onerror = null;
+        try { img.removeAttribute('src'); } catch (_) {}
+        img.style.display = 'none';
+        img.alt = '';
+    }
+    if (kicker) {
+        kicker.textContent = '';
+        kicker.style.display = 'none';
+    }
+}
+
+function bindAuthPreparingOverlayBranding() {
+    var root = document.getElementById('auth-preparing-busy');
+    if (!root) return;
+    var img = root.querySelector('.auth-preparing-busy-logo');
+    var kicker = root.querySelector('.auth-preparing-busy-eyebrow');
+    var tid = '';
+    try {
+        if (window.SA_TENANT && typeof window.SA_TENANT.getSelectedTenantId === 'function') {
+            tid = String(window.SA_TENANT.getSelectedTenantId() || '').trim();
+        }
+    } catch (_) {}
+    var defaultBrandId = (typeof DEFAULT_BRAND_TENANT_ID !== 'undefined' && DEFAULT_BRAND_TENANT_ID)
+        ? String(DEFAULT_BRAND_TENANT_ID)
+        : 'surucu_akademisi';
+    var isGlobal = !tid || tid === defaultBrandId;
+
+    if (isGlobal) {
+        var saSrc = (typeof DEFAULT_LOGIN_LOGO_SRC !== 'undefined' && DEFAULT_LOGIN_LOGO_SRC)
+            ? DEFAULT_LOGIN_LOGO_SRC
+            : './assets/tenant-logos/surucu_akademisi.png';
+        if (kicker) {
+            kicker.textContent = 'SÜRÜCÜ AKADEMİSİ';
+            kicker.style.display = '';
+        }
+        if (img) {
+            img.onerror = function () {
+                img.onerror = null;
+                img.style.display = 'none';
+                try { img.removeAttribute('src'); } catch (_) {}
+            };
+            img.onload = function () {
+                img.style.display = '';
+            };
+            img.alt = 'Sürücü Akademisi Logo';
+            img.src = saSrc;
+            if (img.complete && img.naturalWidth > 0) img.style.display = '';
+        }
+        return;
+    }
+
+    var tenant = null;
+    try {
+        if (Array.isArray(__tenantListCache)) {
+            tenant = __tenantListCache.find(function (x) { return x && String(x.id || '') === tid; }) || null;
+        }
+    } catch (_) {}
+    var tenantName = tenant ? String(tenant.name || tenant.tenantId || tid).trim() : '';
+    var logoUrl = tenant && tenant.logoUrl ? String(tenant.logoUrl).trim() : '';
+    if (!logoUrl || isAuthPreparingSaBrandSrc(logoUrl)) {
+        hideAuthPreparingBrandVisuals(img, kicker);
+        return;
+    }
+    if (kicker) {
+        kicker.textContent = tenantName || '';
+        kicker.style.display = tenantName ? '' : 'none';
+    }
+    if (!img) return;
+    img.onerror = function () {
+        img.onerror = null;
+        hideAuthPreparingBrandVisuals(img, kicker);
+    };
+    img.onload = function () {
+        img.style.display = '';
+    };
+    img.alt = tenantName ? (tenantName + ' logosu') : '';
+    img.style.display = 'none';
+    img.src = logoUrl;
+    if (img.complete && img.naturalWidth > 0) img.style.display = '';
+}
+
 function hideAuthPreparingOverlay() {
     if (__authPreparingShowTimer != null) {
         try { clearTimeout(__authPreparingShowTimer); } catch (_) {}
@@ -17904,6 +18141,7 @@ function showAuthPreparingOverlay(delayMs) {
     var delay = (typeof delayMs === 'number' && delayMs >= 0) ? delayMs : 300;
     var el = document.getElementById('auth-preparing-busy');
     if (!el) return;
+    bindAuthPreparingOverlayBranding();
     if (__authPreparingShowTimer != null) {
         try { clearTimeout(__authPreparingShowTimer); } catch (_) {}
         __authPreparingShowTimer = null;
@@ -17919,6 +18157,7 @@ function showAuthPreparingOverlay(delayMs) {
         __authPreparingShowTimer = null;
         var node = document.getElementById('auth-preparing-busy');
         if (!node) return;
+        bindAuthPreparingOverlayBranding();
         node.style.display = 'flex';
         node.classList.add('is-visible');
         node.setAttribute('aria-hidden', 'false');
@@ -21229,6 +21468,38 @@ function paintMachineProfileSafeInitial() {
     if (lessonList) lessonList.innerHTML = '';
     setMachineProfileStatus('', false);
     setMachineProfileRefreshBusy(false);
+    try { paintMachineProfileAccountDeleteUi(); } catch (_) {}
+}
+
+function paintMachineProfileAccountDeleteUi() {
+    var root = document.getElementById('machine-profile-account-delete-root');
+    var btn = document.getElementById('btn-machine-profile-account-delete');
+    if (!root) return;
+    var show = false;
+    if (!__profileAccountDeleteState.forceManaged) {
+        if (typeof isMachinePublicSession === 'function' && isMachinePublicSession(currentMachineCandidateSession)) {
+            show = true;
+        }
+    }
+    if (!show) {
+        root.style.display = 'none';
+        root.hidden = true;
+        if (btn) {
+            btn.style.display = 'none';
+            btn.disabled = true;
+        }
+        return;
+    }
+    root.hidden = false;
+    root.style.display = 'block';
+    if (btn) {
+        btn.style.display = '';
+        btn.disabled = !!__profileAccountDeleteState.busy;
+    }
+}
+
+function openMachineProfileAccountDeleteModal() {
+    openProfileAccountDeleteModal('machine');
 }
 
 function resetMachineProfileState() {
@@ -22007,6 +22278,7 @@ function openMachineProfilePane() {
     renderMachineProfileIdentity(identity);
     renderMachineProfileProgram(identity);
     renderMachineProfileBrandingImmediate(session);
+    try { paintMachineProfileAccountDeleteUi(); } catch (_) {}
 
     var main = document.getElementById('machine-shell-main');
     if (main) main.scrollTop = 0;
@@ -24599,6 +24871,9 @@ function buildMachineNotificationDocsFromSnaps(viewerContext) {
                 periodGroup: ctx.periodGroup
             });
     });
+    if (typeof filterNotificationsByAccountCreatedFloor === 'function') {
+        docs = filterNotificationsByAccountCreatedFloor(docs, ctx.uid);
+    }
     docs.sort(function (a, b) {
         var ta = (a.data.createdAt && typeof a.data.createdAt.toMillis === 'function') ? a.data.createdAt.toMillis() : 0;
         var tb = (b.data.createdAt && typeof b.data.createdAt.toMillis === 'function') ? b.data.createdAt.toMillis() : 0;
@@ -24621,7 +24896,22 @@ function syncMachineNotificationRealtimeState(captured) {
     try {
         lastSeen = parseInt(localStorage.getItem(getMachineNotifSeenStorageKey(captured.uid, captured.tenantId)), 10) || 0;
     } catch (_) {}
+    var accountCreatedAtMs = (typeof readAccountCreatedAtCacheMs === 'function')
+        ? readAccountCreatedAtCacheMs(captured.uid)
+        : 0;
+    if (captured.uid && typeof isAccountCreatedAtCacheReady === 'function'
+        && !isAccountCreatedAtCacheReady(captured.uid)) {
+        if (!machineNotificationsState.paneOpen) updateMachineNotificationsBadge(0);
+        else {
+            updateMachineNotificationsBadge(0);
+            if (machineNotificationsState.view === 'list') renderMachineNotificationsList(docs);
+        }
+        return;
+    }
     var unseen = docs.filter(function (x) {
+        if (typeof isNotificationUnreadAfterAccountFloor === 'function') {
+            return isNotificationUnreadAfterAccountFloor(x.data, lastSeen, accountCreatedAtMs);
+        }
         var t = x.data && x.data.createdAt;
         return t && typeof t.toMillis === 'function' && t.toMillis() > lastSeen;
     });
@@ -24653,6 +24943,12 @@ function startMachineNotificationListener(viewerContext) {
     machineNotificationsState.tenantSnaps = [];
     machineNotificationsState.allSnaps = [];
     machineNotificationsState.ready = false;
+    if (typeof ensureAccountCreatedAtThen === 'function') {
+        ensureAccountCreatedAtThen(captured.uid, function () {
+            if (!isMachineAudienceSessionFresh(captured)) return;
+            syncMachineNotificationRealtimeState(captured);
+        });
+    }
     try {
         var unsub1 = firebase.firestore()
             .collection('notifications')
@@ -25092,7 +25388,11 @@ function handleMachineGoogleClick() {
 
 function handleMachineAppleClick() {
     if (__machineInstitutionLoginBusy || __machineAuthFlowInProgress || __machineSignupBusy) return;
-    setMachineLoginError(MSG_MACHINE_APPLE_SOON);
+    if (currentMachineLoginMode !== 'public') {
+        currentMachineLoginMode = 'public';
+        applyMachineLoginModeUi();
+    }
+    handleMachinePublicAppleLogin();
 }
 
 function openMachineSignupModal() {
@@ -25302,6 +25602,42 @@ async function handleMachinePublicGoogleLogin() {
     }
 }
 
+async function handleMachinePublicAppleLogin() {
+    if (__machineInstitutionLoginBusy || __machineAuthFlowInProgress || __machineSignupBusy) return;
+    currentMachineLoginMode = 'public';
+    applyMachineLoginModeUi();
+    setMachineLoginError('');
+    clearMachineCandidateSession();
+    if (!window.SA_MACHINE_AUTH
+        || typeof window.SA_MACHINE_AUTH.signInPublicWithAppleCredential !== 'function'
+        || typeof window.SA_MACHINE_AUTH.resolveOrBootstrapPublicSession !== 'function') {
+        setMachineLoginError('Apple ile giriş yapılamadı. Lütfen tekrar deneyin.');
+        return;
+    }
+    __machineAuthFlowInProgress = true;
+    setMachineInstitutionBusy(true);
+    try {
+        await window.SA_MACHINE_AUTH.signInPublicWithAppleCredential();
+        var resolved = await window.SA_MACHINE_AUTH.resolveOrBootstrapPublicSession();
+        await finalizePublicMachineSession(resolved);
+    } catch (e) {
+        var appleCancelled = e && String(e.code || '') === 'APPLE_SIGNIN_CANCELLED';
+        clearMachineSessionHintSafe();
+        await signOutMachineAuthQuietly();
+        clearMachineCandidateSession();
+        currentMachineLoginMode = 'public';
+        setRootScreenVisible('machine-login-screen');
+        applyMachineLoginModeUi();
+        if (!appleCancelled) {
+            var appleMsg = (e && e.userMessage) ? String(e.userMessage).trim() : '';
+            setMachineLoginError(appleMsg || mapMachineAuthErrorToMessage(e));
+        }
+    } finally {
+        __machineAuthFlowInProgress = false;
+        setMachineInstitutionBusy(false);
+    }
+}
+
 async function handleMachineInstitutionLogin() {
     if (__machineInstitutionLoginBusy || __machineAuthFlowInProgress || __machineSignupBusy) return;
     if (currentMachineLoginMode !== 'institution') {
@@ -25381,10 +25717,26 @@ async function handleMachineInstitutionLogin() {
     }
 }
 
+function clearInstitutionTenantContextForPublicFlow() {
+    try {
+        if (window.SA_LOGIN && typeof window.SA_LOGIN.clearInstitutionTenantState === 'function') {
+            var p = window.SA_LOGIN.clearInstitutionTenantState();
+            if (p && typeof p.catch === 'function') p.catch(function () {});
+            return;
+        }
+    } catch (_) {}
+    try {
+        if (window.SA_TENANT && typeof window.SA_TENANT.clearSelectedTenantId === 'function') {
+            window.SA_TENANT.clearSelectedTenantId();
+        }
+    } catch (_) {}
+}
+
 function showProgramSelect() {
     if (__machineInstitutionLoginBusy || __machineAuthFlowInProgress || __machineSignupBusy) return;
     hideAuthPreparingOverlay();
     closePasswordResetModal();
+    clearInstitutionTenantContextForPublicFlow();
     currentEntryProgram = null;
     currentInstitutionSelectorContext = 'driving';
     currentMachineLoginMode = 'public';
@@ -25406,12 +25758,14 @@ function showProgramSelect() {
 }
 
 function showDrivingLogin() {
+    clearInstitutionTenantContextForPublicFlow();
     currentEntryProgram = 'driving_license';
     currentInstitutionSelectorContext = 'driving';
     showLogin();
 }
 
 function showMachineEntry() {
+    clearInstitutionTenantContextForPublicFlow();
     currentEntryProgram = 'machine_operator';
     currentMachineLoginMode = 'public';
     try {
@@ -25644,7 +25998,9 @@ async function trySyncPublicProfileIdentity(uid, userDoc, authUser) {
         var visibleName = getMobileUserDisplayName(data, auth);
         var slug = buildInternalUsernameSlug(data, auth, uid);
         var fullName = clampPublicProfileField(trimMobileIdentityString(data.fullName) || visibleName, 200);
-        var photoUrl = clampPublicProfileField(trimMobileIdentityString(data.photoUrl || data.photoURL || auth.photoURL), 2048);
+        var photoUrl = clampPublicProfileField(trimMobileIdentityString(
+            data.profilePhotoUrl || data.photoUrl || data.photoURL || auth.photoURL
+        ), 2048);
         var displayName = clampPublicProfileField(visibleName, 32);
         var username = clampPublicProfileField(slug, 32);
         if (!displayName) displayName = clampPublicProfileField(username, 32) || 'Uye';
@@ -25722,13 +26078,28 @@ async function showApp() {
     }
     currentEntryProgram = null;
     clearMachineCandidateSession();
-    setRootScreenVisible('app-container');
-    await loadAndApplyTenantProfile();
-    // #region agent log
-    __duelDbg({runId:'duel-presence',hypothesisId:'H1',location:'index.html:showApp:beforeWriteDuelPresence',message:'showApp about to call writeDuelPresence',data:{}});
-    // #endregion
+    try { clearStartupRootFailsafe(); } catch (_) {}
+    var startupOverlayToken = null;
+    try {
+        if (typeof showSaOperationOverlay === 'function') {
+            startupOverlayToken = showSaOperationOverlay({
+                mode: 'explained',
+                kicker: '',
+                title: 'Oturumunuz hazırlanıyor',
+                desc: 'Bilgileriniz güvenli biçimde doğrulanıyor.'
+            });
+        }
+        await loadAndApplyTenantProfile(startupOverlayToken);
+    } finally {
+        if (startupOverlayToken != null && typeof hideSaOperationOverlay === 'function') {
+            hideSaOperationOverlay(startupOverlayToken);
+        }
+    }
     startDuelPresenceHeartbeat();
     ensureDuelInviteListener();
+    try {
+        void refreshDrivingProgramInstitutionVisibility();
+    } catch (_) {}
 }
 
 function instructorInitialsFromName(fullName, username) {
@@ -28309,8 +28680,10 @@ function countInstructorPrivateUnreadThreads() {
 function updateInstructorPrivateUnreadBadges() {
     var count = countInstructorPrivateUnreadThreads();
     var label = count > 0 ? String(count) : '';
+    var homeLabel = count > 0 ? (String(count) + ' yeni') : '';
     setInstructorUnreadBadgeEl(document.getElementById('instructor-private-tab-badge'), label);
     setInstructorUnreadBadgeEl(document.getElementById('instructor-room-private-unread-badge'), label);
+    setInstructorUnreadBadgeEl(document.getElementById('instructor-home-room-unread-badge'), homeLabel);
 }
 
 function refreshInstructorPrivateUiAfterParticipantCache(options) {
@@ -31730,10 +32103,6 @@ async function showInstructorApp(personaPayload) {
         try {
             console.log('[AuthGate] setupPushForCurrentUser çağrılıyor (instructor).');
         } catch (_) {}
-        // #region agent log
-        fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H0',location:'index.html:showInstructorApp',message:'instructor calling setupPushForCurrentUser',data:{},timestamp:Date.now()})}).catch(function(){});
-        try{var __dl=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__dl))__dl=[];__dl.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H0',location:'index.html:showInstructorApp',message:'instructor calling setupPushForCurrentUser',data:{},timestamp:Date.now()});if(__dl.length>80)__dl=__dl.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__dl));}catch(_){}
-        // #endregion
         try {
             setupPushForCurrentUser();
         } catch (_) {}
@@ -31775,12 +32144,6 @@ async function enterInstructorSessionFromAuth(user, options) {
     return true;
 }
 
-// #region agent log
-function _debugLogIndex(payload) {
-    fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2a11cc'},body:JSON.stringify(payload)}).catch(function(){});
-    try { var arr=JSON.parse(localStorage.getItem('debug_log_2a11cc')||'[]'); if(!Array.isArray(arr))arr=[]; arr.push(payload); if(arr.length>50)arr=arr.slice(-50); localStorage.setItem('debug_log_2a11cc',JSON.stringify(arr)); } catch(_){}
-}
-// #endregion
 
 function authErrorToMessage(e) {
     if (e && e.userMessage) return String(e.userMessage);
@@ -31815,29 +32178,14 @@ async function handleLogin() {
         err.style.display = 'none';
         err.style.color = '#ffb3b3';
     }
-    var dc = document.getElementById('login-debug-copy');
-    if (dc) { dc.style.display = 'none'; dc.textContent = '[Debug log kopyala]'; }
 
     const selectedTenantId = window.SA_TENANT && window.SA_TENANT.getSelectedTenantId ? window.SA_TENANT.getSelectedTenantId() : null;
-    // #region agent log
-    _debugLogIndex({sessionId:'2a11cc',runId:'tenant-login-1',hypothesisId:'H1',location:'mobile_app/src/index.html:handleLogin',message:'handleLogin start',data:{selectedTenantId:selectedTenantId||null,usernameLength:String(username||'').length},timestamp:Date.now()});
-    // #endregion
 
     try {
         if (!window.SA_LOGIN || typeof window.SA_LOGIN.signIn !== 'function') {
             if (err) {
                 err.textContent = 'Giriş sistemi yüklenemedi.';
                 err.style.display = 'block';
-            }
-            return;
-        }
-
-        // AUTH CORRECTIVE — pre-auth tenant guard (no Firebase Auth without kurum).
-        if (!selectedTenantId) {
-            if (err) {
-                err.textContent = 'Lütfen giriş yapmadan önce kurumunuzu seçin.';
-                err.style.display = 'block';
-                err.style.color = '#ffb3b3';
             }
             return;
         }
@@ -31857,20 +32205,9 @@ async function handleLogin() {
         try { console.log('[TenantDebug] login success selected tenant after showApp=', afterShow); } catch (_) {}
         await ensureContentLoaded(true);
     } catch (e) {
-        // #region agent log
-        _debugLogIndex({sessionId:'2a11cc',runId:'tenant-login-1',hypothesisId:'H4',location:'mobile_app/src/index.html:handleLogin',message:'handleLogin catch',data:{errorCode:e&&e.code?String(e.code):null,errorMessage:e&&e.message?String(e.message):null,userMessage:e&&e.userMessage?String(e.userMessage):null,mappedMessage:authErrorToMessage(e)},timestamp:Date.now()});
-        // #endregion
         if (err) {
             err.textContent = authErrorToMessage(e);
             err.style.display = err.textContent ? 'block' : 'none';
-            var debugLink = document.getElementById('login-debug-copy');
-            if (debugLink) {
-                try {
-                    var logs = localStorage.getItem('debug_log_2a11cc');
-                    debugLink.style.display = logs ? 'inline' : 'none';
-                    debugLink.onclick = function(ev) { ev.preventDefault(); try { navigator.clipboard.writeText(localStorage.getItem('debug_log_2a11cc')||''); debugLink.textContent = 'Kopyalandı'; } catch(_){} };
-                } catch(_) {}
-            }
         }
     } finally {
         hideAuthPreparingOverlay();
@@ -31906,6 +32243,44 @@ async function handleGoogleSignIn() {
         try { console.log('[TenantDebug] login success selected tenant after showApp=', afterShow); } catch (_) {}
         await ensureContentLoaded(true);
     } catch (e) {
+        if (err) {
+            err.textContent = authErrorToMessage(e);
+            err.style.display = err.textContent ? 'block' : 'none';
+        }
+    } finally {
+        hideAuthPreparingOverlay();
+    }
+}
+
+async function handleAppleSignIn() {
+    const err = document.getElementById('login-error');
+    if (err) {
+        err.textContent = '';
+        err.style.display = 'none';
+        err.style.color = '#ffb3b3';
+    }
+
+    try {
+        if (!window.SA_LOGIN || typeof window.SA_LOGIN.signInWithApple !== 'function') {
+            if (err) {
+                err.textContent = 'Apple ile giriş yapılamadı. Lütfen tekrar deneyin.';
+                err.style.display = 'block';
+            }
+            return;
+        }
+
+        await window.SA_LOGIN.signInWithApple();
+        var beforeShow = window.SA_TENANT && window.SA_TENANT.getSelectedTenantId ? window.SA_TENANT.getSelectedTenantId() : null;
+        try { console.log('[TenantDebug] login success selected tenant before showApp=', beforeShow); } catch (_) {}
+        await showApp();
+        var afterShow = window.SA_TENANT && window.SA_TENANT.getSelectedTenantId ? window.SA_TENANT.getSelectedTenantId() : null;
+        try { console.log('[TenantDebug] login success selected tenant after showApp=', afterShow); } catch (_) {}
+        await ensureContentLoaded(true);
+    } catch (e) {
+        var appleCode = (e && e.code) ? String(e.code) : '';
+        if (appleCode === 'APPLE_SIGNIN_CANCELLED') {
+            return;
+        }
         if (err) {
             err.textContent = authErrorToMessage(e);
             err.style.display = err.textContent ? 'block' : 'none';
@@ -32249,6 +32624,14 @@ async function submitSignup() {
         }
 
         __signupFlowInProgress = true;
+        try {
+            if (window.SA_LOGIN && typeof window.SA_LOGIN.clearInstitutionTenantState === 'function') {
+                await window.SA_LOGIN.clearInstitutionTenantState();
+            } else if (window.SA_TENANT && typeof window.SA_TENANT.clearSelectedTenantId === 'function') {
+                window.SA_TENANT.clearSelectedTenantId();
+            }
+        } catch (_) {}
+        try { updateSelectedKurumDisplay(); } catch (_) {}
         if (window.SA_OPERATION_OVERLAY && typeof window.SA_OPERATION_OVERLAY.show === 'function') {
             opTokenSignup = window.SA_OPERATION_OVERLAY.show({
                 mode: 'explained',
@@ -32259,14 +32642,8 @@ async function submitSignup() {
         }
         await window.SA_LOGIN.signUp(email, password, fullName);
         closeSignupModal();
-        const loginUserEl = document.getElementById('login-username');
-        if (loginUserEl) loginUserEl.value = email;
-        const loginErrOk = document.getElementById('login-error');
-        if (loginErrOk) {
-            loginErrOk.textContent = 'Hesabınız oluşturuldu. Giriş yapabilirsiniz.';
-            loginErrOk.style.color = '#86efac';
-            loginErrOk.style.display = 'block';
-        }
+        await showApp();
+        await ensureContentLoaded(true);
     } catch (e) {
         if (err) {
             err.textContent = authErrorToMessage(e);
@@ -32282,6 +32659,7 @@ async function submitSignup() {
 
 window.handleSignup = handleSignup;
 window.handleGoogleSignIn = handleGoogleSignIn;
+window.handleAppleSignIn = handleAppleSignIn;
 window.handleMicrosoftSignIn = handleMicrosoftSignIn;
 window.handleDrivingForgotPassword = handleDrivingForgotPassword;
 window.handleMachineForgotPassword = handleMachineForgotPassword;
@@ -32306,6 +32684,7 @@ async function handleLogout() {
     try {
         // Real logout must never inherit a controlled login-validation route intent.
         try { window.__saAuthNullRouteIntent = null; } catch (_) {}
+        try { resetDrivingProgramInstitutionVisibility(); } catch (_) {}
         hideAuthPreparingOverlay();
         if (window.SA_OPERATION_OVERLAY && typeof window.SA_OPERATION_OVERLAY.forceHide === 'function') {
             try { window.SA_OPERATION_OVERLAY.forceHide(); } catch (_) {}
@@ -32340,6 +32719,13 @@ async function handleLogout() {
         if (window.SA_PUBLIC_USER_SESSION && typeof window.SA_PUBLIC_USER_SESSION.clearPublicUserSession === 'function') {
             window.SA_PUBLIC_USER_SESSION.clearPublicUserSession();
         }
+        try {
+            if (window.SA_LOGIN && typeof window.SA_LOGIN.clearInstitutionTenantState === 'function') {
+                await window.SA_LOGIN.clearInstitutionTenantState();
+            } else if (window.SA_TENANT && typeof window.SA_TENANT.clearSelectedTenantId === 'function') {
+                window.SA_TENANT.clearSelectedTenantId();
+            }
+        } catch (_) {}
         try {
             var nativeAuth = window.Capacitor && window.Capacitor.Plugins ? window.Capacitor.Plugins.FirebaseAuthentication : null;
             if (nativeAuth && typeof nativeAuth.signOut === 'function') {
@@ -32627,6 +33013,7 @@ async function initAuthGate() {
             stopDuelPresenceHeartbeat();
             stopIncomingInviteWatch();
             resetDuelInviteRuntime();
+            try { resetDrivingProgramInstitutionVisibility(); } catch (_) {}
             if (window.SA_PUBLIC_USER_SESSION && typeof window.SA_PUBLIC_USER_SESSION.clearPublicUserSession === 'function') {
                 window.SA_PUBLIC_USER_SESSION.clearPublicUserSession();
             }
@@ -32732,7 +33119,7 @@ async function loadTenantProfile(tenantId) {
     }
 }
 
-var LOGO_FALLBACK_SRC = './resimler/logo.png';
+var LOGO_FALLBACK_SRC = './assets/tenant-logos/surucu_akademisi.png';
 /** Kurum seçili değilken (global/kurumsuz kullanıcı) kullanılan varsayılan marka tenant id. */
 var DEFAULT_BRAND_TENANT_ID = 'surucu_akademisi';
 
@@ -32864,7 +33251,7 @@ function isDefaultBrandHomeContext(tenantId) {
     return String(tenantId || '').trim() === DEFAULT_BRAND_TENANT_ID;
 }
 
-var HOME_PUBLIC_MAIN_TITLE = 'Ehliyet Yolculuğunda Akıllı Eğitim Rehberin';
+var HOME_PUBLIC_MAIN_TITLE = 'Ehliyet Yolculuğunun Akıllı Rehberi';
 var HOME_WEB_INFO_PUBLIC = 'Eğitime web sitemizden de kaldığınız yerden devam edebilirsiniz.';
 var HOME_WEB_INFO_TENANT = 'Kursunuzun tanımladığı kullanıcı adı ve şifreyle web sitemize giriş yaparak derslerinize kaldığınız yerden devam edebilirsiniz.';
 
@@ -32951,6 +33338,7 @@ var __announcementPopupClaimInFlight = false;
 var __announcementPopupPresentedStateIds = {};
 var __notificationBadgeUnsubscribe = null;
 var NOTIF_SEEN_KEY = 'sa_notif_seen_';
+var __accountCreatedAtCache = { uid: '', ms: 0, resolved: false, inflight: null };
 var __notificationTenantDocSnapshots = [];
 var __notificationAllDocSnapshots = [];
 var __notificationRealtimeTenantId = null;
@@ -33008,6 +33396,123 @@ function mobileAudienceTimestampToMillis(ts) {
         if (typeof ts === 'number' && isFinite(ts)) return ts;
     } catch (_) {}
     return null;
+}
+
+function getCurrentAuthUidSafe() {
+    try {
+        if (typeof firebase === 'undefined' || !firebase.auth || !firebase.auth().currentUser) return '';
+        return String(firebase.auth().currentUser.uid || '').trim();
+    } catch (_) {}
+    return '';
+}
+
+function getAuthMetadataCreationTimeMsForUid(uid) {
+    var id = String(uid || '').trim();
+    if (!id) return 0;
+    try {
+        var user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+        if (!user || String(user.uid || '').trim() !== id) return 0;
+        var creationTime = user.metadata && user.metadata.creationTime ? String(user.metadata.creationTime) : '';
+        if (!creationTime) return 0;
+        var ms = Date.parse(creationTime);
+        return (typeof ms === 'number' && isFinite(ms) && ms > 0) ? ms : 0;
+    } catch (_) {}
+    return 0;
+}
+
+function isAccountCreatedAtCacheReady(uid) {
+    var id = String(uid || '').trim();
+    return !!(id && __accountCreatedAtCache && __accountCreatedAtCache.uid === id && __accountCreatedAtCache.resolved);
+}
+
+function readAccountCreatedAtCacheMs(uid) {
+    var id = String(uid || '').trim();
+    if (!isAccountCreatedAtCacheReady(id)) return 0;
+    var ms = Number(__accountCreatedAtCache.ms) || 0;
+    return ms > 0 ? ms : 0;
+}
+
+async function resolveAccountCreatedAtMs(uid) {
+    var id = String(uid || '').trim();
+    if (!id) return 0;
+    if (isAccountCreatedAtCacheReady(id)) return readAccountCreatedAtCacheMs(id);
+    if (__accountCreatedAtCache && __accountCreatedAtCache.uid === id && __accountCreatedAtCache.inflight) {
+        return __accountCreatedAtCache.inflight;
+    }
+    __accountCreatedAtCache = { uid: id, ms: 0, resolved: false, inflight: null };
+    var pending = (async function () {
+        var ms = 0;
+        try {
+            if (typeof firebase !== 'undefined' && firebase.firestore) {
+                var snap = await firebase.firestore().collection('users').doc(id).get();
+                if (snap && snap.exists) {
+                    var fromDoc = mobileAudienceTimestampToMillis((snap.data() || {}).createdAt);
+                    if (fromDoc != null && fromDoc > 0) ms = fromDoc;
+                }
+            }
+        } catch (_) {}
+        if (!(ms > 0)) ms = getAuthMetadataCreationTimeMsForUid(id);
+        if (!__accountCreatedAtCache || __accountCreatedAtCache.uid !== id) {
+            return 0;
+        }
+        __accountCreatedAtCache.ms = (ms > 0) ? ms : 0;
+        __accountCreatedAtCache.resolved = true;
+        __accountCreatedAtCache.inflight = null;
+        return __accountCreatedAtCache.ms;
+    })();
+    __accountCreatedAtCache.inflight = pending;
+    return pending;
+}
+
+function ensureAccountCreatedAtThen(uid, onReady) {
+    var id = String(uid || '').trim();
+    if (!id) {
+        if (typeof onReady === 'function') onReady(0);
+        return;
+    }
+    Promise.resolve(resolveAccountCreatedAtMs(id)).then(function (ms) {
+        if (getCurrentAuthUidSafe() !== id) return;
+        if (typeof onReady === 'function') onReady(ms);
+    }).catch(function () {
+        if (getCurrentAuthUidSafe() !== id) return;
+        if (typeof onReady === 'function') onReady(readAccountCreatedAtCacheMs(id));
+    });
+}
+
+function getNotificationCreatedAtMs(data) {
+    return mobileAudienceTimestampToMillis(data && data.createdAt);
+}
+
+function isNotificationAtOrAfterAccountFloor(data, accountCreatedAtMs) {
+    var floor = Number(accountCreatedAtMs) || 0;
+    if (!(floor > 0)) return true;
+    var created = getNotificationCreatedAtMs(data);
+    if (created == null || !(created > 0)) return false;
+    return created >= floor;
+}
+
+function getNotificationUnreadCutoffMs(lastSeen, accountCreatedAtMs) {
+    var seen = Number(lastSeen) || 0;
+    var floor = Number(accountCreatedAtMs) || 0;
+    return Math.max(seen, floor);
+}
+
+function isNotificationUnreadAfterAccountFloor(data, lastSeen, accountCreatedAtMs) {
+    var created = getNotificationCreatedAtMs(data);
+    if (created == null || !(created > 0)) return false;
+    return created > getNotificationUnreadCutoffMs(lastSeen, accountCreatedAtMs);
+}
+
+function filterNotificationsByAccountCreatedFloor(docs, uid) {
+    var list = docs || [];
+    var id = String(uid || '').trim();
+    if (!id) return list;
+    if (!isAccountCreatedAtCacheReady(id)) return [];
+    var floor = readAccountCreatedAtCacheMs(id);
+    if (!(floor > 0)) return list;
+    return list.filter(function (x) {
+        return isNotificationAtOrAfterAccountFloor(x && x.data, floor);
+    });
 }
 
 function isMobileAnnouncementExpired(data, nowMs) {
@@ -33189,6 +33694,7 @@ function buildNotificationPanelDocs(effectiveTenantId, viewerContext) {
             periodGroup: ctx.periodGroup
         });
     });
+    docs = filterNotificationsByAccountCreatedFloor(docs, ctx.uid);
     docs.sort(function (a, b) {
         var ta = (a.data.createdAt && typeof a.data.createdAt.toMillis === 'function') ? a.data.createdAt.toMillis() : 0;
         var tb = (b.data.createdAt && typeof b.data.createdAt.toMillis === 'function') ? b.data.createdAt.toMillis() : 0;
@@ -33234,10 +33740,16 @@ function syncNotificationRealtimeState() {
     var ctx = getDrivingAudienceViewerContext();
     if (ctx && ctx.tenantId && String(ctx.tenantId) !== String(effectiveTenantId)) return;
     var lastSeen = parseInt(localStorage.getItem(NOTIF_SEEN_KEY + effectiveTenantId), 10) || 0;
+    var uid = (ctx && ctx.uid) ? String(ctx.uid).trim() : getCurrentAuthUidSafe();
     var docs = buildNotificationPanelDocs(effectiveTenantId, ctx);
+    if (uid && !isAccountCreatedAtCacheReady(uid)) {
+        if (!isNotificationPanelVisible()) updateNotificationBadge(0);
+        else if (getEffectiveNotificationTenantId() === effectiveTenantId) renderNotificationPanelList(docs);
+        return;
+    }
+    var accountCreatedAtMs = readAccountCreatedAtCacheMs(uid);
     var unseen = docs.filter(function (x) {
-        var t = x.data && x.data.createdAt;
-        return t && typeof t.toMillis === 'function' && t.toMillis() > lastSeen;
+        return isNotificationUnreadAfterAccountFloor(x.data, lastSeen, accountCreatedAtMs);
     });
     if (!isNotificationPanelVisible()) {
         updateNotificationBadge(unseen.length);
@@ -33263,6 +33775,13 @@ function startNotificationBadgeListener(effectiveTenantId, viewerContext) {
     if (viewerContext) {
         __drivingAudienceViewerContext = viewerContext;
     }
+    var resolveUid = (viewerContext && viewerContext.uid)
+        ? String(viewerContext.uid).trim()
+        : getCurrentAuthUidSafe();
+    ensureAccountCreatedAtThen(resolveUid, function () {
+        if (contextToken !== __notificationRealtimeContextToken) return;
+        syncNotificationRealtimeState();
+    });
     if (isNotificationPanelVisible()) {
         var panelTenantId = getEffectiveNotificationTenantId();
         if (panelTenantId !== effectiveTenantId) {
@@ -33722,6 +34241,10 @@ async function loadNotifications(effectiveTenantId, viewerContext) {
                 periodGroup: ctx.periodGroup
             });
         });
+        if (ctx.uid) {
+            try { await resolveAccountCreatedAtMs(ctx.uid); } catch (_) {}
+        }
+        docs = filterNotificationsByAccountCreatedFloor(docs, ctx.uid);
         docs.sort(function (a, b) {
             var ta = (a.data.createdAt && typeof a.data.createdAt.toMillis === 'function') ? a.data.createdAt.toMillis() : 0;
             var tb = (b.data.createdAt && typeof b.data.createdAt.toMillis === 'function') ? b.data.createdAt.toMillis() : 0;
@@ -33823,7 +34346,7 @@ function toggleAnnouncementItem(index) {
     }
 }
 
-async function loadAndApplyTenantProfile() {
+async function loadAndApplyTenantProfile(startupOverlayToken) {
     const selectedId = window.SA_TENANT && typeof window.SA_TENANT.getSelectedTenantId === 'function' ? window.SA_TENANT.getSelectedTenantId() : null;
     var effectiveTenantId = (selectedId && String(selectedId).trim()) ? String(selectedId).trim() : DEFAULT_BRAND_TENANT_ID;
     try { console.log('[TenantDebug] tenantId at profile load=', selectedId, 'effectiveBranding=', effectiveTenantId); } catch (_) {}
@@ -33831,6 +34354,10 @@ async function loadAndApplyTenantProfile() {
     __tenantProfileCache = { profile: profile, tenantId: effectiveTenantId };
     try { if (typeof refreshSaOperationOverlayLogoIfOpen === 'function') refreshSaOperationOverlayLogoIfOpen(); } catch (_) {}
     applyTenantProfileToHome(profile, effectiveTenantId);
+    setRootScreenVisible('app-container');
+    if (startupOverlayToken != null && typeof hideSaOperationOverlay === 'function') {
+        hideSaOperationOverlay(startupOverlayToken);
+    }
     var viewerContext = await resolveDrivingAudienceViewerContext(effectiveTenantId);
     var ann = await loadTenantAnnouncements(effectiveTenantId, viewerContext);
     var sysAnn = await loadSystemAnnouncement(viewerContext);
@@ -34666,7 +35193,6 @@ function teacherVideoEntitlementExpiryToMillisMobile(value) {
 }
 
 function saTvDebugLog(location, message, data) {
-    // #region agent log
     try {
         var payload = data && typeof data === 'object' ? data : {};
         var jsonText = '{}';
@@ -34678,11 +35204,6 @@ function saTvDebugLog(location, message, data) {
         if (typeof jsonText !== 'string' || !jsonText) jsonText = '{}';
         console.log('[SA-TV-DEBUG] ' + String(message || location || 'debug') + ' ' + jsonText);
     } catch (_) {}
-    try {
-        var safeData = data && typeof data === 'object' ? data : {};
-        fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4e438a'},body:JSON.stringify({sessionId:'4e438a',location:String(location||''),message:String(message||''),data:safeData,timestamp:Date.now(),runId:'sa-tv-debug',hypothesisId:'H-tv'})}).catch(function(){});
-    } catch (_) {}
-    // #endregion
 }
 
 function isExplicitTeacherVideoEntitlementActiveMobile(record) {
@@ -34836,14 +35357,12 @@ function resolveTeacherVideoTenantIdMobile() {
         // membership for Video Teacher entitlement. Do not treat it as a tenant.
         returned = '';
     }
-    // #region agent log
     saTvDebugLog('resolveTeacherVideoTenantIdMobile', 'resolve tenant', {
         isPublicSession: !!isPublic,
         selectedTenantId: selected || null,
         returnedTenantId: returned || null,
         returnedEmpty: !returned
     });
-    // #endregion
     return returned;
 }
 
@@ -34922,12 +35441,10 @@ async function ensureTeacherVideoUserEntitlementMobile() {
 
 async function loadTeacherVideoTenantEntitlementMobile(force) {
     var tenantId = resolveTeacherVideoTenantIdMobile();
-    // #region agent log
     saTvDebugLog('loadTeacherVideoTenantEntitlementMobile', 'tenant read start', {
         tenantId: tenantId || null,
         path: tenantId ? ('tenantSettings/' + tenantId) : null
     });
-    // #endregion
     if (!tenantId) {
         clearTeacherVideoTenantEntitlementCacheMobile();
         return null;
@@ -34940,14 +35457,12 @@ async function loadTeacherVideoTenantEntitlementMobile(force) {
         if (typeof window !== 'undefined') {
             window.__SA_TENANT_VIDEO_ENTITLEMENT = teacherVideoTenantEntitlementState.entitlement;
         }
-        // #region agent log
         saTvDebugLog('loadTeacherVideoTenantEntitlementMobile', 'tenant read cache', {
             tenantId: tenantId,
             path: 'tenantSettings/' + tenantId,
             cachedPremiumActive: !!(teacherVideoTenantEntitlementState.entitlement && teacherVideoTenantEntitlementState.entitlement.premiumVideoLessonsActive === true),
             cacheAgeMs: now - teacherVideoTenantEntitlementState.loadedAt
         });
-        // #endregion
         return teacherVideoTenantEntitlementState.entitlement;
     }
     if (teacherVideoTenantEntitlementState.loading) {
@@ -34970,7 +35485,6 @@ async function loadTeacherVideoTenantEntitlementMobile(force) {
             desiredPremiumVideoLessonsActive: desiredPremiumVideoLessonsActive,
             premiumVideoLessonsUntil: d.premiumVideoLessonsUntil != null ? d.premiumVideoLessonsUntil : null
         };
-        // #region agent log
         saTvDebugLog('loadTeacherVideoTenantEntitlementMobile', 'tenant read ok', {
             tenantId: tenantId,
             path: 'tenantSettings/' + tenantId,
@@ -34980,7 +35494,6 @@ async function loadTeacherVideoTenantEntitlementMobile(force) {
             premiumVideoLessonsUntilPresent: d.premiumVideoLessonsUntil != null,
             calculatedPremiumActive: desiredPremiumVideoLessonsActive === true
         });
-        // #endregion
         teacherVideoTenantEntitlementState.tenantId = tenantId;
         teacherVideoTenantEntitlementState.entitlement = entitlement;
         teacherVideoTenantEntitlementState.loadedAt = Date.now();
@@ -34990,7 +35503,6 @@ async function loadTeacherVideoTenantEntitlementMobile(force) {
         return entitlement;
     } catch (e) {
         try { console.warn('[TeacherVideoEntitlement] tenantSettings read failed', e); } catch (_) {}
-        // #region agent log
         saTvDebugLog('loadTeacherVideoTenantEntitlementMobile', 'tenant read failed', {
             tenantId: tenantId || null,
             path: tenantId ? ('tenantSettings/' + tenantId) : null,
@@ -34998,7 +35510,6 @@ async function loadTeacherVideoTenantEntitlementMobile(force) {
             errorMessage: (e && e.message != null) ? String(e.message).slice(0, 200) : null,
             errorName: (e && e.name != null) ? String(e.name) : null
         });
-        // #endregion
         teacherVideoTenantEntitlementState.tenantId = tenantId;
         teacherVideoTenantEntitlementState.entitlement = {
             premiumVideoLessonsActive: false,
@@ -35029,7 +35540,6 @@ async function ensureTeacherVideoTenantEntitlementMobile() {
         && cacheAgeMs != null
         && cacheAgeMs < 60000
     );
-    // #region agent log
     saTvDebugLog('ensureTeacherVideoTenantEntitlementMobile', 'ensure entry', {
         freshLoadRequested: false,
         wouldUseCache: wouldUseCache,
@@ -35037,7 +35547,6 @@ async function ensureTeacherVideoTenantEntitlementMobile() {
         cacheAgeMs: cacheAgeMs,
         resolvedTenantId: tenantIdBefore || null
     });
-    // #endregion
     try {
         await loadTeacherVideoTenantEntitlementMobile(false);
     } catch (e) {
@@ -35076,13 +35585,11 @@ function hasTeacherVideoPremiumAccessMobile() {
             break;
         }
     }
-    // #region agent log
     saTvDebugLog('hasTeacherVideoPremiumAccessMobile', 'source results', {
         userEntitlementResult: userResult,
         tenantEntitlementResult: tenantResult,
         finalPremiumAccessResult: finalResult
     });
-    // #endregion
     return finalResult;
 }
 
@@ -35204,7 +35711,6 @@ async function handleTeacherVideoPlayRequestMobile(video) {
     if (typeof window !== 'undefined'
         && window.__SA_USER_ENTITLEMENT
         && isExplicitTeacherVideoEntitlementActiveMobile(window.__SA_USER_ENTITLEMENT)) {
-        // #region agent log
         var tidUserOpen = resolveTeacherVideoTenantIdMobile();
         saTvDebugLog('handleTeacherVideoPlayRequestMobile', 'decision', {
             resolvedTenantId: tidUserOpen || null,
@@ -35212,14 +35718,12 @@ async function handleTeacherVideoPlayRequestMobile(video) {
             tenantPremiumResult: null,
             finalAction: 'OPEN_VIDEO'
         });
-        // #endregion
         openTeacherVideoPlayerMobile(video);
         return;
     }
     if (typeof window !== 'undefined'
         && window.__SA_TEACHER_VIDEO_ENTITLEMENT
         && isExplicitTeacherVideoEntitlementActiveMobile(window.__SA_TEACHER_VIDEO_ENTITLEMENT)) {
-        // #region agent log
         var tidTeacherOpen = resolveTeacherVideoTenantIdMobile();
         saTvDebugLog('handleTeacherVideoPlayRequestMobile', 'decision', {
             resolvedTenantId: tidTeacherOpen || null,
@@ -35227,7 +35731,6 @@ async function handleTeacherVideoPlayRequestMobile(video) {
             tenantPremiumResult: null,
             finalAction: 'OPEN_VIDEO'
         });
-        // #endregion
         openTeacherVideoPlayerMobile(video);
         return;
     }
@@ -35242,25 +35745,21 @@ async function handleTeacherVideoPlayRequestMobile(video) {
             && window.__SA_TENANT_VIDEO_ENTITLEMENT
             && isExplicitTeacherVideoEntitlementActiveMobile(window.__SA_TENANT_VIDEO_ENTITLEMENT));
         if (tenantPremiumOk) {
-            // #region agent log
             saTvDebugLog('handleTeacherVideoPlayRequestMobile', 'decision', {
                 resolvedTenantId: tenantId,
                 branchSelected: 'TENANT',
                 tenantPremiumResult: true,
                 finalAction: 'OPEN_VIDEO'
             });
-            // #endregion
             openTeacherVideoPlayerMobile(video);
             return;
         }
-        // #region agent log
         saTvDebugLog('handleTeacherVideoPlayRequestMobile', 'decision', {
             resolvedTenantId: tenantId,
             branchSelected: 'TENANT',
             tenantPremiumResult: false,
             finalAction: 'SHOW_PREMIUM_LOCK'
         });
-        // #endregion
         showTeacherVideoPremiumLockModalMobile();
         return;
     }
@@ -35269,7 +35768,6 @@ async function handleTeacherVideoPlayRequestMobile(video) {
     var settings = await loadTeacherVideoAccessSettingsMobile(false);
     var effectiveMode = getEffectiveTeacherVideoAccessModeMobile(settings);
     if (effectiveMode === 'premium_locked') {
-        // #region agent log
         saTvDebugLog('handleTeacherVideoPlayRequestMobile', 'decision', {
             resolvedTenantId: null,
             branchSelected: 'PUBLIC',
@@ -35277,14 +35775,12 @@ async function handleTeacherVideoPlayRequestMobile(video) {
             publicMode: effectiveMode,
             finalAction: 'SHOW_PREMIUM_LOCK'
         });
-        // #endregion
         showTeacherVideoPremiumLockModalMobile();
         return;
     }
     // open_with_rewarded (also forced by an active launchOpenUntil window)
     if (settings && settings.requireRewardedAd === true) {
         if (settings.rewardedConsentRequired !== false) {
-            // #region agent log
             saTvDebugLog('handleTeacherVideoPlayRequestMobile', 'decision', {
                 resolvedTenantId: null,
                 branchSelected: 'PUBLIC',
@@ -35292,11 +35788,9 @@ async function handleTeacherVideoPlayRequestMobile(video) {
                 publicMode: effectiveMode,
                 finalAction: 'SHOW_REWARDED_CONSENT'
             });
-            // #endregion
             showTeacherVideoRewardConsentModalMobile(video);
             return;
         }
-        // #region agent log
         saTvDebugLog('handleTeacherVideoPlayRequestMobile', 'decision', {
             resolvedTenantId: null,
             branchSelected: 'PUBLIC',
@@ -35304,11 +35798,9 @@ async function handleTeacherVideoPlayRequestMobile(video) {
             publicMode: effectiveMode,
             finalAction: 'RUN_REWARDED'
         });
-        // #endregion
         await runTeacherVideoRewardedThenPlayMobile(video);
         return;
     }
-    // #region agent log
     saTvDebugLog('handleTeacherVideoPlayRequestMobile', 'decision', {
         resolvedTenantId: null,
         branchSelected: 'PUBLIC',
@@ -35316,7 +35808,6 @@ async function handleTeacherVideoPlayRequestMobile(video) {
         publicMode: effectiveMode,
         finalAction: 'OPEN_VIDEO'
     });
-    // #endregion
     openTeacherVideoPlayerMobile(video);
 }
 
@@ -35361,10 +35852,16 @@ function parseTeacherYoutubeIdMobile(urlOrId) {
     return m && m[1] ? String(m[1]) : null;
 }
 
+function buildYoutubeEmbedSrcMobile(videoId) {
+    var id = String(videoId || '').trim();
+    if (!/^[A-Za-z0-9_-]{11}$/.test(id)) return '';
+    return 'https://surucuakademisi.com/embed/youtube/?v=' + encodeURIComponent(id);
+}
+
 function buildTeacherVideoEmbedUrlMobile(videoId) {
     var id = String(videoId || '').trim();
     if (!id) return '';
-    return 'https://www.youtube.com/embed/' + encodeURIComponent(id) + '?playsinline=1&rel=0';
+    return buildYoutubeEmbedSrcMobile(id);
 }
 
 function isTeacherVideoPlayerOpenMobile() {
@@ -35715,13 +36212,10 @@ function applyLessonV2MobileViewMode() {
     } else {
         setLessonUnitsScrollModeMobile(false);
     }
-    // #region agent log
     (function () {
         var notesTabDbg = document.getElementById('tab-notes');
         var practicalDbg = notesTabDbg ? notesTabDbg.querySelector('#practical-guides-mobile') : null;
-        fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b512db'},body:JSON.stringify({sessionId:'b512db',runId:'diagnostic-pre',hypothesisId:'H1-H3',location:'index.html:applyLessonV2MobileViewMode:entry',message:'Apply lesson mode entry and practical node state',data:{mode:mode,practicalExists:!!practicalDbg,inlineDisplay:practicalDbg?String(practicalDbg.style.display||''):'(missing)',computedDisplay:(practicalDbg&&window.getComputedStyle)?String(window.getComputedStyle(practicalDbg).display||''):'(na)'},timestamp:Date.now()})}).catch(()=>{});
     })();
-    // #endregion
 
     var notesHeading = document.querySelector('#tab-notes > h2');
     if (notesHeading) notesHeading.style.display = 'none';
@@ -35755,9 +36249,6 @@ function applyLessonV2MobileViewMode() {
         if (practicalSeparator) practicalSeparator.style.display = showPracticalSection ? '' : 'none';
         var dashboardCard = notesTab.querySelector('[onclick="openDashboard()"]');
         if (dashboardCard) dashboardCard.style.display = 'none';
-        // #region agent log
-        fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b512db'},body:JSON.stringify({sessionId:'b512db',runId:'diagnostic-pre',hypothesisId:'H1',location:'index.html:applyLessonV2MobileViewMode:afterPracticalHide',message:'Practical section forced hidden in apply mode',data:{mode:mode,practicalInlineDisplay:practicalGuides?String(practicalGuides.style.display||''):'(missing)',practicalComputedDisplay:(practicalGuides&&window.getComputedStyle)?String(window.getComputedStyle(practicalGuides).display||''):'(na)'},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
     }
 
     var categoriesHost = document.getElementById('lesson-v2-categories-mobile');
@@ -35945,13 +36436,10 @@ function beginLessonUnitsSelectionMobileV2(categoryId) {
 function renderLessonCategoriesMobileV2() {
     var host = document.getElementById('lesson-v2-categories-mobile');
     if (!host) return;
-    // #region agent log
     (function () {
         var notesTabDbg = document.getElementById('tab-notes');
         var practicalDbg = notesTabDbg ? notesTabDbg.querySelector('#practical-guides-mobile') : null;
-        fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b512db'},body:JSON.stringify({sessionId:'b512db',runId:'diagnostic-pre',hypothesisId:'H2-H4',location:'index.html:renderLessonCategoriesMobileV2:beforeRender',message:'Categories render start with practical DOM check',data:{hostExists:!!host,existingCategoryCards:host.querySelectorAll('.card').length,practicalExists:!!practicalDbg,practicalInlineDisplay:practicalDbg?String(practicalDbg.style.display||''):'(missing)'},timestamp:Date.now()})}).catch(()=>{});
     })();
-    // #endregion
 
     // Presentation layer: driving fixed categories (excludes machine-only is_makineleri)
     var byId = {};
@@ -35975,13 +36463,10 @@ function renderLessonCategoriesMobileV2() {
         };
         host.appendChild(card);
     });
-    // #region agent log
     (function () {
         var notesTabDbg = document.getElementById('tab-notes');
         var practicalDbg = notesTabDbg ? notesTabDbg.querySelector('#practical-guides-mobile') : null;
-        fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b512db'},body:JSON.stringify({sessionId:'b512db',runId:'diagnostic-pre',hypothesisId:'H2',location:'index.html:renderLessonCategoriesMobileV2:afterRender',message:'Categories render completed and practical DOM still present check',data:{renderedCategoryCards:host.querySelectorAll('.card').length,practicalExists:!!practicalDbg,practicalInlineDisplay:practicalDbg?String(practicalDbg.style.display||''):'(missing)'},timestamp:Date.now()})}).catch(()=>{});
     })();
-    // #endregion
 }
 
 function bindLessonV2TopCardMobile() {
@@ -36869,9 +37354,6 @@ function captureMicrosoftAuthCallback(rawUrl, source) {
 
 async function triggerMicrosoftCallbackConsume(source) {
     try {
-        // #region agent log
-        fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a445ba'},body:JSON.stringify({sessionId:'a445ba',runId:'ms-debug-v1',hypothesisId:'H1',location:'mobile_app/src/index.html:triggerMicrosoftCallbackConsume',message:'ms_trigger_enter',data:{source:source||null,hasPayload:Boolean(window.__msAuthCallbackPayload)},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         if (!window.__msAuthCallbackPayload) return;
 
         let attempts = 0;
@@ -36884,9 +37366,6 @@ async function triggerMicrosoftCallbackConsume(source) {
                     const err = document.getElementById('login-error');
                     if (err) err.textContent = result.message;
                 }
-                // #region agent log
-                fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a445ba'},body:JSON.stringify({sessionId:'a445ba',runId:'ms-debug-v1',hypothesisId:'H1',location:'mobile_app/src/index.html:triggerMicrosoftCallbackConsume.tryConsume',message:'ms_consume_dispatched',data:{source:source||null,attempts},timestamp:Date.now()})}).catch(()=>{});
-                // #endregion
                 return true;
             }
             return false;
@@ -36901,9 +37380,6 @@ async function triggerMicrosoftCallbackConsume(source) {
                 attempts++;
                 if ((await tryConsume()) || attempts > 20) {
                     if (attempts > 20) {
-                        // #region agent log
-                        fetch('http://127.0.0.1:7616/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a445ba'},body:JSON.stringify({sessionId:'a445ba',runId:'ms-debug-v1',hypothesisId:'H1',location:'mobile_app/src/index.html:triggerMicrosoftCallbackConsume.interval',message:'ms_consume_not_dispatched_timeout',data:{source:source||null,attempts},timestamp:Date.now()})}).catch(()=>{});
-                        // #endregion
                     }
                 } else {
                     scheduleRetry();
@@ -37067,6 +37543,9 @@ function setActiveMainScreen(mode) {
         if (content) {
             content.style.display = 'none';
         }
+        try {
+            void refreshDrivingProgramInstitutionVisibility();
+        } catch (_) {}
         return;
     }
 
@@ -37146,9 +37625,6 @@ function openContentDirectly(tabId) {
 }
 
 async function loadExamList(type) {
-    // #region agent log
-    fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3ce40e'},body:JSON.stringify({sessionId:'3ce40e',runId:'tenant-debug-1',hypothesisId:'H1',location:'index.html:loadExamList:entry',message:'loadExamList entry',data:{type:type||null,hasQuizState:!!quizState,quizExamMode:quizState&&quizState.examMode?String(quizState.examMode):null,quizTenantId:quizState&&quizState.tenantId?String(quizState.tenantId):null,lastExamListType:lastExamListType||null,lastExamListItemsLen:Array.isArray(lastExamListItems)?lastExamListItems.length:null},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     if (isDrivingBlockedMachineExamType(type)) return;
     lastExamListType = type;
     const listTitle = document.getElementById('exam-list-title');
@@ -37168,9 +37644,6 @@ async function loadExamList(type) {
             }
             activeTenantId = activeTenantId && String(activeTenantId).trim() ? String(activeTenantId).trim() : '';
             console.log('TENANT ID:', activeTenantId || '(none)');
-            // #region agent log
-            fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3ce40e'},body:JSON.stringify({sessionId:'3ce40e',runId:'tenant-debug-1',hypothesisId:'H2',location:'index.html:loadExamList:tenantResolution',message:'tenant resolution snapshot',data:{activeTenantId:activeTenantId||null,selectedTenantId:(window.SA_TENANT&&typeof window.SA_TENANT.getSelectedTenantId==='function')?(window.SA_TENANT.getSelectedTenantId()||null):null,currentUserTenantId:user&&user.tenantId?String(user.tenantId):null,currentUid:user&&user.uid?String(user.uid):null},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
 
             var tenantExams = await window.SA_EXAM_REPO.loadExams(activeTenantId || null, type);
             console.log('tenant exams count:', (tenantExams && tenantExams.length) || 0);
@@ -37187,9 +37660,6 @@ async function loadExamList(type) {
             }
             items = firestoreExams || [];
             console.log('final items count:', (items && items.length) || 0);
-            // #region agent log
-            fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3ce40e'},body:JSON.stringify({sessionId:'3ce40e',runId:'tenant-debug-1',hypothesisId:'H3',location:'index.html:loadExamList:fallbackResult',message:'loadExamList counts',data:{tenantExamsCount:Array.isArray(tenantExams)?tenantExams.length:null,shouldFallback:!!shouldFallback,globalExamsCount:Array.isArray(globalExams)?globalExams.length:null,finalItemsCount:Array.isArray(items)?items.length:null},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
         } catch (e) { console.warn('[loadExamList] Firestore load error:', e); }
     }
     if (items && items.length > 0) {
@@ -37236,9 +37706,6 @@ async function loadExamList(type) {
         lastExamListItems = items;
     }
     else lastExamListItems = null;
-    // #region agent log
-    fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3ce40e'},body:JSON.stringify({sessionId:'3ce40e',runId:'tenant-debug-1',hypothesisId:'H4',location:'index.html:loadExamList:beforeRender',message:'before renderList2',data:{containerId:listContainer&&listContainer.id?String(listContainer.id):null,itemsLen:Array.isArray(items)?items.length:null,lastExamListItemsLen:Array.isArray(lastExamListItems)?lastExamListItems.length:null,lastExamListIsNull:lastExamListItems===null},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     if (listContainer) renderList2(listContainer, items);
     updateExamListLastUpdateLine();
 
@@ -37281,9 +37748,6 @@ function ensureExamListVisible() {
         const group = getExamGroupConfig(lastExamListType);
         if (listTitle) listTitle.innerText = group.title;
         var items = lastExamListItems || group.items;
-        // #region agent log
-        fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3ce40e'},body:JSON.stringify({sessionId:'3ce40e',runId:'tenant-debug-1',hypothesisId:'H5',location:'index.html:ensureExamListVisible:renderSource',message:'ensureExamListVisible render source',data:{lastExamListType:lastExamListType||null,lastExamListItemsLen:Array.isArray(lastExamListItems)?lastExamListItems.length:null,groupItemsLen:Array.isArray(group&&group.items)?group.items.length:null,chosenItemsLen:Array.isArray(items)?items.length:null,chosenFrom:Array.isArray(lastExamListItems)?'lastExamListItems':'group.items'},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         renderList2(listContainer, items);
         updateExamListLastUpdateLine();
     }
@@ -37509,6 +37973,148 @@ function goBackToHome() {
 var SLR_WEEK_DAY_LABELS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
 var SLR_WEEK_AGENDA_MIN_ROWS = 7;
 var SLR_AGENDA_SLOT_HOURS = [8, 10, 12, 14, 16, 18, 20];
+var DRIVING_PROGRAM_PLATFORM_TENANT_ID = 'surucu_akademisi';
+var __drivingProgramInstitutionEligible = null;
+var __drivingProgramMembershipCacheUid = '';
+var __drivingProgramMembershipCacheResult = null;
+var __drivingProgramMembershipInFlight = null;
+
+function setDrivingProgramHomeCardVisible(visible) {
+    var btn = document.getElementById('btn-home-driving-program');
+    if (!btn) return;
+    if (visible) btn.removeAttribute('hidden');
+    else btn.setAttribute('hidden', '');
+}
+
+function resetDrivingProgramInstitutionVisibility() {
+    __drivingProgramInstitutionEligible = null;
+    __drivingProgramMembershipCacheUid = '';
+    __drivingProgramMembershipCacheResult = null;
+    __drivingProgramMembershipInFlight = null;
+    setDrivingProgramHomeCardVisible(false);
+}
+
+function normalizeDrivingProgramProgramType(value) {
+    var s = String(value == null ? '' : value).trim().toLowerCase();
+    if (!s) return 'driving_license';
+    return s;
+}
+
+function normalizeDrivingProgramEnrollmentSource(value, tenantId, programType) {
+    var e = String(value == null ? '' : value).trim().toLowerCase();
+    if (e === 'public') return 'public';
+    if (e === 'institution') return 'institution';
+    var tid = String(tenantId == null ? '' : tenantId).trim();
+    if (tid === DRIVING_PROGRAM_PLATFORM_TENANT_ID
+        && normalizeDrivingProgramProgramType(programType) === 'machine_operator') {
+        return 'public';
+    }
+    return 'institution';
+}
+
+function membershipQualifiesAsActiveInstitutionDriving(membership) {
+    var m = membership && typeof membership === 'object' ? membership : null;
+    if (!m) return false;
+    if (String(m.role || '').trim().toLowerCase() !== 'student') return false;
+    if (String(m.status || '').trim().toLowerCase() !== 'active') return false;
+    var tenantId = String(m.tenantId || '').trim();
+    if (!tenantId || tenantId === DRIVING_PROGRAM_PLATFORM_TENANT_ID) return false;
+    if (normalizeDrivingProgramProgramType(m.programType) !== 'driving_license') return false;
+    return normalizeDrivingProgramEnrollmentSource(m.enrollmentSource, tenantId, m.programType) === 'institution';
+}
+
+async function hasActiveInstitutionDrivingMembership(opts) {
+    var force = !!(opts && opts.force);
+    var user = (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser)
+        ? firebase.auth().currentUser
+        : null;
+    if (!user || !user.uid) return false;
+    var uid = String(user.uid);
+    if (!force
+        && __drivingProgramMembershipCacheUid === uid
+        && typeof __drivingProgramMembershipCacheResult === 'boolean') {
+        return __drivingProgramMembershipCacheResult;
+    }
+    if (!force
+        && __drivingProgramMembershipInFlight
+        && __drivingProgramMembershipCacheUid === uid) {
+        try {
+            return await __drivingProgramMembershipInFlight;
+        } catch (_) {
+            return false;
+        }
+    }
+    __drivingProgramMembershipCacheUid = uid;
+    __drivingProgramMembershipInFlight = (async function () {
+        try {
+            if (typeof firebase === 'undefined' || !firebase.firestore) {
+                __drivingProgramMembershipCacheResult = false;
+                return false;
+            }
+            var snap = await firebase.firestore().collection('tenantMemberships')
+                .where('uid', '==', uid)
+                .where('role', '==', 'student')
+                .where('status', '==', 'active')
+                .get();
+            var ok = false;
+            (snap.docs || []).forEach(function (doc) {
+                if (membershipQualifiesAsActiveInstitutionDriving(doc.data() || {})) ok = true;
+            });
+            __drivingProgramMembershipCacheResult = ok;
+            return ok;
+        } catch (_) {
+            __drivingProgramMembershipCacheResult = false;
+            return false;
+        } finally {
+            __drivingProgramMembershipInFlight = null;
+        }
+    })();
+    try {
+        return await __drivingProgramMembershipInFlight;
+    } catch (_) {
+        return false;
+    }
+}
+
+async function refreshDrivingProgramInstitutionVisibility() {
+    try {
+        setDrivingProgramHomeCardVisible(false);
+        var ok = await hasActiveInstitutionDrivingMembership();
+        __drivingProgramInstitutionEligible = !!ok;
+        setDrivingProgramHomeCardVisible(!!ok);
+        return !!ok;
+    } catch (_) {
+        __drivingProgramInstitutionEligible = false;
+        setDrivingProgramHomeCardVisible(false);
+        return false;
+    }
+}
+
+async function ensureDrivingProgramInstitutionAccess() {
+    try {
+        var user = (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser)
+            ? firebase.auth().currentUser
+            : null;
+        var uid = user && user.uid ? String(user.uid) : '';
+        if (__drivingProgramInstitutionEligible === true
+            && uid
+            && __drivingProgramMembershipCacheUid === uid
+            && __drivingProgramMembershipCacheResult === true) {
+            setDrivingProgramHomeCardVisible(true);
+            return true;
+        }
+        var ok = await hasActiveInstitutionDrivingMembership({
+            force: __drivingProgramInstitutionEligible !== true
+        });
+        __drivingProgramInstitutionEligible = !!ok;
+        setDrivingProgramHomeCardVisible(!!ok);
+        return !!ok;
+    } catch (_) {
+        __drivingProgramInstitutionEligible = false;
+        setDrivingProgramHomeCardVisible(false);
+        return false;
+    }
+}
 
 var __specialLessonState = {
     selectedInstructorUid: '',
@@ -38145,7 +38751,17 @@ function slBindSpecialLessonUiOnce() {
     slPopulateCreateHmSelectsOnce();
 }
 
-function openDrivingProgramScreen(opts) {
+async function openDrivingProgramScreen(opts) {
+    var allowed = false;
+    try {
+        allowed = await ensureDrivingProgramInstitutionAccess();
+    } catch (_) {
+        allowed = false;
+    }
+    if (!allowed) {
+        try { setActiveMainScreen('home'); } catch (_) {}
+        return;
+    }
     var skipAnim = !!(opts && opts.skipAnim);
     var home = document.getElementById('home-screen');
     slClosePickerOverlays();
@@ -38161,7 +38777,17 @@ function openDrivingProgramScreen(opts) {
     void slLoadNormalDrivingProgram();
 }
 
-function openSpecialLessonRequestScreen() {
+async function openSpecialLessonRequestScreen() {
+    var allowed = false;
+    try {
+        allowed = await ensureDrivingProgramInstitutionAccess();
+    } catch (_) {
+        allowed = false;
+    }
+    if (!allowed) {
+        try { setActiveMainScreen('home'); } catch (_) {}
+        return;
+    }
     slBindSpecialLessonUiOnce();
     if (!__specialLessonState.weekAgendaWeekStartYmd) {
         __specialLessonState.weekAgendaWeekStartYmd = slGetMondayYmdIstanbul(Date.now());
@@ -38178,6 +38804,16 @@ function openSpecialLessonRequestScreen() {
 }
 
 async function slOnSpecialLessonRequestEntered() {
+    var allowed = false;
+    try {
+        allowed = await ensureDrivingProgramInstitutionAccess();
+    } catch (_) {
+        allowed = false;
+    }
+    if (!allowed) {
+        try { setActiveMainScreen('home'); } catch (_) {}
+        return;
+    }
     await Promise.all([
         slLoadInstructors(),
         slLoadMyRequests(),
@@ -38201,6 +38837,17 @@ async function slLoadNormalDrivingProgram() {
         featuredEl.classList.remove('is-special');
     }
     if (listEl) listEl.innerHTML = '';
+    var allowed = false;
+    try {
+        allowed = await ensureDrivingProgramInstitutionAccess();
+    } catch (_) {
+        allowed = false;
+    }
+    if (!allowed) {
+        if (statusEl) statusEl.textContent = '';
+        try { setActiveMainScreen('home'); } catch (_) {}
+        return;
+    }
     try {
         var fn = slGetCallable('listMyDrivingLessonsForStudent');
         var res = await fn({});
@@ -38593,7 +39240,9 @@ function slRenderWeekAgendaGrid(entries, weekStartYmd) {
     var today = slTodayYmdIstanbul();
     var html = '';
     for (var di = 0; di < 7; di++) {
-        html += '<div class="slr-week-day-head" data-day-index="' + di + '" role="columnheader">'
+        var headYmd = dayYmDs[di] || '';
+        var headPast = !headYmd || headYmd < today;
+        html += '<div class="slr-week-day-head' + (headPast ? ' is-past-day' : '') + '" data-day-index="' + di + '" role="columnheader">'
             + slEscapeHtml(SLR_WEEK_DAY_LABELS[di] || '')
             + '<span class="slr-week-day-num">' + slEscapeHtml(dayNums[di]) + '</span>'
             + '</div>';
@@ -38602,7 +39251,8 @@ function slRenderWeekAgendaGrid(entries, weekStartYmd) {
         for (var day = 0; day < 7; day++) {
             var entry = byDay[day][ri] || null;
             var cellYmd = dayYmDs[day] || '';
-            html += '<div class="slr-week-cell" data-day-index="' + day + '" data-row="' + ri + '">';
+            var cellPast = !cellYmd || cellYmd < today;
+            html += '<div class="slr-week-cell' + (cellPast ? ' is-past-day' : '') + '" data-day-index="' + day + '" data-row="' + ri + '">';
             if (entry) {
                 var kind = String(entry.kind || '').trim().toLowerCase();
                 var approvalStage = String(entry.approvalStage || '').trim().toLowerCase();
@@ -38612,7 +39262,6 @@ function slRenderWeekAgendaGrid(entries, weekStartYmd) {
                     if (approvalStage === 'pending_admin') cls += ' is-own-pending-admin';
                     else cls += ' is-own-pending-instructor';
                 } else if (kind === 'own_approved') cls += ' is-own-approved';
-                else if (kind === 'closed') cls += ' is-closed';
                 else cls += ' is-busy';
                 var startLabel = slNormalizeHm(slHmFromIso(entry.startAt)) || '—';
                 var endLabel = slNormalizeHm(slHmFromIso(entry.endAt)) || '';
@@ -38636,11 +39285,10 @@ function slRenderWeekAgendaGrid(entries, weekStartYmd) {
                     + statusHtml
                     + '</div>';
             } else {
-                var pastDay = !cellYmd || cellYmd < today;
                 html += '<button type="button" class="slr-week-empty"'
                     + ' data-date-ymd="' + slEscapeHtml(cellYmd) + '"'
                     + ' data-row-index="' + ri + '"'
-                    + (pastDay ? ' disabled' : '')
+                    + (cellPast ? ' disabled' : '')
                     + ' aria-label="' + slEscapeHtml((cellYmd || '') + ' boş alan — özel ders talep et') + '"'
                     + '></button>';
             }
@@ -39441,6 +40089,146 @@ var __duelLeagueBoardRefreshedFor = '';
 function escapeLeagueText(v) {
     return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+function escapeLeagueAttr(v) {
+    return escapeLeagueText(v).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function leagueFirstNameToken(source) {
+    var s = String(source == null ? '' : source).trim();
+    if (!s) return '';
+    var parts = s.split(/\s+/).filter(Boolean);
+    return parts.length ? parts[0] : '';
+}
+function privacySafeLeagueDisplayName(opts) {
+    var o = opts || {};
+    var fromFirst = leagueFirstNameToken(o.firstName);
+    if (fromFirst) return fromFirst;
+    var fromDisplay = leagueFirstNameToken(o.displayName);
+    if (fromDisplay) return fromDisplay;
+    var fromFull = leagueFirstNameToken(o.fullName);
+    if (fromFull) return fromFull;
+    var fromName = leagueFirstNameToken(o.name);
+    if (fromName) return fromName;
+    var username = String(o.username == null ? '' : o.username).trim();
+    if (username) return username;
+    var safeUid = String(o.uid == null ? '' : o.uid);
+    return safeUid ? ('Kullanıcı ' + safeUid.slice(0, 6)) : 'Kullanıcı';
+}
+function buildLeagueSafeFirstNameLabel(userDoc, authUser, uid) {
+    var d = userDoc || {};
+    var auth = authUser || {};
+    var explicitFirst = trimMobileIdentityString(d.firstName);
+    if (explicitFirst) {
+        return clampPublicProfileField(leagueFirstNameToken(explicitFirst) || explicitFirst, 32)
+            || clampPublicProfileField(explicitFirst, 32);
+    }
+    var fromFull = leagueFirstNameToken(d.fullName);
+    if (fromFull) return clampPublicProfileField(fromFull, 32);
+    var fromDisplay = leagueFirstNameToken(d.displayName);
+    if (fromDisplay) return clampPublicProfileField(fromDisplay, 32);
+    var fromName = leagueFirstNameToken(d.name);
+    if (fromName) return clampPublicProfileField(fromName, 32);
+    var authDn = leagueFirstNameToken(auth.displayName);
+    if (authDn) return clampPublicProfileField(authDn, 32);
+    var username = trimMobileIdentityString(d.username);
+    if (username) return clampPublicProfileField(username, 32);
+    var safeUid = String(uid || '');
+    return clampPublicProfileField(safeUid ? ('Kullanıcı ' + safeUid.slice(0, 6)) : 'Kullanıcı', 32) || 'Uye';
+}
+
+var __leaguePublicProfileSyncInFlight = false;
+var __leaguePublicProfileSyncSignature = '';
+
+async function trySyncLeagueParticipantPublicProfileIdentity(optionalUserDoc) {
+    if (typeof firebase === 'undefined' || !firebase.firestore) return false;
+    var authUser = firebase.auth && firebase.auth().currentUser;
+    if (!authUser || !authUser.uid) return false;
+    if (__leaguePublicProfileSyncInFlight) return false;
+    __leaguePublicProfileSyncInFlight = true;
+    var uid = String(authUser.uid);
+    try {
+        var db = firebase.firestore();
+        var data = optionalUserDoc && typeof optionalUserDoc === 'object' ? optionalUserDoc : null;
+        if (!data) {
+            var userSnap = await db.collection('users').doc(uid).get();
+            data = (userSnap && userSnap.exists) ? (userSnap.data() || {}) : {};
+        }
+        var firstLabel = buildLeagueSafeFirstNameLabel(data, authUser, uid);
+        if (!firstLabel) firstLabel = 'Kullanıcı ' + uid.slice(0, 6);
+        firstLabel = clampPublicProfileField(firstLabel, 32) || ('Kullanıcı ' + uid.slice(0, 6));
+        if (firstLabel.length < 1) firstLabel = 'Uye';
+
+        var username = '';
+        var existingUsername = trimMobileIdentityString(data.username);
+        if (isValidUsername(existingUsername)) {
+            username = clampPublicProfileField(existingUsername, 32);
+        } else {
+            username = clampPublicProfileField(buildInternalUsernameSlug(data, authUser, uid), 32);
+        }
+        if (!username) username = firstLabel;
+
+        var photoUrl = clampPublicProfileField(trimMobileIdentityString(
+            data.profilePhotoUrl || data.photoUrl || data.photoURL || authUser.photoURL
+        ), 2048);
+
+        var signature = uid + '\n' + firstLabel + '\n' + username + '\n' + photoUrl;
+        if (signature === __leaguePublicProfileSyncSignature) return false;
+
+        try {
+            var pSnap = await db.collection('publicProfiles').doc(uid).get();
+            if (pSnap && pSnap.exists) {
+                var p = pSnap.data() || {};
+                if (String(p.displayName || '').trim() === firstLabel
+                    && String(p.fullName || '').trim() === firstLabel
+                    && String(p.username || '').trim() === username
+                    && String(p.photoUrl || '').trim() === photoUrl) {
+                    __leaguePublicProfileSyncSignature = signature;
+                    return false;
+                }
+            }
+        } catch (_) {}
+
+        await db.collection('publicProfiles').doc(uid).set({
+            username: username,
+            displayName: firstLabel,
+            fullName: firstLabel,
+            photoUrl: photoUrl,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        __leaguePublicProfileSyncSignature = signature;
+        return true;
+    } catch (e) {
+        try { console.warn('[LeaguePublicProfile] sync skipped', e); } catch (_) {}
+        return false;
+    } finally {
+        __leaguePublicProfileSyncInFlight = false;
+    }
+}
+
+function leagueAvatarInitial(name) {
+    var s = String(name == null ? '' : name).trim();
+    if (!s) return '?';
+    try {
+        return s.charAt(0).toLocaleUpperCase('tr-TR');
+    } catch (_) {
+        return s.charAt(0).toUpperCase();
+    }
+}
+function buildLeagueAvatarHtml(photoUrl, displayName) {
+    var initial = escapeLeagueText(leagueAvatarInitial(displayName));
+    var url = String(photoUrl == null ? '' : photoUrl).trim();
+    if (!url) {
+        return ''
+            + '<div class="league-avatar" aria-hidden="true">'
+            +   '<span class="league-avatar-fallback">' + initial + '</span>'
+            + '</div>';
+    }
+    return ''
+        + '<div class="league-avatar" aria-hidden="true">'
+        +   '<img class="league-avatar-img" src="' + escapeLeagueAttr(url) + '" alt="" loading="lazy" referrerpolicy="no-referrer"'
+        +     ' onerror="this.style.display=\'none\';var f=this.nextElementSibling;if(f){f.hidden=false;}">'
+        +   '<span class="league-avatar-fallback" hidden>' + initial + '</span>'
+        + '</div>';
+}
 
 async function trySyncPublicProfileDisplayName(uid, newUsername) {
     if (!uid || typeof firebase === 'undefined' || !firebase.firestore) return;
@@ -39480,6 +40268,9 @@ async function loadDuelLeagueLeaderboard() {
             stateEl.textContent = 'Lig verisi yüklenemedi.';
             return;
         }
+        try {
+            await trySyncLeagueParticipantPublicProfileIdentity();
+        } catch (_) {}
         var db = firebase.firestore();
         var snap = null;
         var primaryQueryError = null;
@@ -39527,58 +40318,95 @@ async function loadDuelLeagueLeaderboard() {
             return;
         }
 
-        var uidToName = {};
+        var uidToMeta = {};
         var top = rows.slice(0, 20);
         var currentUser = firebase && firebase.auth && firebase.auth().currentUser;
         var myUid = currentUser && currentUser.uid ? String(currentUser.uid) : '';
-        function getEmailPrefix(email) {
-            if (!email || typeof email !== 'string') return null;
-            var parts = email.split('@');
-            if (!parts[0]) return null;
-            return parts[0].trim();
-        }
-        var selfResolvedFromUsers = null;
+        var selfProfileFields = null;
         if (myUid) {
             try {
                 var selfSnap = await db.collection('users').doc(myUid).get();
                 var selfData = (selfSnap && selfSnap.exists) ? (selfSnap.data() || {}) : {};
-                selfResolvedFromUsers =
-                    (selfData.username && String(selfData.username).trim())
-                    || (selfData.displayName && String(selfData.displayName).trim())
-                    || (selfData.fullName && String(selfData.fullName).trim())
-                    || (selfData.name && String(selfData.name).trim())
-                    || (selfData.email ? getEmailPrefix(selfData.email) : null)
-                    || null;
+                selfProfileFields = {
+                    firstName: (selfData.firstName && String(selfData.firstName).trim()) || '',
+                    displayName: (selfData.displayName && String(selfData.displayName).trim()) || '',
+                    fullName: (selfData.fullName && String(selfData.fullName).trim()) || '',
+                    name: (selfData.name && String(selfData.name).trim()) || '',
+                    username: (selfData.username && String(selfData.username).trim()) || '',
+                    profilePhotoUrl: (selfData.profilePhotoUrl && String(selfData.profilePhotoUrl).trim()) || ''
+                };
             } catch (_) {
-                selfResolvedFromUsers = null;
+                selfProfileFields = null;
             }
         }
         var nameResolveTasks = top.map(async function (r) {
             var uid = String(r && r.uid ? r.uid : '');
             if (!uid) return;
+            var isMe = !!(myUid && uid === myUid);
             try {
                 var pSnap = await db.collection('publicProfiles').doc(uid).get();
                 var pData = (pSnap && pSnap.exists) ? (pSnap.data() || {}) : {};
-                var fromPublic = (pData.displayName && String(pData.displayName).trim()) || null;
-                var resolvedName = fromPublic;
-                if (!resolvedName && myUid && uid === myUid) {
-                    resolvedName = selfResolvedFromUsers;
+                var displayName = (pData.displayName && String(pData.displayName).trim()) || '';
+                var fullName = (pData.fullName && String(pData.fullName).trim()) || '';
+                var username = (pData.username && String(pData.username).trim()) || '';
+                var photoUrl = (pData.photoUrl && String(pData.photoUrl).trim()) || '';
+                var resolvedName;
+                if (isMe && selfProfileFields) {
+                    resolvedName = privacySafeLeagueDisplayName({
+                        firstName: selfProfileFields.firstName || '',
+                        displayName: selfProfileFields.displayName || displayName,
+                        fullName: selfProfileFields.fullName || fullName,
+                        name: selfProfileFields.name || '',
+                        username: selfProfileFields.username || username,
+                        uid: uid
+                    });
+                    if (!photoUrl) photoUrl = selfProfileFields.profilePhotoUrl || '';
+                } else {
+                    resolvedName = privacySafeLeagueDisplayName({
+                        displayName: displayName,
+                        fullName: fullName,
+                        username: username,
+                        uid: uid
+                    });
                 }
-                uidToName[uid] = resolvedName || null;
+                uidToMeta[uid] = {
+                    name: resolvedName,
+                    photoUrl: photoUrl
+                };
             } catch (errUser) {
-                uidToName[uid] = (myUid && uid === myUid) ? (selfResolvedFromUsers || null) : null;
+                var fallbackPhoto = '';
+                var resolvedFallbackName;
+                if (isMe && selfProfileFields) {
+                    fallbackPhoto = selfProfileFields.profilePhotoUrl || '';
+                    resolvedFallbackName = privacySafeLeagueDisplayName({
+                        firstName: selfProfileFields.firstName || '',
+                        displayName: selfProfileFields.displayName || '',
+                        fullName: selfProfileFields.fullName || '',
+                        name: selfProfileFields.name || '',
+                        username: selfProfileFields.username || '',
+                        uid: uid
+                    });
+                } else {
+                    resolvedFallbackName = privacySafeLeagueDisplayName({ uid: uid });
+                }
+                uidToMeta[uid] = {
+                    name: resolvedFallbackName,
+                    photoUrl: fallbackPhoto
+                };
             }
         });
         await Promise.all(nameResolveTasks);
         listEl.innerHTML = top.map(function (r, idx) {
             var rank = idx + 1;
             var safeUid = String(r.uid || '');
-            var fallbackName = safeUid ? ('Kullanıcı ' + safeUid.slice(0, 6)) : 'Kullanıcı';
-            var name = uidToName[safeUid] || fallbackName;
+            var meta = uidToMeta[safeUid] || {};
+            var name = (meta.name && String(meta.name).trim()) || privacySafeLeagueDisplayName({ uid: safeUid });
+            var photoUrl = (meta.photoUrl && String(meta.photoUrl).trim()) || '';
             var isMe = !!(myUid && myUid === safeUid);
             return ''
                 + '<div class="league-row' + (isMe ? ' me' : '') + '">'
                 +   '<div class="league-rank">#' + rank + '</div>'
+                +   buildLeagueAvatarHtml(photoUrl, name)
                 +   '<div class="league-main">'
                 +     '<div class="league-name">' + escapeLeagueText(name) + '</div>'
                 +     '<div class="league-sub">Galibiyet: ' + r.wins + '  Mağlubiyet: ' + r.losses + '  Toplam Düello: ' + r.matchesPlayed + '</div>'
@@ -39719,9 +40547,6 @@ async function getDuelEffectiveTenantId() {
 }
 
 async function writeDuelPresence() {
-    // #region agent log
-    __duelDbg({runId:'duel-presence',hypothesisId:'H1',location:'index.html:writeDuelPresence:entry',message:'writeDuelPresence called',data:{hasFirebase:!!(typeof firebase!=='undefined'),hasFirestore:!!(firebase&&firebase.firestore),hasAuth:!!(firebase&&firebase.auth),hasUser:!!(firebase&&firebase.auth&&firebase.auth().currentUser),uid:(firebase&&firebase.auth&&firebase.auth().currentUser)?(firebase.auth().currentUser.uid||null):null}});
-    // #endregion
     var user = firebase && firebase.auth && firebase.auth().currentUser;
     if (!user || !user.uid || typeof firebase === 'undefined' || !firebase.firestore) {
         renderDuelDebug('[writeDuelPresence] early return: no user or firestore');
@@ -39983,9 +40808,6 @@ var duelRuntime = {
 if (typeof window !== 'undefined' && !window.__DUEL_BTN_DEBUG_ERROR_HOOKED) {
     window.__DUEL_BTN_DEBUG_ERROR_HOOKED = true;
     window.addEventListener('error', function (ev) {
-        // #region agent log
-        fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3ce40e'},body:JSON.stringify({sessionId:'3ce40e',runId:'duel-btn-debug-1',hypothesisId:'H5',location:'index.html:window.onerror',message:'runtime error captured',data:{msg:ev&&ev.message?String(ev.message):null,file:ev&&ev.filename?String(ev.filename):null,line:ev&&ev.lineno?Number(ev.lineno):null,col:ev&&ev.colno?Number(ev.colno):null},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
     });
 }
 
@@ -40148,23 +40970,14 @@ function setDuelViewState(mode) {
     if (searching) searching.style.display = mode === 'searching' ? 'block' : 'none';
     if (preparing) preparing.style.display = mode === 'preparing' ? 'block' : 'none';
     if (mode === 'searching') {
-        // #region agent log
-        fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3ce40e'},body:JSON.stringify({sessionId:'3ce40e',runId:'duel-btn-debug-1',hypothesisId:'H3',location:'index.html:setDuelViewState:searching',message:'searching state applied',data:{hasSearchingEl:!!searching,searchingDisplay:searching&&searching.style?String(searching.style.display):null,mainDisplay:main&&main.style?String(main.style.display):null,gridDisplay:grid&&grid.style?String(grid.style.display):null},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
     }
 }
 
 function startInstitutionRandomMatchmaking() {
-    // #region agent log
-    fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3ce40e'},body:JSON.stringify({sessionId:'3ce40e',runId:'duel-btn-debug-1',hypothesisId:'H1',location:'index.html:startInstitutionRandomMatchmaking',message:'institution button handler called',data:{duelHomeVisible:(function(){var el=document.getElementById('duel-home-view');return !!(el&&el.style.display!=='none');})()},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     return startRandomDuelMatchmaking('institution');
 }
 
 function startGlobalRandomMatchmaking() {
-    // #region agent log
-    fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3ce40e'},body:JSON.stringify({sessionId:'3ce40e',runId:'duel-btn-debug-1',hypothesisId:'H1',location:'index.html:startGlobalRandomMatchmaking',message:'global button handler called',data:{duelHomeVisible:(function(){var el=document.getElementById('duel-home-view');return !!(el&&el.style.display!=='none');})()},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     return startRandomDuelMatchmaking('global');
 }
 
@@ -40182,19 +40995,13 @@ async function pickRandomDuelOpponentByMode(mode) {
     if (mode === 'institution') users = await loadDuelOnlineUsersInstitution();
     else users = await loadDuelOnlineUsersGlobal();
     var eligible = (users || []).filter(function (u) { return !!(u && u.uid); });
-    // #region agent log
-    fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3ce40e'},body:JSON.stringify({sessionId:'3ce40e',runId:'duel-btn-debug-1',hypothesisId:'H4',location:'index.html:pickRandomDuelOpponentByMode',message:'candidate pool evaluated',data:{mode:mode||null,userCount:Array.isArray(users)?users.length:null,eligibleCount:eligible.length},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     if (!eligible.length) return null;
     var picked = eligible[Math.floor(Math.random() * eligible.length)];
     return { uid: picked.uid, name: picked.displayName || 'Kullanıcı', count: eligible.length };
 }
 
 async function startRandomDuelMatchmaking(mode) {
-    // #region agent log
     var __dbgUser = firebase && firebase.auth && firebase.auth().currentUser;
-    fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3ce40e'},body:JSON.stringify({sessionId:'3ce40e',runId:'duel-btn-debug-1',hypothesisId:'H2',location:'index.html:startRandomDuelMatchmaking:entry',message:'startRandomDuelMatchmaking entry',data:{mode:mode||null,matchmakingInProgress:!!duelRuntime.matchmakingInProgress,inviteId:duelRuntime.inviteId||null,hasUser:!!(__dbgUser&&__dbgUser.uid),uid:__dbgUser&&__dbgUser.uid?String(__dbgUser.uid):null},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     var badge = document.getElementById('duel-search-mode-badge');
     var statusEl = document.getElementById('duel-search-status-text');
     var modeResolved = mode || 'global';
@@ -40209,9 +41016,6 @@ async function startRandomDuelMatchmaking(mode) {
         });
         if (statusEl) statusEl.textContent = 'Devam eden bir düello işlemi var. Önce iptal edin veya tamamlayın.';
         setDuelViewState('searching');
-        // #region agent log
-        fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3ce40e'},body:JSON.stringify({sessionId:'3ce40e',runId:'duel-btn-debug-1',hypothesisId:'H2',location:'index.html:startRandomDuelMatchmaking:guard',message:'early return by guard',data:{matchmakingInProgress:!!duelRuntime.matchmakingInProgress,inviteId:duelRuntime.inviteId||null},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         return;
     }
     duelRuntime.matchmakingInProgress = true;
@@ -40243,9 +41047,6 @@ async function startRandomDuelMatchmaking(mode) {
         }
         console.log('[DuelMatchmaking] selected opponent:', picked.uid, picked.name);
         if (statusEl) statusEl.textContent = 'Rakip bulundu, davet gonderiliyor...';
-        // #region agent log
-        fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3ce40e'},body:JSON.stringify({sessionId:'3ce40e',runId:'duel-btn-debug-1',hypothesisId:'H5',location:'index.html:startRandomDuelMatchmaking:beforeInvite',message:'before startDuelInvite',data:{selectedUid:picked.uid||null,selectedName:picked.name||null},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         await startDuelInvite(picked.uid, picked.name);
         if (token !== duelRuntime.matchmakingToken) return;
         duelRuntime.matchmakingInProgress = false;
@@ -40594,9 +41395,6 @@ async function startDuelInvite(opponentId, opponentName) {
                 stopDuelInviteCountdown();
                 transitionToDuelPreparing(duelRuntime.opponentName || data.receiverName || '');
                 if (duelRuntime.duelId) {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e0071c'},body:JSON.stringify({sessionId:'e0071c',runId:'asym-debug',hypothesisId:'H_sender',location:'index.html:startDuelInvite:accepted',message:'sender invite accepted snapshot',data:{side:'sender',duelId:String(duelRuntime.duelId),fromSnapshot:true},timestamp:Date.now()})}).catch(()=>{});
-                    // #endregion
                     try { console.warn('DUEL_LAUNCH_SENDER_OK:' + String(duelRuntime.duelId)); } catch (_) {}
                     beginDuelPreparingBridge(duelRuntime.duelId, duelRuntime.opponentName || data.receiverName || '');
                     return;
@@ -40606,9 +41404,6 @@ async function startDuelInvite(opponentId, opponentName) {
                     var d = snap.exists ? (snap.data() || {}) : {};
                     var did = d.duelId ? String(d.duelId) : null;
                     duelRuntime.duelId = did;
-                    // #region agent log
-                    fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e0071c'},body:JSON.stringify({sessionId:'e0071c',runId:'asym-debug',hypothesisId:'H_sender_repair',location:'index.html:startDuelInvite:accepted:repair',message:'sender invite repair read',data:{side:'sender',duelId:did||null,fromSnapshot:false},timestamp:Date.now()})}).catch(()=>{});
-                    // #endregion
                     if (did) {
                         try { console.warn('DUEL_LAUNCH_SENDER_OK:' + did); } catch (_) {}
                         beginDuelPreparingBridge(did, duelRuntime.opponentName || data.receiverName || '');
@@ -40770,12 +41565,9 @@ async function respondIncomingInvite(accept) {
             duelRuntime.opponentId = data.senderId || null;
             duelRuntime.opponentName = data.senderName || 'Kullanıcı';
         });
-        // #region agent log
         if (accept && duelRuntime.duelId) {
-            fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e0071c'},body:JSON.stringify({sessionId:'e0071c',runId:'asym-debug',hypothesisId:'H_receiver',location:'index.html:respondIncomingInvite',message:'receiver accept transaction done',data:{side:'receiver',duelId:String(duelRuntime.duelId)},timestamp:Date.now()})}).catch(()=>{});
             try { console.warn('DUEL_LAUNCH_RECEIVER_OK:' + String(duelRuntime.duelId)); } catch (_) {}
         }
-        // #endregion
         closeIncomingInviteModal();
         if (accept) {
             var acceptedDuelId = duelRuntime.duelId ? String(duelRuntime.duelId) : '';
@@ -40841,15 +41633,9 @@ async function refreshDuelOnlineUsers() {
 }
 
 async function loadAndRenderDuelOnlineUsers() {
-    // #region agent log
-    __duelDbg({runId:'duel-read',hypothesisId:'H1',location:'index.html:loadAndRenderDuelOnlineUsers:entry',message:'loadAndRenderDuelOnlineUsers called from openDuelHome',data:{}});
-    // #endregion
     var market = isMarketUser();
     var inst = market ? [] : await loadDuelOnlineUsersInstitution();
     var glob = await loadDuelOnlineUsersGlobal();
-    // #region agent log
-    __duelDbg({runId:'duel-read',hypothesisId:'H5',location:'index.html:loadAndRenderDuelOnlineUsers:beforeRender',message:'before renderDuelOnlineUsers',data:{institutionCount:inst.length,globalCount:glob.length,institutionUids:inst.map(function(u){return u.uid;}),globalUids:glob.map(function(u){return u.uid;})}});
-    // #endregion
     renderDuelOnlineUsers(inst, glob);
 }
 
@@ -54895,9 +55681,6 @@ function renderList(containerId, dataArray) {
     if(container) renderList2(container, dataArray);
 }
 function renderList2(container, dataArray) {
-    // #region agent log
-    fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3ce40e'},body:JSON.stringify({sessionId:'3ce40e',runId:'tenant-debug-1',hypothesisId:'H5',location:'index.html:renderList2:entry',message:'renderList2 called',data:{containerId:container&&container.id?String(container.id):null,dataLen:Array.isArray(dataArray)?dataArray.length:null},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     container.innerHTML = "";
     dataArray.forEach(item => {
         const div = document.createElement('div');
@@ -55334,11 +56117,8 @@ function startQuiz(questions, title, meta) {
         resetDuelFinishLocks();
         try { console.log('[DuelResult] finish locks reset for new duel quiz', { duelId: quizState.duelId || null }); } catch (_) {}
     }
-    // #region agent log
     if (examMode === 'duel') {
-        fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e0071c'},body:JSON.stringify({sessionId:'e0071c',runId:'asym-debug',hypothesisId:'H_startQuiz',location:'index.html:startQuiz',message:'duel quizState init',data:{effectiveDuelId:effectiveDuelId||null,metaDuelId:m.duelId?String(m.duelId):null,runtimeDuelId:(typeof duelRuntime!=='undefined'&&duelRuntime&&duelRuntime.duelId)?String(duelRuntime.duelId):null},timestamp:Date.now()})}).catch(()=>{});
     }
-    // #endregion
     try { window.__SA_WEB_EXAM_ACTIVE = true; } catch (_) {}
     console.log('[ExamBridgeWeb] startQuiz:', quizState.sessionId);
     // prepare UI — hide all tab panels and overlay views (same spirit as switchTab) before quiz
@@ -55453,8 +56233,12 @@ function renderQuestion() {
     if (videoUrl) {
         var m = videoUrl.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
         if (m && m[1]) {
-            var embedUrl = 'https://www.youtube.com/embed/' + m[1];
-            videoHtml = '<div style="margin:10px 0;position:relative;padding-bottom:56.25%;height:0;overflow:hidden;"><iframe src="' + embedUrl + '" style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:8px;" allowfullscreen></iframe></div>';
+            var embedUrl = typeof buildYoutubeEmbedSrcMobile === 'function'
+                ? buildYoutubeEmbedSrcMobile(m[1])
+                : '';
+            if (embedUrl) {
+                videoHtml = '<div style="margin:10px 0;position:relative;padding-bottom:56.25%;height:0;overflow:hidden;"><iframe src="' + embedUrl + '" style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:8px;" allowfullscreen></iframe></div>';
+            }
         }
     }
     card.innerHTML = `
@@ -55764,6 +56548,9 @@ async function updateOwnLeagueStats(duelId, winnerUid, myUid) {
                 processedAt: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
         });
+        try {
+            await trySyncLeagueParticipantPublicProfileIdentity();
+        } catch (_) {}
         return true;
     } catch (err) {
         try { console.warn('[DuelLeague] updateOwnLeagueStats failed', err); } catch (_) {}
@@ -55831,9 +56618,6 @@ function resetDuelFinishLocks() {
 async function handleDuelFinish(result) {
     if (typeof window !== 'undefined' && window.__duelFinishProcessing === true) return;
     if (typeof window !== 'undefined') window.__duelFinishProcessing = true;
-    // #region agent log
-    fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e0071c'},body:JSON.stringify({sessionId:'e0071c',runId:'pre-fix',hypothesisId:'H1',location:'index.html:20655',message:'handleDuelFinish(active) entry',data:{hasQuizState:!!quizState,duelId:quizState&&quizState.duelId?String(quizState.duelId):null,examMode:quizState&&quizState.examMode?String(quizState.examMode):null},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     syncActiveDuelContextFromAllSources();
     if (quizState && quizState.examMode === 'duel' && !quizState.duelId) {
         for (var __duelRetry = 0; __duelRetry < 5; __duelRetry++) {
@@ -55843,15 +56627,9 @@ async function handleDuelFinish(result) {
         }
     }
     if (quizState && quizState.examMode === 'duel') {
-        // #region agent log
-        fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e0071c'},body:JSON.stringify({sessionId:'e0071c',runId:'asym-debug',hypothesisId:'H_finish',location:'index.html:handleDuelFinish:precheck',message:'duel finish ids',data:{quizDuelId:quizState.duelId?String(quizState.duelId):null,runtimeDuelId:(typeof duelRuntime!=='undefined'&&duelRuntime&&duelRuntime.duelId)?String(duelRuntime.duelId):null},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         try { console.warn('DUEL_FINISH_HAS_ID:' + (quizState.duelId ? String(quizState.duelId) : '(none)') + '|runtime:' + ((typeof duelRuntime !== 'undefined' && duelRuntime && duelRuntime.duelId) ? String(duelRuntime.duelId) : '(none)')); } catch (_) {}
     }
     if (!quizState || !quizState.duelId || typeof firebase === 'undefined' || !firebase.firestore) {
-        // #region agent log
-        fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e0071c'},body:JSON.stringify({sessionId:'e0071c',runId:'pre-fix',hypothesisId:'H3',location:'index.html:20656',message:'active generic alert branch (missing duel context)',data:{hasQuizState:!!quizState,duelId:quizState&&quizState.duelId?String(quizState.duelId):null,hasFirestore:!!(typeof firebase!=='undefined'&&firebase&&firebase.firestore)},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         var precheckReason = !quizState
             ? 'quizState missing'
             : (!quizState.duelId
@@ -55871,9 +56649,6 @@ async function handleDuelFinish(result) {
     }
     var user = firebase && firebase.auth && firebase.auth().currentUser;
     if (!user || !user.uid) {
-        // #region agent log
-        fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e0071c'},body:JSON.stringify({sessionId:'e0071c',runId:'pre-fix',hypothesisId:'H4',location:'index.html:20661',message:'active generic alert branch (missing auth user)',data:{hasUser:!!user,uid:user&&user.uid?String(user.uid):null},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         try { alert('Düello sonucu kaydedilemedi.'); } catch (_) {}
         resetDuelFinishLocks();
         return;
@@ -55914,9 +56689,6 @@ async function finishQuiz() {
         if (typeof window !== 'undefined' && window.__duelFinishStarted === true) return;
         if (typeof window !== 'undefined') window.__duelFinishStarted = true;
     }
-    // #region agent log
-    fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'e0071c'},body:JSON.stringify({sessionId:'e0071c',runId:'pre-fix',hypothesisId:'H5',location:'index.html:20691',message:'finishQuiz entry',data:{isDuelMode:isDuelMode,hasDuelId:!!(quizState&&quizState.duelId),duelId:quizState&&quizState.duelId?String(quizState.duelId):null},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     if (quizState.isVideoMode) {
         if (quizState.timerId) clearInterval(quizState.timerId);
         quizState.sessionEnded = true;
@@ -56094,9 +56866,6 @@ async function finishQuiz() {
 
 async function closeQuiz(fromResult) {
     var wasDuelResult = !!(fromResult && quizState && quizState.examMode === 'duel');
-    // #region agent log
-    fetch('http://127.0.0.1:7736/ingest/cd372bb6-79f4-4723-9076-d91478da1094',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3ce40e'},body:JSON.stringify({sessionId:'3ce40e',runId:'tenant-debug-1',hypothesisId:'H1',location:'index.html:closeQuiz:entry',message:'closeQuiz from duel result flow',data:{fromResult:!!fromResult,wasDuelResult:!!wasDuelResult,quizExamMode:quizState&&quizState.examMode?String(quizState.examMode):null,quizTenantId:quizState&&quizState.tenantId?String(quizState.tenantId):null},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     if(quizState && !quizState.sessionEnded) {
         emitParentEvent('exam:exit');
         console.log('[ExamBridgeWeb] closeQuiz:', quizState.sessionId);
@@ -56287,19 +57056,11 @@ function bindPushRegistrationListeners(PushPlugin) {
         var uid = authUser && authUser.uid ? authUser.uid : null;
         if (!uid) {
             console.warn('[PushSetup] Token alındı ancak oturum yok; kayıt atlandı.');
-            // #region agent log
-            fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H5',location:'index.html:registration',message:'registration event but no auth uid',data:{step:5},timestamp:Date.now()})}).catch(function(){});
-            try{var __dl0=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__dl0))__dl0=[];__dl0.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H5',location:'index.html:registration',message:'registration event but no auth uid',data:{step:5},timestamp:Date.now()});if(__dl0.length>80)__dl0=__dl0.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__dl0));}catch(_){}
-            // #endregion
             return;
         }
 
         var tokenValue = token && (token.value || token.token) ? (token.value || token.token) : null;
         console.log('[PushSetup] masked token received:', maskPushToken(tokenValue), 'uid=', uid);
-        // #region agent log
-        fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H5',location:'index.html:registration',message:'registration event received',data:{step:5,step6:!!tokenValue,tokenLen:tokenValue?String(tokenValue).length:0,uidSuffix:String(uid).slice(-6)},timestamp:Date.now()})}).catch(function(){});
-        try{var __dl1=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__dl1))__dl1=[];__dl1.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H5',location:'index.html:registration',message:'registration event received',data:{step:5,step6:!!tokenValue,tokenLen:tokenValue?String(tokenValue).length:0,uidSuffix:String(uid).slice(-6)},timestamp:Date.now()});if(__dl1.length>80)__dl1=__dl1.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__dl1));}catch(_){}
-        // #endregion
         if (!tokenValue) {
             clearPushSetupSessionState(uid);
             console.warn('[PushSetup] Boş token; oturum durumu sıfırlandı.');
@@ -56335,10 +57096,6 @@ function bindPushRegistrationListeners(PushPlugin) {
                 writeData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             }
 
-            // #region agent log
-            fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H6',location:'index.html:registration',message:'firestore token write attempt',data:{step:7,platform:platform,tenantId:effectiveTenantId||null,existing:!!(existing&&existing.exists)},timestamp:Date.now()})}).catch(function(){});
-            try{var __dl2=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__dl2))__dl2=[];__dl2.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H6',location:'index.html:registration',message:'firestore token write attempt',data:{step:7,platform:platform,tenantId:effectiveTenantId||null,existing:!!(existing&&existing.exists)},timestamp:Date.now()});if(__dl2.length>80)__dl2=__dl2.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__dl2));}catch(_){}
-            // #endregion
 
             await ref.set(writeData, { merge: true });
 
@@ -56349,10 +57106,6 @@ function bindPushRegistrationListeners(PushPlugin) {
                 platform: platform,
                 token: maskPushToken(tokenValue)
             });
-            // #region agent log
-            fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H6',location:'index.html:registration',message:'firestore token write OK',data:{step:7,ok:true},timestamp:Date.now()})}).catch(function(){});
-            try{var __dl3=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__dl3))__dl3=[];__dl3.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H6',location:'index.html:registration',message:'firestore token write OK',data:{step:7,ok:true},timestamp:Date.now()});if(__dl3.length>80)__dl3=__dl3.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__dl3));}catch(_){}
-            // #endregion
         } catch (e) {
             clearPushSetupSessionState(uid);
             var errCode = (e && e.code) ? String(e.code) : 'unknown';
@@ -56364,10 +57117,6 @@ function bindPushRegistrationListeners(PushPlugin) {
                 message: errMsg,
                 token: maskPushToken(tokenValue)
             });
-            // #region agent log
-            fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H6',location:'index.html:registration',message:'firestore token write FAIL',data:{step:8,code:errCode,errMsg:String(errMsg).slice(0,180)},timestamp:Date.now()})}).catch(function(){});
-            try{var __dl4=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__dl4))__dl4=[];__dl4.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H6',location:'index.html:registration',message:'firestore token write FAIL',data:{step:8,code:errCode,errMsg:String(errMsg).slice(0,180)},timestamp:Date.now()});if(__dl4.length>80)__dl4=__dl4.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__dl4));}catch(_){}
-            // #endregion
         }
     });
 
@@ -56379,27 +57128,15 @@ function bindPushRegistrationListeners(PushPlugin) {
             uid: uid || '(none)',
             message: err && err.message ? err.message : err
         });
-        // #region agent log
-        fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H5',location:'index.html:registrationError',message:'native registrationError',data:{step:5,err:String(err&&err.message?err.message:err).slice(0,180)},timestamp:Date.now()})}).catch(function(){});
-        try{var __dl5=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__dl5))__dl5=[];__dl5.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H5',location:'index.html:registrationError',message:'native registrationError',data:{step:5,err:String(err&&err.message?err.message:err).slice(0,180)},timestamp:Date.now()});if(__dl5.length>80)__dl5=__dl5.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__dl5));}catch(_){}
-        // #endregion
     });
 }
 
 async function setupPushForCurrentUser() {
     try {
         console.log('[PushSetup] setupPushForCurrentUser başlangıç');
-        // #region agent log
-        fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H1',location:'index.html:setupPushForCurrentUser',message:'setupPushForCurrentUser ENTER',data:{step:1},timestamp:Date.now()})}).catch(function(){});
-        try{var __a=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__a))__a=[];__a.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H1',location:'index.html:setupPushForCurrentUser',message:'setupPushForCurrentUser ENTER',data:{step:1},timestamp:Date.now()});if(__a.length>80)__a=__a.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__a));}catch(_){}
-        // #endregion
 
         if (typeof window === 'undefined' || !window.Capacitor || !window.Capacitor.isNativePlatform || !window.Capacitor.isNativePlatform()) {
             console.log('[PushSetup] Native olmayan ortam, push kurulumu atlandı.');
-            // #region agent log
-            fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H1',location:'index.html:setupPushForCurrentUser',message:'early exit not native',data:{step:1,branch:'not_native'},timestamp:Date.now()})}).catch(function(){});
-            try{var __b=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__b))__b=[];__b.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H1',location:'index.html:setupPushForCurrentUser',message:'early exit not native',data:{step:1,branch:'not_native'},timestamp:Date.now()});if(__b.length>80)__b=__b.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__b));}catch(_){}
-            // #endregion
             return;
         }
 
@@ -56411,10 +57148,6 @@ async function setupPushForCurrentUser() {
         var user = firebase.auth().currentUser;
         if (!user || !user.uid) {
             console.log('[PushSetup] Kullanıcı yok, push kurulumu atlandı.');
-            // #region agent log
-            fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H1',location:'index.html:setupPushForCurrentUser',message:'early exit no user',data:{step:1,branch:'no_user'},timestamp:Date.now()})}).catch(function(){});
-            try{var __c=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__c))__c=[];__c.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H1',location:'index.html:setupPushForCurrentUser',message:'early exit no user',data:{step:1,branch:'no_user'},timestamp:Date.now()});if(__c.length>80)__c=__c.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__c));}catch(_){}
-            // #endregion
             return;
         }
 
@@ -56438,10 +57171,6 @@ async function setupPushForCurrentUser() {
         var sessFlag = null;
         try { sessFlag = sessionStorage.getItem(pushSetupFlagKey(user.uid)); } catch (_) {}
 
-        // #region agent log
-        fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H1',location:'index.html:setupPushForCurrentUser',message:'guards before register',data:{step:1,uidSuffix:String(user.uid).slice(-6),tenantId:effectiveTenantId||null,preState:preState===null?'(null)':String(preState),sessFlag:sessFlag===null?'(null)':String(sessFlag)},timestamp:Date.now()})}).catch(function(){});
-        try{var __d=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__d))__d=[];__d.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H1',location:'index.html:setupPushForCurrentUser',message:'guards before register',data:{step:1,uidSuffix:String(user.uid).slice(-6),tenantId:effectiveTenantId||null,preState:preState===null?'(null)':String(preState),sessFlag:sessFlag===null?'(null)':String(sessFlag)},timestamp:Date.now()});if(__d.length>80)__d=__d.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__d));}catch(_){}
-        // #endregion
 
         if (isInstructorPushContext) {
             console.log('[PushSetup] instructor context: skip custom prepermission, uid=', user.uid);
@@ -56454,10 +57183,6 @@ async function setupPushForCurrentUser() {
             }
         } else if (!preState) {
             console.log('[PushSetup] Ön bilgilendirme gösterilecek.');
-            // #region agent log
-            fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H1',location:'index.html:setupPushForCurrentUser',message:'EARLY RETURN preperm modal (no preState)',data:{step:1,brokenStep:1,branch:'preperm_null_return'},timestamp:Date.now()})}).catch(function(){});
-            try{var __e=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__e))__e=[];__e.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H1',location:'index.html:setupPushForCurrentUser',message:'EARLY RETURN preperm modal (no preState)',data:{step:1,brokenStep:1,branch:'preperm_null_return'},timestamp:Date.now()});if(__e.length>80)__e=__e.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__e));}catch(_){}
-            // #endregion
             if (typeof openPushPrepermissionModal === 'function') {
                 openPushPrepermissionModal(user.uid);
             }
@@ -56465,27 +57190,15 @@ async function setupPushForCurrentUser() {
         }
         if (!isInstructorPushContext && preState === 'dismissed') {
             console.log('[PushSetup] Ön bilgilendirme reddedildi; push kurulumu atlandı. uid=', user.uid);
-            // #region agent log
-            fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H2',location:'index.html:setupPushForCurrentUser',message:'EARLY RETURN preperm dismissed',data:{step:1,brokenStep:1,branch:'preperm_dismissed'},timestamp:Date.now()})}).catch(function(){});
-            try{var __f=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__f))__f=[];__f.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H2',location:'index.html:setupPushForCurrentUser',message:'EARLY RETURN preperm dismissed',data:{step:1,brokenStep:1,branch:'preperm_dismissed'},timestamp:Date.now()});if(__f.length>80)__f=__f.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__f));}catch(_){}
-            // #endregion
             return;
         }
 
         if (!isInstructorPushContext && isPushSetupComplete(user.uid)) {
             console.log('[PushSetup] Bu oturumda token kaydı tamamlandı. uid=', user.uid);
-            // #region agent log
-            fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H3',location:'index.html:setupPushForCurrentUser',message:'EARLY RETURN session complete',data:{step:1,branch:'sess_complete'},timestamp:Date.now()})}).catch(function(){});
-            try{var __g=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__g))__g=[];__g.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H3',location:'index.html:setupPushForCurrentUser',message:'EARLY RETURN session complete',data:{step:1,branch:'sess_complete'},timestamp:Date.now()});if(__g.length>80)__g=__g.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__g));}catch(_){}
-            // #endregion
             return;
         }
         if (!isInstructorPushContext && isPushSetupInProgress(user.uid)) {
             console.log('[PushSetup] Kayıt devam ediyor; yinelenen deneme atlandı. uid=', user.uid);
-            // #region agent log
-            fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H3',location:'index.html:setupPushForCurrentUser',message:'EARLY RETURN session in_progress',data:{step:1,branch:'sess_in_progress'},timestamp:Date.now()})}).catch(function(){});
-            try{var __h=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__h))__h=[];__h.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H3',location:'index.html:setupPushForCurrentUser',message:'EARLY RETURN session in_progress',data:{step:1,branch:'sess_in_progress'},timestamp:Date.now()});if(__h.length>80)__h=__h.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__h));}catch(_){}
-            // #endregion
             return;
         }
 
@@ -56498,10 +57211,6 @@ async function setupPushForCurrentUser() {
 
         if (!PushPlugin || typeof PushPlugin.requestPermissions !== 'function') {
             console.log('[PushSetup] PushNotifications plugin bulunamadı veya geçersiz.');
-            // #region agent log
-            fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H1',location:'index.html:setupPushForCurrentUser',message:'plugin missing',data:{step:1,branch:'no_plugin'},timestamp:Date.now()})}).catch(function(){});
-            try{var __i=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__i))__i=[];__i.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H1',location:'index.html:setupPushForCurrentUser',message:'plugin missing',data:{step:1,branch:'no_plugin'},timestamp:Date.now()});if(__i.length>80)__i=__i.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__i));}catch(_){}
-            // #endregion
             if (isInstructorPushContext) {
                 __instructorPushSetupInFlightUid = '';
                 try { clearPushSetupSessionState(user.uid); } catch (_) {}
@@ -56522,31 +57231,15 @@ async function setupPushForCurrentUser() {
         } catch (checkErr) {
             checkStatus = 'check_error:' + String(checkErr && checkErr.message ? checkErr.message : checkErr).slice(0, 80);
         }
-        // #region agent log
-        fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H4',location:'index.html:setupPushForCurrentUser',message:'checkPermissions result',data:{step:2,checkStatus:checkStatus},timestamp:Date.now()})}).catch(function(){});
-        try{var __j=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__j))__j=[];__j.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H4',location:'index.html:setupPushForCurrentUser',message:'checkPermissions result',data:{step:2,checkStatus:checkStatus},timestamp:Date.now()});if(__j.length>80)__j=__j.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__j));}catch(_){}
-        // #endregion
 
         console.log('[PushSetup] İzin isteniyor... uid=', user.uid);
-        // #region agent log
-        fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H4',location:'index.html:setupPushForCurrentUser',message:'requestPermissions calling',data:{step:3},timestamp:Date.now()})}).catch(function(){});
-        try{var __k=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__k))__k=[];__k.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H4',location:'index.html:setupPushForCurrentUser',message:'requestPermissions calling',data:{step:3},timestamp:Date.now()});if(__k.length>80)__k=__k.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__k));}catch(_){}
-        // #endregion
         var permResult = await PushPlugin.requestPermissions();
         var status = (permResult && (permResult.receive || permResult.notification)) ? (permResult.receive || permResult.notification) : permResult;
         console.log('[PushSetup] permission result:', { uid: user.uid, status: status });
-        // #region agent log
-        fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H4',location:'index.html:setupPushForCurrentUser',message:'requestPermissions result',data:{step:3,status:String(status)},timestamp:Date.now()})}).catch(function(){});
-        try{var __l=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__l))__l=[];__l.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H4',location:'index.html:setupPushForCurrentUser',message:'requestPermissions result',data:{step:3,status:String(status)},timestamp:Date.now()});if(__l.length>80)__l=__l.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__l));}catch(_){}
-        // #endregion
         if (status !== 'granted') {
             clearPushSetupSessionState(user.uid);
             if (isInstructorPushContext) __instructorPushSetupInFlightUid = '';
             console.log('[PushSetup] Bildirim izni verilmedi; oturum durumu sıfırlandı.');
-            // #region agent log
-            fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H4',location:'index.html:setupPushForCurrentUser',message:'EARLY RETURN permission not granted',data:{step:3,brokenStep:3,status:String(status)},timestamp:Date.now()})}).catch(function(){});
-            try{var __m=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__m))__m=[];__m.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H4',location:'index.html:setupPushForCurrentUser',message:'EARLY RETURN permission not granted',data:{step:3,brokenStep:3,status:String(status)},timestamp:Date.now()});if(__m.length>80)__m=__m.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__m));}catch(_){}
-            // #endregion
             return;
         }
 
@@ -56556,16 +57249,8 @@ async function setupPushForCurrentUser() {
             markPushSetupInProgress(user.uid);
         }
         console.log('[PushSetup] native registration started:', { uid: user.uid, tenantId: effectiveTenantId });
-        // #region agent log
-        fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H5',location:'index.html:setupPushForCurrentUser',message:'register() calling',data:{step:4},timestamp:Date.now()})}).catch(function(){});
-        try{var __n=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__n))__n=[];__n.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H5',location:'index.html:setupPushForCurrentUser',message:'register() calling',data:{step:4},timestamp:Date.now()});if(__n.length>80)__n=__n.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__n));}catch(_){}
-        // #endregion
         await PushPlugin.register();
         if (isInstructorPushContext) __instructorPushSetupInFlightUid = '';
-        // #region agent log
-        fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H5',location:'index.html:setupPushForCurrentUser',message:'register() awaited returned',data:{step:4,returned:true},timestamp:Date.now()})}).catch(function(){});
-        try{var __o=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__o))__o=[];__o.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H5',location:'index.html:setupPushForCurrentUser',message:'register() awaited returned',data:{step:4,returned:true},timestamp:Date.now()});if(__o.length>80)__o=__o.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__o));}catch(_){}
-        // #endregion
 
     } catch (e) {
         var failUid = firebase && firebase.auth && firebase.auth().currentUser && firebase.auth().currentUser.uid;
@@ -56575,10 +57260,6 @@ async function setupPushForCurrentUser() {
             uid: failUid || '(none)',
             message: e && e.message ? e.message : e
         });
-        // #region agent log
-        fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H1',location:'index.html:setupPushForCurrentUser',message:'setupPush unexpected throw',data:{err:String(e&&e.message?e.message:e).slice(0,180)},timestamp:Date.now()})}).catch(function(){});
-        try{var __p=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__p))__p=[];__p.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H1',location:'index.html:setupPushForCurrentUser',message:'setupPush unexpected throw',data:{err:String(e&&e.message?e.message:e).slice(0,180)},timestamp:Date.now()});if(__p.length>80)__p=__p.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__p));}catch(_){}
-        // #endregion
     }
 }
 
@@ -59498,6 +60179,17 @@ async function handleProfilePhotoSelected(event) {
         console.log('[PHOTO] saved to firestore');
 
         await renderProfilePhoto();
+
+        try {
+            var userSnap = await firebase.firestore().collection('users').doc(user.uid).get();
+            var userData = Object.assign({}, (userSnap && userSnap.exists) ? (userSnap.data() || {}) : {}, {
+                profilePhotoUrl: url
+            });
+            await trySyncPublicProfileIdentity(user.uid, userData, user);
+            await trySyncLeagueParticipantPublicProfileIdentity(userData);
+        } catch (syncIdentityErr) {
+            console.warn('[PHOTO] publicProfiles identity sync skipped', syncIdentityErr);
+        }
     } catch (err) {
         console.error('[PHOTO ERROR]', err);
         alert('Yükleme hatası');
@@ -59533,6 +60225,7 @@ async function renderProfileStudentIdentity() {
                 fullnameEl.style.display = 'none';
             }
             row.style.display = 'block';
+            try { paintProfileAccountDeleteUi(null); } catch (_) {}
             return;
         }
 
@@ -59559,6 +60252,7 @@ async function renderProfileStudentIdentity() {
         }
 
         row.style.display = 'block';
+        try { paintProfileAccountDeleteUi(data); } catch (_) {}
     } catch (e) {
         console.warn('[ProfileIdentity] render failed', e);
         greetingEl.textContent = 'Merhaba, Öğrenci';
@@ -59567,6 +60261,282 @@ async function renderProfileStudentIdentity() {
             fullnameEl.style.display = 'none';
         }
         row.style.display = 'block';
+        try { paintProfileAccountDeleteUi(null); } catch (_) {}
+    }
+}
+
+var __profileAccountDeleteState = {
+    step: 1,
+    busy: false,
+    overlayToken: null,
+    forceManaged: false,
+    origin: ''
+};
+
+function setAccountDeleteModalOrigin(origin) {
+    var note = document.getElementById('account-delete-step1-machine-note');
+    var isMachine = origin === 'machine';
+    __profileAccountDeleteState.origin = isMachine ? 'machine' : '';
+    if (note) note.style.display = isMachine ? 'block' : 'none';
+}
+
+function getSelectedTenantIdForAccountDeleteUx() {
+    try {
+        if (window.SA_TENANT && typeof window.SA_TENANT.getSelectedTenantId === 'function') {
+            return String(window.SA_TENANT.getSelectedTenantId() || '').trim();
+        }
+    } catch (_) {}
+    return '';
+}
+
+function resolveProfileAccountDeleteUx(userDoc) {
+    var user = (typeof firebase !== 'undefined' && firebase && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!user) return 'hide';
+    if (__profileAccountDeleteState.forceManaged) return 'managed';
+    var d = userDoc && typeof userDoc === 'object' ? userDoc : {};
+    var role = String(d.role || d.globalRole || '').trim().toLowerCase();
+    if (d.isSuperAdmin === true || d.isAdmin === true) return 'hide';
+    if (role === 'instructor' || role === 'institution_admin' || role === 'super_admin' || role === 'admin') return 'hide';
+    if (role !== 'student' && role !== 'public_user') return 'hide';
+    if (getSelectedTenantIdForAccountDeleteUx()) return 'managed';
+    return 'delete';
+}
+
+function paintProfileAccountDeleteUi(userDoc) {
+    var root = document.getElementById('profile-account-delete-root');
+    var copyEl = document.getElementById('profile-account-delete-copy');
+    var managedEl = document.getElementById('profile-account-delete-managed');
+    var btn = document.getElementById('btn-profile-account-delete');
+    if (!root) return;
+    var mode = resolveProfileAccountDeleteUx(userDoc);
+    if (mode === 'hide') {
+        root.style.display = 'none';
+        root.hidden = true;
+        if (btn) btn.style.display = 'none';
+        if (copyEl) copyEl.style.display = 'none';
+        if (managedEl) managedEl.style.display = 'none';
+        return;
+    }
+    root.hidden = false;
+    root.style.display = 'block';
+    if (mode === 'managed') {
+        if (copyEl) copyEl.style.display = 'none';
+        if (managedEl) managedEl.style.display = 'block';
+        if (btn) {
+            btn.style.display = 'none';
+            btn.disabled = true;
+        }
+        return;
+    }
+    if (copyEl) copyEl.style.display = 'block';
+    if (managedEl) managedEl.style.display = 'none';
+    if (btn) {
+        btn.style.display = '';
+        btn.disabled = !!__profileAccountDeleteState.busy;
+    }
+}
+
+function setProfileAccountDeleteError(text) {
+    var msg = text != null ? String(text).trim() : '';
+    var step = __profileAccountDeleteState.step === 2 ? 2 : 1;
+    var el1 = document.getElementById('account-delete-step1-error');
+    var el2 = document.getElementById('account-delete-step2-error');
+    if (el1) {
+        el1.textContent = (step === 1) ? msg : '';
+        el1.style.display = (step === 1 && msg) ? 'block' : 'none';
+    }
+    if (el2) {
+        el2.textContent = (step === 2) ? msg : '';
+        el2.style.display = (step === 2 && msg) ? 'block' : 'none';
+    }
+}
+
+function isProfileAccountDeleteConfirmMatch() {
+    var inp = document.getElementById('account-delete-confirm-input');
+    var raw = inp ? String(inp.value || '') : '';
+    var normalized = '';
+    try { normalized = raw.trim().toLocaleUpperCase('tr-TR'); } catch (_) { normalized = raw.trim().toUpperCase(); }
+    return normalized === 'SİL';
+}
+
+function syncProfileAccountDeleteConfirmButton() {
+    var btn = document.getElementById('account-delete-confirm-submit');
+    if (!btn) return;
+    btn.disabled = !!__profileAccountDeleteState.busy || __profileAccountDeleteState.step !== 2 || !isProfileAccountDeleteConfirmMatch();
+}
+
+function setProfileAccountDeleteBusy(isBusy) {
+    __profileAccountDeleteState.busy = !!isBusy;
+    var ids = ['account-delete-continue', 'account-delete-cancel-1', 'account-delete-cancel-2', 'account-delete-confirm-input', 'btn-profile-account-delete', 'btn-machine-profile-account-delete'];
+    for (var i = 0; i < ids.length; i++) {
+        var el = document.getElementById(ids[i]);
+        if (el) el.disabled = !!isBusy;
+    }
+    syncProfileAccountDeleteConfirmButton();
+    try { paintMachineProfileAccountDeleteUi(); } catch (_) {}
+}
+
+function resetProfileAccountDeleteModalState() {
+    __profileAccountDeleteState.step = 1;
+    var step1 = document.getElementById('account-delete-step-1');
+    var step2 = document.getElementById('account-delete-step-2');
+    if (step1) step1.style.display = '';
+    if (step2) step2.style.display = 'none';
+    var inp = document.getElementById('account-delete-confirm-input');
+    if (inp) inp.value = '';
+    setProfileAccountDeleteError('');
+    setAccountDeleteModalOrigin('');
+    syncProfileAccountDeleteConfirmButton();
+}
+
+function openProfileAccountDeleteModal(origin) {
+    if (__profileAccountDeleteState.busy) return;
+    var fromMachine = origin === 'machine';
+    if (fromMachine) {
+        if (typeof isMachinePublicSession !== 'function' || !isMachinePublicSession(currentMachineCandidateSession)) return;
+        var mRoot = document.getElementById('machine-profile-account-delete-root');
+        var mBtn = document.getElementById('btn-machine-profile-account-delete');
+        if (!mRoot || mRoot.hidden || mRoot.style.display === 'none') return;
+        if (!mBtn || mBtn.style.display === 'none' || mBtn.disabled) return;
+    } else {
+        var root = document.getElementById('profile-account-delete-root');
+        var btn = document.getElementById('btn-profile-account-delete');
+        if (!root || root.hidden || root.style.display === 'none') return;
+        if (!btn || btn.style.display === 'none') return;
+    }
+    resetProfileAccountDeleteModalState();
+    setAccountDeleteModalOrigin(fromMachine ? 'machine' : '');
+    var modal = document.getElementById('account-delete-modal');
+    if (!modal) return;
+    modal.hidden = false;
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeProfileAccountDeleteModal(ev) {
+    if (ev && ev.target && ev.currentTarget && ev.target !== ev.currentTarget) return;
+    if (__profileAccountDeleteState.busy) return;
+    var modal = document.getElementById('account-delete-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.hidden = true;
+        modal.setAttribute('aria-hidden', 'true');
+    }
+    resetProfileAccountDeleteModalState();
+}
+
+function advanceProfileAccountDeleteModal() {
+    if (__profileAccountDeleteState.busy) return;
+    __profileAccountDeleteState.step = 2;
+    var step1 = document.getElementById('account-delete-step-1');
+    var step2 = document.getElementById('account-delete-step-2');
+    if (step1) step1.style.display = 'none';
+    if (step2) step2.style.display = '';
+    setProfileAccountDeleteError('');
+    syncProfileAccountDeleteConfirmButton();
+    var inp = document.getElementById('account-delete-confirm-input');
+    if (inp) {
+        try { inp.focus(); } catch (_) {}
+    }
+}
+
+function mapProfileAccountDeleteError(error) {
+    var code = '';
+    var msg = '';
+    try { code = String((error && error.code) || '').trim().toLowerCase(); } catch (_) { code = ''; }
+    try { msg = String((error && (error.message || error.userMessage)) || '').trim(); } catch (_) { msg = ''; }
+    if (code.indexOf('unauthenticated') !== -1) {
+        return { text: 'Oturum doğrulanamadı. Lütfen tekrar giriş yapın.', kind: 'auth' };
+    }
+    if (code.indexOf('permission-denied') !== -1) {
+        return { text: 'Bu hesap uygulama içinden silinemez.', kind: 'denied' };
+    }
+    if (code.indexOf('failed-precondition') !== -1) {
+        var institutionHint = /kurum|silinemez|yönet/i.test(msg);
+        if (institutionHint) {
+            return {
+                text: 'Bu hesap uygulama içinden silinemez. Hesabınız kurum tarafından yönetiliyor olabilir.',
+                kind: 'managed'
+            };
+        }
+        return { text: 'Hesap silinemedi. Lütfen tekrar deneyin.', kind: 'fail' };
+    }
+    if (code.indexOf('unavailable') !== -1 || code.indexOf('network') !== -1) {
+        return { text: 'Bağlantı kurulamadı. Lütfen tekrar deneyin.', kind: 'network' };
+    }
+    return { text: 'Hesap silinemedi. Lütfen tekrar deneyin.', kind: 'fail' };
+}
+
+function hideProfileAccountDeleteOverlayToken() {
+    var token = __profileAccountDeleteState.overlayToken;
+    __profileAccountDeleteState.overlayToken = null;
+    if (token != null && window.SA_OPERATION_OVERLAY && typeof window.SA_OPERATION_OVERLAY.hide === 'function') {
+        try { window.SA_OPERATION_OVERLAY.hide(token); } catch (_) {}
+    }
+}
+
+async function submitProfileAccountDelete(ev) {
+    if (ev) {
+        try { ev.preventDefault(); } catch (_) {}
+    }
+    if (__profileAccountDeleteState.busy) return false;
+    if (__profileAccountDeleteState.step !== 2 || !isProfileAccountDeleteConfirmMatch()) {
+        syncProfileAccountDeleteConfirmButton();
+        return false;
+    }
+
+    setProfileAccountDeleteBusy(true);
+    setProfileAccountDeleteError('');
+    var modal = document.getElementById('account-delete-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+    }
+
+    var opToken = null;
+    try {
+        if (window.SA_OPERATION_OVERLAY && typeof window.SA_OPERATION_OVERLAY.show === 'function') {
+            opToken = window.SA_OPERATION_OVERLAY.show({
+                mode: 'explained',
+                kicker: 'HESAP İŞLEMİ',
+                title: 'Hesabınız siliniyor',
+                desc: 'Verileriniz güvenli biçimde kaldırılıyor.'
+            });
+            __profileAccountDeleteState.overlayToken = opToken;
+        }
+        if (typeof slGetCallable !== 'function') {
+            throw new Error('Silme işlemi hazır değil.');
+        }
+        var callable = slGetCallable('deleteOwnPublicAccount');
+        var result = await callable({});
+        var data = (result && result.data && typeof result.data === 'object') ? result.data : {};
+        if (data.ok !== true) {
+            throw new Error('Hesap silinemedi. Lütfen tekrar deneyin.');
+        }
+        if (typeof handleLogout === 'function') {
+            await handleLogout();
+        }
+        return false;
+    } catch (e) {
+        try { console.warn('[AccountDelete] failed', e && e.code ? e.code : e); } catch (_) {}
+        hideProfileAccountDeleteOverlayToken();
+        var mapped = mapProfileAccountDeleteError(e);
+        if (mapped.kind === 'managed' || mapped.kind === 'denied') {
+            __profileAccountDeleteState.forceManaged = true;
+            try { paintProfileAccountDeleteUi(null); } catch (_) {}
+            try { paintMachineProfileAccountDeleteUi(); } catch (_) {}
+            setProfileAccountDeleteBusy(false);
+            closeProfileAccountDeleteModal();
+            return false;
+        }
+        if (modal) {
+            modal.hidden = false;
+            modal.style.display = 'flex';
+            modal.setAttribute('aria-hidden', 'false');
+        }
+        setProfileAccountDeleteBusy(false);
+        setProfileAccountDeleteError(mapped.text);
+        return false;
     }
 }
 
@@ -59700,10 +60670,6 @@ function dismissPushPrepermission() {
             var preKey = 'sa_push_preperm_state_' + uid;
             localStorage.setItem(preKey, 'dismissed');
         }
-        // #region agent log
-        fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H2',location:'index.html:dismissPushPrepermission',message:'preperm dismissed',data:{uidSuffix:uid?String(uid).slice(-6):null},timestamp:Date.now()})}).catch(function(){});
-        try{var __q=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__q))__q=[];__q.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H2',location:'index.html:dismissPushPrepermission',message:'preperm dismissed',data:{uidSuffix:uid?String(uid).slice(-6):null},timestamp:Date.now()});if(__q.length>80)__q=__q.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__q));}catch(_){}
-        // #endregion
     } catch (_) {}
     closePushPrepermissionModal();
 }
@@ -59715,10 +60681,6 @@ function acceptPushPrepermission() {
             var preKey = 'sa_push_preperm_state_' + uid;
             localStorage.setItem(preKey, 'accepted');
         }
-        // #region agent log
-        fetch('http://127.0.0.1:7613/ingest/882f384f-a0a6-4650-b36c-ce1de508c853',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'96a552'},body:JSON.stringify({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H1',location:'index.html:acceptPushPrepermission',message:'preperm accepted → re-call setupPush',data:{uidSuffix:uid?String(uid).slice(-6):null},timestamp:Date.now()})}).catch(function(){});
-        try{var __r=JSON.parse(localStorage.getItem('debug_log_96a552')||'[]');if(!Array.isArray(__r))__r=[];__r.push({sessionId:'96a552',runId:'instr-push-1',hypothesisId:'H1',location:'index.html:acceptPushPrepermission',message:'preperm accepted → re-call setupPush',data:{uidSuffix:uid?String(uid).slice(-6):null},timestamp:Date.now()});if(__r.length>80)__r=__r.slice(-80);localStorage.setItem('debug_log_96a552',JSON.stringify(__r));}catch(_){}
-        // #endregion
     } catch (_) {}
     closePushPrepermissionModal();
     if (typeof setupPushForCurrentUser === 'function') {
